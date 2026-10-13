@@ -1,0 +1,32 @@
+# 실제 카드 결제 내역 — 저장소에 올리지 않는다 (두 노트북 사이는 USB/개인 클라우드로 복사)
+카드내역/
+data/*.csv
+data/*.xlsx
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Flutter / Dart (app/ 생성 후)
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+*.iml
+.idea/
+local.properties
+*.jks
+*.keystore
+key.properties
+
+# 비밀값
+.env
+*.env
+server/.env
+
+# OS / 에디터
+.DS_Store
+Thumbs.db
+~$*
