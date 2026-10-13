@@ -143,6 +143,10 @@ class BudgetEngine {
 
   int spent(YearMonth m) => ledger.txns.fold(0, (s, t) => s + contrib(t, m));
 
+  /// S 중 특이 지출 부분(할부 회차 포함).
+  int unusualSpent(YearMonth m) =>
+      ledger.txns.where((t) => t.isUnusual).fold(0, (s, t) => s + contrib(t, m));
+
   /// 오늘 승인·취소된 거래의 기여분.
   int _todayContrib(DateTime today) {
     final m = YearMonth.of(today);

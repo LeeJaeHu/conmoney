@@ -20,7 +20,8 @@ server/  Cloud Run(Python) LLM 중계 (예정)
 ## 데이터 (git에 없음 — 노트북 사이 직접 복사)
 - `카드내역/`: 롯데·현대·신한 .xls(실제로는 HTML), 토스 후불교통 PDF
 - `data/labels.csv`: 사용자가 검수한 정답(category, is_foreign, cancelled). **카테고리 정답의 기준 파일**
-- `data/transactions_v3.csv`: 최신 가져오기 결과(446건, 2026-05~10-13)
+- `data/transactions_v3.csv`: 최신 가져오기 결과(446건, 2026-05~10-13). 폰에서 쓰려면 이 파일을 폰으로 옮겨 앱 메뉴 > 과거 기록 가져오기
+- drift 코드 생성: `app`에서 `dart run build_runner build` (database.dart를 고친 뒤)
 - 재생성: `python tools/import_statements.py 카드내역 data/transactions_v3.csv` (토스 PDF는 `pypdf` 필요)
 - 실제 결제 내역이므로 git·외부 서비스·LLM 프롬프트에 원본을 올리지 않는다. 테스트용 데이터는 금액·가맹점을 바꾼 샘플을 따로 만든다
 
@@ -45,4 +46,7 @@ server/  Cloud Run(Python) LLM 중계 (예정)
 - [x] BudgetEngine(`app/lib/core/`) + 테스트 C1~C18 (`app/test/core/`)
 - [x] 알림 리스너 + 샘플 수집 화면 — **집 노트북에서 빌드·설치 후 알림 접근 허용 필요**
 - [ ] 현대카드 앱 패키지명 확인(샘플 수집 화면의 "알림을 보낸 앱" 목록) → `SourceFilter` 수정
-- [ ] DB(drift) + CSV 가져오기, 파서, 홈 화면 …(Spec 9장 순서)
+- [x] DB(drift, `app/lib/data/`) + CSV 가져오기(설정 메뉴 > 과거 기록 가져오기). 실데이터 월 합계가 부록 A와 일치(테스트)
+- [x] 홈 화면(오늘 금액 + 남은 예산 + 초과액 + 단계 표시), 예산 설정(고정/단계적, 만 원 단위 입력)
+- [ ] 정기 지출 등록·자동 탐지(F5) → 지금은 F가 0이라 정기 지출 미리 빼기가 안 됨
+- [ ] 알림 파서(F2), 확인 알림·확인 시트(F3), 서버·구매 상담(F6), 먼저 알림(F7), 카테고리 보기(F8)

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'features/samples/sample_collector_page.dart';
+import 'features/home/home_page.dart';
 
 void main() {
-  runApp(const ConmoneyApp());
+  runApp(const ProviderScope(child: ConmoneyApp()));
 }
 
 class ConmoneyApp extends StatelessWidget {
@@ -15,8 +16,7 @@ class ConmoneyApp extends StatelessWidget {
       title: 'conmoney',
       theme: ThemeData(colorSchemeSeed: Colors.teal, useMaterial3: true),
       darkTheme: ThemeData(colorSchemeSeed: Colors.teal, brightness: Brightness.dark, useMaterial3: true),
-      // P0 1단계: 알림 샘플 수집부터. 홈 화면(F4)은 다음 단계에서 붙인다.
-      home: const SampleCollectorPage(),
+      home: const HomePage(),
     );
   }
 }

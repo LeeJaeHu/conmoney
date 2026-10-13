@@ -1,0 +1,11 @@
+﻿date,time,card,merchant,merchant_raw,amount,installment_months,is_foreign,currency,original_amount,cancelled,category,category_guess,is_unusual,source
+2026-08-02,,현대 ZERO,가짜배달,KCP - 가짜배달,20000,1,False,KRW,,False,식비,식비,False,fake_hd.xls
+2026-08-15,,현대 ZERO,가짜게임기,토스페이먼츠 - 가짜게임기,300000,3,False,KRW,,False,게임,게임,True,fake_hd.xls
+2026-09-03,13:05,롯데 LOCA LIKIT Eat(5*1*),"FAKE AI, INC.","FAKE AI, INC.",6900,1,True,USD,USD 5.00,False,API,API,False,fake_lotte.xls
+2026-09-10,9:14,롯데 LOCA LIKIT Eat(5*1*),가짜커피,가짜커피 1호점,1800,1,False,KRW,,False,카페·간식,카페·간식,False,fake_lotte.xls
+2026-09-10,9:40,롯데 LOCA LIKIT Eat(5*1*),가짜커피,가짜커피 1호점,1800,1,False,KRW,,False,카페·간식,카페·간식,False,fake_lotte.xls
+2026-09-15,00:21,롯데 LOCA LIKIT Eat(5*1*),가짜버스,가짜버스,13200,1,False,KRW,,True,교통,교통,False,fake_lotte.xls
+2026-09-20,,현대 ZERO,가짜버스,가짜버스,-5300,1,False,KRW,,False,교통,교통,False,fake_hd.xls
+2026-09-11,,신한 000,후불교통 합산,모바일후불티머니이용 0014건/월,15350,1,False,KRW,,False,교통,교통,False,fake_sh.xls
+2026-10-01,08:45,토스뱅크 0000,후불교통 버스,후불교통 버스,1500,1,False,KRW,,False,교통,교통,False,fake_toss.pdf
+2026-10-02,,현대 ZERO,가짜마켓,가짜마켓,12000,1,False,KRW,,False,,식비,False,fake_hd.xls
