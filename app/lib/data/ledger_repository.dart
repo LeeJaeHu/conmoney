@@ -73,35 +73,33 @@ class LedgerRepository {
   }
 
   Future<List<MonthlyBudget>> budgets() async => [
-        for (final b in await db.select(db.budgets).get())
-          MonthlyBudget(
-            YearMonth.parse(b.month),
-            b.amount,
-            switch (b.source) {
-              'STEP_PLAN' => BudgetSource.stepPlan,
-              'MANUAL' => BudgetSource.manual,
-              _ => BudgetSource.fixed,
-            },
-          ),
-      ];
+    for (final b in await db.select(db.budgets).get())
+      MonthlyBudget(YearMonth.parse(b.month), b.amount, switch (b.source) {
+        'STEP_PLAN' => BudgetSource.stepPlan,
+        'MANUAL' => BudgetSource.manual,
+        _ => BudgetSource.fixed,
+      }),
+  ];
 
   /// 이번 달부터 새 예산을 적용한다. 지난 달 값은 그대로 둔다(Spec F4).
   /// 이번 달 이후에 남아 있던 이전 계획은 지운다.
   Future<void> saveBudgets(YearMonth from, List<MonthlyBudget> plan, {required BudgetPlansCompanion setting}) {
     return db.transaction(() async {
       await (db.delete(db.budgets)..where((b) => b.month.isBiggerOrEqualValue(from.toString()))).go();
-      await db.batch((b) => b.insertAll(db.budgets, [
-            for (final m in plan)
-              BudgetsCompanion.insert(
-                month: m.month.toString(),
-                amount: m.amount,
-                source: switch (m.source) {
-                  BudgetSource.stepPlan => 'STEP_PLAN',
-                  BudgetSource.manual => 'MANUAL',
-                  BudgetSource.fixed => 'FIXED',
-                },
-              ),
-          ]));
+      await db.batch(
+        (b) => b.insertAll(db.budgets, [
+          for (final m in plan)
+            BudgetsCompanion.insert(
+              month: m.month.toString(),
+              amount: m.amount,
+              source: switch (m.source) {
+                BudgetSource.stepPlan => 'STEP_PLAN',
+                BudgetSource.manual => 'MANUAL',
+                BudgetSource.fixed => 'FIXED',
+              },
+            ),
+        ]),
+      );
       await db.into(db.budgetPlans).insert(setting);
     });
   }
@@ -136,7 +134,10 @@ class LedgerRepository {
   Future<List<(RecurringItem, DateTime)>> upcomingRecurring(DateTime now) async {
     final ledger = await loadLedger();
     final m = YearMonth.of(now);
-    final handled = {for (final x in ledger.recurringMatches) if (x.month == m) x.itemId};
+    final handled = {
+      for (final x in ledger.recurringMatches)
+        if (x.month == m) x.itemId,
+    };
     final list = [
       for (final i in ledger.recurringItems)
         if (i.active && !handled.contains(i.id)) (i, m.dayClamped(i.dueDay)),

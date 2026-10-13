@@ -6,6 +6,7 @@ import '../../core/budget_engine.dart';
 import '../../ui/format.dart';
 import '../budget/budget_settings_page.dart';
 import '../dev/import_page.dart';
+import '../recurring/recurring_page.dart';
 import '../samples/sample_collector_page.dart';
 
 /// 홈 화면(Spec F4): 오늘 쓸 수 있는 금액(크게) + 이번 달 남은 예산(작게). 총 사용액은 보여주지 않는다.
@@ -29,10 +30,12 @@ class HomePage extends ConsumerWidget {
             onSelected: (v) => switch (v) {
               'budget' => open(const BudgetSettingsPage()),
               'import' => open(const ImportPage()),
+              'recurring' => open(const RecurringPage()),
               _ => open(const SampleCollectorPage()),
             },
             itemBuilder: (_) => const [
               PopupMenuItem(value: 'budget', child: Text('예산 설정')),
+              PopupMenuItem(value: 'recurring', child: Text('정기 지출')),
               PopupMenuItem(value: 'import', child: Text('과거 기록 가져오기')),
               PopupMenuItem(value: 'samples', child: Text('결제 알림 샘플')),
             ],
@@ -43,7 +46,9 @@ class HomePage extends ConsumerWidget {
         onRefresh: () => ref.refresh(homeProvider.future),
         child: home.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => ListView(children: [Padding(padding: const EdgeInsets.all(24), child: Text('불러오지 못했어요: $e'))]),
+          error: (e, _) => ListView(
+            children: [Padding(padding: const EdgeInsets.all(24), child: Text('불러오지 못했어요: $e'))],
+          ),
           data: (data) => ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -60,7 +65,7 @@ class HomePage extends ConsumerWidget {
                     trailing: const Icon(Icons.chevron_right),
                   ),
                 ),
-              _UpcomingCard(data: data),
+              _UpcomingCard(data: data, onOpen: () => open(const RecurringPage())),
               const SizedBox(height: 12),
               OutlinedButton.icon(
                 onPressed: null,
@@ -96,7 +101,10 @@ class _TodayCard extends StatelessWidget {
           children: [
             Text('오늘 쓸 수 있는 금액', style: theme.textTheme.titleSmall),
             const SizedBox(height: 4),
-            Text(won(status.availableShown), style: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600)),
+            Text(
+              won(status.availableShown),
+              style: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+            ),
             if (status.todayOver > 0) ...[
               const SizedBox(height: 4),
               Text(
@@ -107,8 +115,10 @@ class _TodayCard extends StatelessWidget {
             ],
             const Divider(height: 28),
             if (status.monthOver > 0) ...[
-              Text('이번 달 예산을 ${won(status.monthOver)} 넘었어요',
-                  style: theme.textTheme.titleMedium?.copyWith(color: overColor)),
+              Text(
+                '이번 달 예산을 ${won(status.monthOver)} 넘었어요',
+                style: theme.textTheme.titleMedium?.copyWith(color: overColor),
+              ),
               if (status.overOnlyAfterFixed)
                 Text('예정된 정기 지출 ${won(status.upcomingFixed)}을 반영한 금액이에요', style: secondary),
             ] else
@@ -147,7 +157,9 @@ class _NoBudgetCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              next == null ? '월 예산을 정하면 오늘 쓸 수 있는 금액을 알려드려요' : '${next.month.month}월 1일부터 목표 ${manWon(next.amount)}으로 시작해요',
+              next == null
+                  ? '월 예산을 정하면 오늘 쓸 수 있는 금액을 알려드려요'
+                  : '${next.month.month}월 1일부터 목표 ${manWon(next.amount)}으로 시작해요',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 12),
@@ -160,33 +172,50 @@ class _NoBudgetCard extends StatelessWidget {
 }
 
 class _UpcomingCard extends StatelessWidget {
-  const _UpcomingCard({required this.data});
+  const _UpcomingCard({required this.data, required this.onOpen});
 
   final HomeData data;
+  final VoidCallback onOpen;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-              child: Text('다가오는 정기 지출', style: theme.textTheme.titleSmall),
-            ),
-            if (data.upcoming.isEmpty)
-              const ListTile(dense: true, title: Text('정기 지출을 등록하면 예산에서 미리 빼 드려요')),
-            for (final (item, due) in data.upcoming)
-              ListTile(
-                dense: true,
-                leading: Text('${due.month}/${due.day}'),
-                title: Text(item.name),
-                trailing: Text('${item.isEstimate ? '약 ' : ''}${won(item.amount)}'),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onOpen,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                child: Row(
+                  children: [
+                    Expanded(child: Text('다가오는 정기 지출', style: theme.textTheme.titleSmall)),
+                    const Icon(Icons.chevron_right, size: 20),
+                  ],
+                ),
               ),
-          ],
+              if (data.upcoming.isEmpty)
+                ListTile(
+                  dense: true,
+                  title: Text(
+                    data.recurringSuggestions > 0
+                        ? '매달 나가는 결제 ${data.recurringSuggestions}개를 찾았어요. 등록하면 예산에서 미리 빼 드려요'
+                        : '정기 지출을 등록하면 예산에서 미리 빼 드려요',
+                  ),
+                ),
+              for (final (item, due) in data.upcoming)
+                ListTile(
+                  dense: true,
+                  leading: Text('${due.month}/${due.day}'),
+                  title: Text(item.name),
+                  trailing: Text('${item.isEstimate ? '약 ' : ''}${won(item.amount)}'),
+                ),
+            ],
+          ),
         ),
       ),
     );

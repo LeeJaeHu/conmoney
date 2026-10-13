@@ -27,9 +27,7 @@ List<MonthlyBudget> stepPlan({
     for (var k = 0; k < months; k++)
       MonthlyBudget(
         start.plus(k),
-        k == months - 1
-            ? targetAmount
-            : _roundTo10k(startAmount + (targetAmount - startAmount) * k / (months - 1)),
+        k == months - 1 ? targetAmount : _roundTo10k(startAmount + (targetAmount - startAmount) * k / (months - 1)),
         BudgetSource.stepPlan,
       ),
   ];
@@ -44,9 +42,8 @@ int defaultStartAmount(List<int> recentMonthlyTotals) {
 
 /// 특정 달만 직접 고친다. 나머지 계획은 그대로 둔다.
 List<MonthlyBudget> overrideMonth(List<MonthlyBudget> plan, YearMonth month, int amount) => [
-      for (final b in plan)
-        b.month == month ? MonthlyBudget(month, amount, BudgetSource.manual) : b,
-    ];
+  for (final b in plan) b.month == month ? MonthlyBudget(month, amount, BudgetSource.manual) : b,
+];
 
 /// 그 달 예산. 행이 없으면 그 이전 가장 최근 달의 값을 이어 쓴다(Spec 2.1 budgets).
 int? budgetFor(List<MonthlyBudget> budgets, YearMonth month) {

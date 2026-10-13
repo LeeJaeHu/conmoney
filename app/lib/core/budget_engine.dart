@@ -144,15 +144,12 @@ class BudgetEngine {
   int spent(YearMonth m) => ledger.txns.fold(0, (s, t) => s + contrib(t, m));
 
   /// S 중 특이 지출 부분(할부 회차 포함).
-  int unusualSpent(YearMonth m) =>
-      ledger.txns.where((t) => t.isUnusual).fold(0, (s, t) => s + contrib(t, m));
+  int unusualSpent(YearMonth m) => ledger.txns.where((t) => t.isUnusual).fold(0, (s, t) => s + contrib(t, m));
 
   /// 오늘 승인·취소된 거래의 기여분.
   int _todayContrib(DateTime today) {
     final m = YearMonth.of(today);
-    return ledger.txns
-        .where((t) => dateOnly(t.date) == today)
-        .fold(0, (s, t) => s + contrib(t, m));
+    return ledger.txns.where((t) => dateOnly(t.date) == today).fold(0, (s, t) => s + contrib(t, m));
   }
 
   /// F: 이번 달 아직 처리(PAID/SKIPPED)되지 않은 활성 정기 지출 예정액.
@@ -160,12 +157,9 @@ class BudgetEngine {
   int upcomingFixed(YearMonth m, {DateTime? decidedBefore}) {
     final handled = <int>{
       for (final x in ledger.recurringMatches)
-        if (x.month == m && (decidedBefore == null || dateOnly(x.decidedOn).isBefore(decidedBefore)))
-          x.itemId,
+        if (x.month == m && (decidedBefore == null || dateOnly(x.decidedOn).isBefore(decidedBefore))) x.itemId,
     };
-    return ledger.recurringItems
-        .where((i) => i.active && !handled.contains(i.id))
-        .fold(0, (s, i) => s + i.amount);
+    return ledger.recurringItems.where((i) => i.active && !handled.contains(i.id)).fold(0, (s, i) => s + i.amount);
   }
 
   /// 오늘 정기 지출에 매칭된 거래의 예정액 합(이미 F로 빼 두었던 금액).

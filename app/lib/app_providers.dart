@@ -5,6 +5,7 @@ import 'core/budget_plan.dart';
 import 'core/models.dart';
 import 'data/database.dart';
 import 'data/ledger_repository.dart';
+import 'data/recurring_repository.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
@@ -34,6 +35,7 @@ class HomeData {
     required this.unconfirmed,
     this.planStep,
     this.nextBudget,
+    this.recurringSuggestions = 0,
   });
 
   final YearMonth month;
@@ -46,6 +48,9 @@ class HomeData {
 
   /// 이번 달 예산은 없지만 다음 달부터 시작하는 계획이 있으면 그 달과 금액.
   final MonthlyBudget? nextBudget;
+
+  /// 등록 안 된 정기 지출 후보 수(F5 자동 탐지).
+  final int recurringSuggestions;
 }
 
 final homeProvider = FutureProvider<HomeData>((ref) async {
@@ -75,5 +80,6 @@ final homeProvider = FutureProvider<HomeData>((ref) async {
     unconfirmed: await repo.unconfirmedCount(),
     planStep: step,
     nextBudget: budget == null && future.isNotEmpty ? future.first : null,
+    recurringSuggestions: (await RecurringRepository(ref.watch(databaseProvider)).suggestions(now)).length,
   );
 });

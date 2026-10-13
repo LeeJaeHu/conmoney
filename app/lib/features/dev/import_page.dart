@@ -30,8 +30,11 @@ class _ImportPageState extends ConsumerState<ImportPage> {
       }
       final rows = parseTransactionsCsv(utf8.decode(await file.readAsBytes()));
       final result = await importTransactions(ref.read(databaseProvider), rows);
-      setState(() => _message = '${file.name}\n새로 ${result.inserted}건, 이미 있던 ${result.skipped}건'
-          '${result.firstDate != null ? '\n첫 기록일 ${result.firstDate!.toString().substring(0, 10)}' : ''}');
+      setState(
+        () => _message =
+            '${file.name}\n새로 ${result.inserted}건, 이미 있던 ${result.skipped}건'
+            '${result.firstDate != null ? '\n첫 기록일 ${result.firstDate!.toString().substring(0, 10)}' : ''}',
+      );
     } catch (e) {
       setState(() => _message = '가져오지 못했어요: $e');
     } finally {
@@ -60,7 +63,9 @@ class _ImportPageState extends ConsumerState<ImportPage> {
           ),
           if (_message != null) ...[
             const SizedBox(height: 16),
-            Card(child: Padding(padding: const EdgeInsets.all(16), child: Text(_message!))),
+            Card(
+              child: Padding(padding: const EdgeInsets.all(16), child: Text(_message!)),
+            ),
           ],
         ],
       ),

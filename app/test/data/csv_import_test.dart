@@ -69,7 +69,9 @@ void main() {
 
     final st = engine.status(DateTime(2026, 10, 13, 12), 540000);
     // ignore: avoid_print
-    print('10/13 B=540,000 → R=${st.remaining}, 기준액=${st.dailyBase}, 오늘 지출=${st.spentToday}, '
-        'P=${engine.pattern(DateTime(2026, 10, 13)).amount}, 시작금액 기본값 후보=${await repo.recentMonthlyTotals(DateTime(2026, 10, 13))}');
+    print(
+      '10/13 B=540,000 → R=${st.remaining}, 기준액=${st.dailyBase}, 오늘 지출=${st.spentToday}, '
+      'P=${engine.pattern(DateTime(2026, 10, 13)).amount}, 시작금액 기본값 후보=${await repo.recentMonthlyTotals(DateTime(2026, 10, 13))}',
+    );
   }, skip: real.existsSync() ? false : 'data/transactions_v3.csv 없음');
 }

@@ -85,7 +85,9 @@ class _BudgetSettingsPageState extends ConsumerState<BudgetSettingsPage> {
   Future<void> _save() async {
     final plan = _plan;
     if (plan == null) return;
-    await ref.read(repositoryProvider).saveBudgets(
+    await ref
+        .read(repositoryProvider)
+        .saveBudgets(
           _startMonth,
           plan,
           setting: BudgetPlansCompanion.insert(
@@ -101,12 +103,17 @@ class _BudgetSettingsPageState extends ConsumerState<BudgetSettingsPage> {
   }
 
   Widget _manField(TextEditingController c, String label, {String? helper}) => TextField(
-        controller: c,
-        keyboardType: TextInputType.number,
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        decoration: InputDecoration(labelText: label, suffixText: '만 원', helperText: helper, border: const OutlineInputBorder()),
-        onChanged: (_) => setState(() {}),
-      );
+    controller: c,
+    keyboardType: TextInputType.number,
+    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+    decoration: InputDecoration(
+      labelText: label,
+      suffixText: '만 원',
+      helperText: helper,
+      border: const OutlineInputBorder(),
+    ),
+    onChanged: (_) => setState(() {}),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -171,9 +178,12 @@ class _BudgetSettingsPageState extends ConsumerState<BudgetSettingsPage> {
               child: Column(
                 children: [
                   for (final b in plan)
-                    ListTile(dense: true, title: Text('${b.month.year}년 ${b.month.month}월'), trailing: Text(manWon(b.amount))),
-                  if (_mode == _Mode.step)
-                    const ListTile(dense: true, title: Text('그 이후'), trailing: Text('최종 목표 유지')),
+                    ListTile(
+                      dense: true,
+                      title: Text('${b.month.year}년 ${b.month.month}월'),
+                      trailing: Text(manWon(b.amount)),
+                    ),
+                  if (_mode == _Mode.step) const ListTile(dense: true, title: Text('그 이후'), trailing: Text('최종 목표 유지')),
                 ],
               ),
             ),

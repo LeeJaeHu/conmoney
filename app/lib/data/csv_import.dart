@@ -125,21 +125,26 @@ Future<ImportResult> importTransactions(AppDatabase db, List<ImportRow> rows) {
       final info = cardInfo(card);
       if (cardIds[info.product] case final id?) return id;
       final existing = await (db.select(db.cards)..where((c) => c.productName.equals(info.product))).getSingleOrNull();
-      final id = existing?.id ??
-          await db.into(db.cards).insert(CardsCompanion.insert(
-                issuer: info.issuer,
-                productName: info.product,
-                source: Value(info.source),
-                active: Value(info.active),
-              ));
+      final id =
+          existing?.id ??
+          await db
+              .into(db.cards)
+              .insert(
+                CardsCompanion.insert(
+                  issuer: info.issuer,
+                  productName: info.product,
+                  source: Value(info.source),
+                  active: Value(info.active),
+                ),
+              );
       return cardIds[info.product] = id;
     }
 
     Future<int?> categoryIdFor(String name) async {
       if (name.isEmpty) return null;
-      return categoryIds[name] ??= await db.into(db.categories).insert(
-            CategoriesCompanion.insert(name: name, sortOrder: Value(categoryIds.length)),
-          );
+      return categoryIds[name] ??= await db
+          .into(db.categories)
+          .insert(CategoriesCompanion.insert(name: name, sortOrder: Value(categoryIds.length)));
     }
 
     for (final r in rows) {
@@ -147,7 +152,9 @@ Future<ImportResult> importTransactions(AppDatabase db, List<ImportRow> rows) {
       final n = seen[base] = (seen[base] ?? 0) + 1;
       if (existing.contains('$base|$n')) continue;
       final categoryId = await categoryIdFor(r.category);
-      final id = await db.into(db.transactions).insert(
+      final id = await db
+          .into(db.transactions)
+          .insert(
             TransactionsCompanion.insert(
               cardId: Value(await cardIdFor(r.card)),
               kind: r.amount < 0 ? 'CANCEL' : 'APPROVAL',
@@ -175,15 +182,17 @@ Future<ImportResult> importTransactions(AppDatabase db, List<ImportRow> rows) {
 
       if (r.installmentMonths > 1) {
         final txn = Txn(id: id, amount: r.amount, date: r.date, installmentMonths: r.installmentMonths);
-        await db.batch((b) => b.insertAll(db.installmentSchedules, [
-              for (final row in buildSchedule(txn))
-                InstallmentSchedulesCompanion.insert(
-                  transactionId: id,
-                  seq: row.seq,
-                  month: row.month.toString(),
-                  amount: row.amount,
-                ),
-            ]));
+        await db.batch(
+          (b) => b.insertAll(db.installmentSchedules, [
+            for (final row in buildSchedule(txn))
+              InstallmentSchedulesCompanion.insert(
+                transactionId: id,
+                seq: row.seq,
+                month: row.month.toString(),
+                amount: row.amount,
+              ),
+          ]),
+        );
       }
     }
 
@@ -197,5 +206,4 @@ Future<ImportResult> importTransactions(AppDatabase db, List<ImportRow> rows) {
   });
 }
 
-String _ymd(DateTime d) =>
-    '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+String _ymd(DateTime d) => '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';

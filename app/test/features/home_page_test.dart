@@ -20,13 +20,12 @@ void main() {
 
   Future<void> pumpHome(WidgetTester tester, DateTime now) async {
     await tester.runAsync(() async {
-      await tester.pumpWidget(ProviderScope(
-        overrides: [
-          databaseProvider.overrideWithValue(db),
-          clockProvider.overrideWithValue(() => now),
-        ],
-        child: const MaterialApp(home: HomePage()),
-      ));
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [databaseProvider.overrideWithValue(db), clockProvider.overrideWithValue(() => now)],
+          child: const MaterialApp(home: HomePage()),
+        ),
+      );
       await Future<void>.delayed(const Duration(milliseconds: 300));
     });
     await tester.pump();

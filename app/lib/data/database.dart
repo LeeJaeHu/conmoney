@@ -134,22 +134,37 @@ class Settings extends Table {
 
 /// 기본 카테고리(PRD F3, 10/13 검수 반영).
 const defaultCategories = [
-  '식비', '카페·간식', '교통', '게임', '쇼핑', '구독', 'API', '통신',
-  '공과금', '의료', '교육', '영화', '경조사·선물', '연회비', '기타',
+  '식비',
+  '카페·간식',
+  '교통',
+  '게임',
+  '쇼핑',
+  '구독',
+  'API',
+  '통신',
+  '공과금',
+  '의료',
+  '교육',
+  '영화',
+  '경조사·선물',
+  '연회비',
+  '기타',
 ];
 
-@DriftDatabase(tables: [
-  Cards,
-  Categories,
-  Transactions,
-  InstallmentSchedules,
-  RecurringItems,
-  RecurringMatches,
-  Budgets,
-  BudgetPlans,
-  MerchantRules,
-  Settings,
-])
+@DriftDatabase(
+  tables: [
+    Cards,
+    Categories,
+    Transactions,
+    InstallmentSchedules,
+    RecurringItems,
+    RecurringMatches,
+    Budgets,
+    BudgetPlans,
+    MerchantRules,
+    Settings,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? driftDatabase(name: 'conmoney'));
 
@@ -158,23 +173,19 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onCreate: (m) async {
-          await m.createAll();
-          await batch((b) {
-            b.insertAll(categories, [
-              for (var i = 0; i < defaultCategories.length; i++)
-                CategoriesCompanion.insert(
-                  name: defaultCategories[i],
-                  sortOrder: Value(i),
-                  isDefault: const Value(true),
-                ),
-            ]);
-          });
-        },
-        beforeOpen: (details) async {
-          await customStatement('PRAGMA foreign_keys = ON');
-        },
-      );
+    onCreate: (m) async {
+      await m.createAll();
+      await batch((b) {
+        b.insertAll(categories, [
+          for (var i = 0; i < defaultCategories.length; i++)
+            CategoriesCompanion.insert(name: defaultCategories[i], sortOrder: Value(i), isDefault: const Value(true)),
+        ]);
+      });
+    },
+    beforeOpen: (details) async {
+      await customStatement('PRAGMA foreign_keys = ON');
+    },
+  );
 
   Future<String?> setting(String key) async =>
       (await (select(settings)..where((s) => s.key.equals(key))).getSingleOrNull())?.value;

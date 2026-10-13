@@ -19,14 +19,16 @@ Ledger ledgerOf(
   List<RecurringItem> items = const [telecom, gas],
   List<RecurringMatch> matches = const [],
   DateTime? firstRecordDate,
-}) =>
-    Ledger(
-      txns: txns,
-      installments: [for (final t in txns) if (t.isInstallment) ...buildSchedule(t)],
-      recurringItems: items,
-      recurringMatches: matches,
-      firstRecordDate: firstRecordDate,
-    );
+}) => Ledger(
+  txns: txns,
+  installments: [
+    for (final t in txns)
+      if (t.isInstallment) ...buildSchedule(t),
+  ],
+  recurringItems: items,
+  recurringMatches: matches,
+  firstRecordDate: firstRecordDate,
+);
 
 void main() {
   group('하루 기준액·오늘 쓸 수 있는 금액 (3.6)', () {
@@ -54,10 +56,7 @@ void main() {
 
     test('C2 같은 날 결제가 여러 번 들어와도 기준액은 그대로', () {
       final now = DateTime(2026, 10, 13, 20);
-      final txns = [
-        ...baseTxns(),
-        for (var i = 0; i < 5; i++) Txn(id: 10 + i, amount: 3000, date: d(10, 13)),
-      ];
+      final txns = [...baseTxns(), for (var i = 0; i < 5; i++) Txn(id: 10 + i, amount: 3000, date: d(10, 13))];
       final st = BudgetEngine(ledgerOf(txns)).status(now, 1000000);
       expect(st.dailyBase, 15000);
       expect(st.available, 0);
@@ -113,23 +112,30 @@ void main() {
     test('C7 같은 달 전액 취소: S 원상복구, 할부 회차 무효', () {
       final original = Txn(id: 1, amount: 90000, date: d(10, 3), installmentMonths: 3, cancelled: true);
       final cancelRow = Txn(id: 2, amount: -90000, date: d(10, 10), kind: TxnKind.cancel, excludedFromSums: true);
-      final rows = [for (final r in buildSchedule(original)) InstallmentRow(txnId: r.txnId, seq: r.seq, month: r.month, amount: r.amount, voided: true)];
+      final rows = [
+        for (final r in buildSchedule(original))
+          InstallmentRow(txnId: r.txnId, seq: r.seq, month: r.month, amount: r.amount, voided: true),
+      ];
       final engine = BudgetEngine(Ledger(txns: [original, cancelRow], installments: rows));
       expect(engine.spent(ym(10)), 0);
       expect(engine.spent(ym(11)), 0);
     });
 
     test('C8 지난달 거래를 이번 달에 취소: 지난달 S 그대로, 이번 달 −금액', () {
-      final engine = BudgetEngine(ledgerOf([
-        Txn(id: 1, amount: 13200, date: d(9, 15)),
-        Txn(id: 2, amount: -13200, date: d(10, 2), kind: TxnKind.cancel),
-      ], items: const []));
+      final engine = BudgetEngine(
+        ledgerOf([
+          Txn(id: 1, amount: 13200, date: d(9, 15)),
+          Txn(id: 2, amount: -13200, date: d(10, 2), kind: TxnKind.cancel),
+        ], items: const []),
+      );
       expect(engine.spent(ym(9)), 13200);
       expect(engine.spent(ym(10)), -13200);
     });
 
     test('C9 원거래 없는 취소는 음수로 반영', () {
-      final engine = BudgetEngine(ledgerOf([Txn(id: 1, amount: -5300, date: d(10, 2), kind: TxnKind.cancel)], items: const []));
+      final engine = BudgetEngine(
+        ledgerOf([Txn(id: 1, amount: -5300, date: d(10, 2), kind: TxnKind.cancel)], items: const []),
+      );
       expect(engine.spent(ym(10)), -5300);
     });
   });
@@ -146,29 +152,38 @@ void main() {
     });
 
     test('[이번 달 없음](SKIPPED)이면 F에서 빠진다', () {
-      final engine = BudgetEngine(ledgerOf(const [], matches: [
-        RecurringMatch(itemId: 2, month: ym(10), status: RecurringMatchStatus.skipped, decidedOn: d(10, 28)),
-      ]));
+      final engine = BudgetEngine(
+        ledgerOf(
+          const [],
+          matches: [
+            RecurringMatch(itemId: 2, month: ym(10), status: RecurringMatchStatus.skipped, decidedOn: d(10, 28)),
+          ],
+        ),
+      );
       expect(engine.status(DateTime(2026, 10, 30), 1000000).upcomingFixed, 65000);
     });
   });
 
   group('평소 패턴 P (3.7)', () {
     test('C12 특이 지출은 S에 포함, P에서 제외', () {
-      final engine = BudgetEngine(ledgerOf([
-        Txn(id: 1, amount: 200000, date: d(9, 20), isUnusual: true),
-        Txn(id: 2, amount: 10000, date: d(9, 20)),
-      ], items: const []));
+      final engine = BudgetEngine(
+        ledgerOf([
+          Txn(id: 1, amount: 200000, date: d(9, 20), isUnusual: true),
+          Txn(id: 2, amount: 10000, date: d(9, 20)),
+        ], items: const []),
+      );
       expect(engine.spent(ym(9)), 210000);
       expect(engine.varSpend(ym(9), 1, 30), 10000);
     });
 
     test('C13 정기 지출에 매칭된 거래와 할부 이월 회차는 P에서 제외', () {
-      final engine = BudgetEngine(ledgerOf([
-        Txn(id: 1, amount: 65000, date: d(9, 15), recurringItemId: 1),
-        Txn(id: 2, amount: 90000, date: d(8, 20), installmentMonths: 3),
-        Txn(id: 3, amount: 12000, date: d(9, 21)),
-      ], items: const []));
+      final engine = BudgetEngine(
+        ledgerOf([
+          Txn(id: 1, amount: 65000, date: d(9, 15), recurringItemId: 1),
+          Txn(id: 2, amount: 90000, date: d(8, 20), installmentMonths: 3),
+          Txn(id: 3, amount: 12000, date: d(9, 21)),
+        ], items: const []),
+      );
       expect(engine.spent(ym(9)), 65000 + 30000 + 12000);
       expect(engine.varSpend(ym(9), 1, 30), 12000);
     });
@@ -183,12 +198,18 @@ void main() {
     });
 
     test('P는 최근 3개월 같은 남은 기간의 중앙값, 짧은 달은 말일로 맞춤', () {
-      final engine = BudgetEngine(ledgerOf([
-        Txn(id: 1, amount: 100000, date: d(7, 31)),
-        Txn(id: 2, amount: 300000, date: d(8, 31)),
-        Txn(id: 3, amount: 200000, date: d(9, 30)), // 9월은 30일까지 → 30일부터 셈
-        Txn(id: 4, amount: 999999, date: d(9, 29)), // 남은 기간 밖
-      ], items: const [], firstRecordDate: d(5, 1)));
+      final engine = BudgetEngine(
+        ledgerOf(
+          [
+            Txn(id: 1, amount: 100000, date: d(7, 31)),
+            Txn(id: 2, amount: 300000, date: d(8, 31)),
+            Txn(id: 3, amount: 200000, date: d(9, 30)), // 9월은 30일까지 → 30일부터 셈
+            Txn(id: 4, amount: 999999, date: d(9, 29)), // 남은 기간 밖
+          ],
+          items: const [],
+          firstRecordDate: d(5, 1),
+        ),
+      );
       final p = engine.pattern(DateTime(2026, 10, 31));
       expect(p.source, PatternSource.history);
       expect(p.monthsUsed, 3);
@@ -196,7 +217,13 @@ void main() {
     });
 
     test('기록이 달 중간에 시작한 달은 P에서 뺀다', () {
-      final engine = BudgetEngine(ledgerOf([Txn(id: 1, amount: 50000, date: d(9, 20))], items: const [], firstRecordDate: d(9, 10)));
+      final engine = BudgetEngine(
+        ledgerOf(
+          [Txn(id: 1, amount: 50000, date: d(9, 20))],
+          items: const [],
+          firstRecordDate: d(9, 10),
+        ),
+      );
       expect(engine.pattern(DateTime(2026, 10, 13)).source, PatternSource.thisMonthPace);
     });
   });

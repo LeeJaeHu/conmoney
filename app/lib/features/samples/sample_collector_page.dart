@@ -68,9 +68,7 @@ class _SampleCollectorPageState extends State<SampleCollectorPage> with WidgetsB
     ]);
     await Clipboard.setData(ClipboardData(text: json));
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${_items.length}건을 복사했어요(카드번호·승인번호는 가림)')),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${_items.length}건을 복사했어요(카드번호·승인번호는 가림)')));
   }
 
   @override
@@ -99,19 +97,13 @@ class _SampleCollectorPageState extends State<SampleCollectorPage> with WidgetsB
                   leading: const Icon(Icons.notifications_off_outlined),
                   title: const Text('알림 접근 권한이 필요해요'),
                   subtitle: const Text('카드사 결제 알림만 저장하고, 다른 앱은 이름만 셉니다.'),
-                  trailing: FilledButton(
-                    onPressed: _channel.openPermissionSettings,
-                    child: const Text('허용하기'),
-                  ),
+                  trailing: FilledButton(onPressed: _channel.openPermissionSettings, child: const Text('허용하기')),
                 ),
               ),
             Text('받은 결제 알림 ${_items.length}건', style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             if (_items.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
-                child: Text('아직 없어요. 카드로 결제하면 여기에 쌓입니다.'),
-              ),
+              const Padding(padding: EdgeInsets.symmetric(vertical: 24), child: Text('아직 없어요. 카드로 결제하면 여기에 쌓입니다.')),
             for (final n in _items)
               Card(
                 child: ListTile(
@@ -123,16 +115,8 @@ class _SampleCollectorPageState extends State<SampleCollectorPage> with WidgetsB
             const SizedBox(height: 24),
             Text('알림을 보낸 앱 (본문 저장 안 함)', style: theme.textTheme.titleMedium),
             const SizedBox(height: 4),
-            Text(
-              '현대카드 앱의 패키지명을 여기서 찾아 SourceFilter에 넣으세요.',
-              style: theme.textTheme.bodySmall,
-            ),
-            for (final p in _packages)
-              ListTile(
-                dense: true,
-                title: Text(p.packageName),
-                trailing: Text('${p.count}회'),
-              ),
+            Text('현대카드 앱의 패키지명을 여기서 찾아 SourceFilter에 넣으세요.', style: theme.textTheme.bodySmall),
+            for (final p in _packages) ListTile(dense: true, title: Text(p.packageName), trailing: Text('${p.count}회')),
           ],
         ),
       ),

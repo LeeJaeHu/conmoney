@@ -34,12 +34,10 @@ class YearMonth implements Comparable<YearMonth> {
   bool contains(DateTime t) => t.year == year && t.month == month;
 
   @override
-  int compareTo(YearMonth other) =>
-      (year * 12 + month).compareTo(other.year * 12 + other.month);
+  int compareTo(YearMonth other) => (year * 12 + month).compareTo(other.year * 12 + other.month);
 
   @override
-  bool operator ==(Object other) =>
-      other is YearMonth && other.year == year && other.month == month;
+  bool operator ==(Object other) => other is YearMonth && other.year == year && other.month == month;
 
   @override
   int get hashCode => year * 12 + month;
@@ -113,6 +111,8 @@ class RecurringItem {
     required this.dueDay,
     this.isEstimate = false,
     this.active = true,
+    this.matchPattern = '',
+    this.amountTolerancePct = 30,
   });
 
   final int id;
@@ -121,6 +121,12 @@ class RecurringItem {
   final int dueDay;
   final bool isEstimate;
   final bool active;
+
+  /// 실제 결제의 가맹점(merchant_norm)에 이 문구가 들어 있으면 매칭 후보(Spec F5).
+  final String matchPattern;
+
+  /// 예정액 대비 허용 오차(%). null이면 금액을 보지 않는다(전기·가스처럼 금액이 크게 변하는 항목).
+  final int? amountTolerancePct;
 }
 
 enum RecurringMatchStatus { paid, skipped }
