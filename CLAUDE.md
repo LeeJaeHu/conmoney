@@ -13,7 +13,7 @@ docs/    PRD, Spec
 tools/   import_statements.py — 카드사 내역 파일 → CSV (PC에서 실행)
 data/    가져온 거래 CSV, 라벨 (git 제외)
 카드내역/ 카드사 원본 파일 (git 제외)
-app/     Flutter 앱 + android/ Kotlin 알림 리스너 (예정)
+app/     Flutter 앱 + android/ Kotlin 알림 리스너
 server/  Cloud Run(Python) LLM 중계 (예정)
 ```
 
@@ -37,4 +37,12 @@ server/  Cloud Run(Python) LLM 중계 (예정)
 ## 작업 방식
 - 계산 로직(BudgetEngine)은 Flutter 의존 없는 순수 Dart로 만들고 Spec 8장 테스트 ID(C1…, P1…)를 테스트 이름으로 쓴다
 - 낮에는 이 노트북, 저녁에는 집 노트북(Android Studio 있음)에서 작업 → 작업 끝에 push, 시작할 때 pull
-- Flutter 버전은 두 노트북에서 같게 맞춘다(앱 생성 후 버전을 여기에 기록)
+- Flutter 버전은 두 노트북에서 같게 맞춘다: **Flutter 3.47.7 (stable), Dart 3.13.5**. 이 노트북은 `C:lutter`에 설치(PATH 미등록이면 `C:lutterinlutter`로 실행)
+- 이 노트북에는 Android SDK가 없어 APK 빌드·폰 설치는 집 노트북에서 한다. `flutter test`는 양쪽 모두 가능
+
+## 진행 상황
+- [x] PRD·Spec, 카드 내역 가져오기(tools/), 실데이터 분석
+- [x] BudgetEngine(`app/lib/core/`) + 테스트 C1~C18 (`app/test/core/`)
+- [x] 알림 리스너 + 샘플 수집 화면 — **집 노트북에서 빌드·설치 후 알림 접근 허용 필요**
+- [ ] 현대카드 앱 패키지명 확인(샘플 수집 화면의 "알림을 보낸 앱" 목록) → `SourceFilter` 수정
+- [ ] DB(drift) + CSV 가져오기, 파서, 홈 화면 …(Spec 9장 순서)
