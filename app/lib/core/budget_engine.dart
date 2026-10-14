@@ -159,18 +159,48 @@ class BudgetEngine {
       for (final x in ledger.recurringMatches)
         if (x.month == m && (decidedBefore == null || dateOnly(x.decidedOn).isBefore(decidedBefore))) x.itemId,
     };
-    return ledger.recurringItems.where((i) => i.active && !handled.contains(i.id)).fold(0, (s, i) => s + i.amount);
+    var sum = 0;
+    for (final i in ledger.recurringItems) {
+      if (!i.active || handled.contains(i.id)) continue;
+      sum += i.isEnvelope ? envelopeRemaining(i, m, before: decidedBefore) : i.amount;
+    }
+    return sum;
   }
 
-  /// 오늘 정기 지출에 매칭된 거래의 예정액 합(이미 F로 빼 두었던 금액).
+  /// 월 예약형에 연결된 이번 달 실제 지출. [before]가 있으면 그 날 이전 결제만.
+  int envelopeUsed(RecurringItem item, YearMonth m, {DateTime? before}) {
+    var used = 0;
+    for (final t in ledger.txns) {
+      if (t.recurringItemId != item.id || !m.contains(t.date)) continue;
+      if (before != null && !dateOnly(t.date).isBefore(before)) continue;
+      used += contrib(t, m);
+    }
+    return used;
+  }
+
+  /// 월 예약형의 남은 예약분 = max(0, 예상액 − 이번 달 실제 지출).
+  int envelopeRemaining(RecurringItem item, YearMonth m, {DateTime? before}) {
+    final left = item.amount - envelopeUsed(item, m, before: before);
+    return left > 0 ? left : 0;
+  }
+
+  /// 오늘 결제 중 이미 F로 빼 두었던 금액. 이만큼은 "오늘 쓴 금액"에서 뺀다(이중 차감 방지, Spec 3.6).
+  /// 일반 정기 지출은 예정액 전체, 월 예약형은 오늘 0시 기준 남은 예약분 안에서 오늘 쓴 만큼.
   int _expectedMatchedToday(DateTime today) {
     final m = YearMonth.of(today);
     final byId = {for (final i in ledger.recurringItems) i.id: i};
     var sum = 0;
     for (final x in ledger.recurringMatches) {
       if (x.month == m && x.status == RecurringMatchStatus.paid && dateOnly(x.decidedOn) == today) {
-        sum += byId[x.itemId]?.amount ?? 0;
+        final item = byId[x.itemId];
+        if (item != null && !item.isEnvelope) sum += item.amount;
       }
+    }
+    for (final i in ledger.recurringItems) {
+      if (!i.active || !i.isEnvelope) continue;
+      final usedToday = envelopeUsed(i, m) - envelopeUsed(i, m, before: today);
+      final reservedAtMidnight = envelopeRemaining(i, m, before: today);
+      sum += usedToday < reservedAtMidnight ? usedToday : reservedAtMidnight;
     }
     return sum;
   }

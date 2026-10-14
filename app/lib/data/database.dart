@@ -79,6 +79,8 @@ class RecurringItems extends Table {
   IntColumn get cardId => integer().nullable()();
   TextColumn get matchPattern => text()();
   IntColumn get amountTolerancePct => integer().nullable().withDefault(const Constant(30))();
+  // 월 예약형(교통비 등). 스키마 v3
+  BoolColumn get isEnvelope => boolean().withDefault(const Constant(false))();
   BoolColumn get active => boolean().withDefault(const Constant(true))();
 }
 
@@ -182,7 +184,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'conmoney', native: const DriftNativeOptions(shareAcrossIsolates: true)));
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -197,6 +199,7 @@ class AppDatabase extends _$AppDatabase {
     },
     onUpgrade: (m, from, to) async {
       if (from < 2) await m.createTable(notificationLogs);
+      if (from < 3) await m.addColumn(recurringItems, recurringItems.isEnvelope);
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');

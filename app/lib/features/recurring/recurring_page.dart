@@ -10,10 +10,12 @@ import '../../ui/format.dart';
 
 final recurringRepositoryProvider = Provider((ref) => RecurringRepository(ref.watch(databaseProvider)));
 
-final _recurringProvider = FutureProvider<(List<RecurringView>, List<RecurringSuggestion>)>((ref) async {
+final _recurringProvider = FutureProvider<(List<RecurringView>, List<RecurringSuggestion>, List<EnvelopeSuggestion>)>((
+  ref,
+) async {
   final repo = ref.watch(recurringRepositoryProvider);
   final now = ref.watch(clockProvider)();
-  return (await repo.view(now), await repo.suggestions(now));
+  return (await repo.view(now), await repo.suggestions(now), await repo.envelopeSuggestions(now));
 });
 
 /// 정기 지출 화면(Spec F5): 등록된 항목의 이번 달 상태, 자동 탐지 제안, 직접 추가.
@@ -42,8 +44,9 @@ class RecurringPage extends ConsumerWidget {
                 name: input.name,
                 amount: input.amount,
                 dueDay: input.dueDay,
-                isEstimate: input.isEstimate,
+                isEstimate: input.isEstimate || input.isEnvelope,
                 matchPattern: input.matchPattern,
+                isEnvelope: input.isEnvelope,
               ),
             );
           }
@@ -55,7 +58,7 @@ class RecurringPage extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('불러오지 못했어요: $e')),
         data: (d) {
-          final (items, suggestions) = d;
+          final (items, suggestions, envelopes) = d;
           final theme = Theme.of(context);
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
@@ -69,7 +72,9 @@ class RecurringPage extends ConsumerWidget {
                   child: ListTile(
                     title: Text(v.item.name),
                     subtitle: Text(
-                      '매달 ${v.item.dueDay}일 · ${v.item.isEstimate ? '약 ' : ''}${won(v.item.amount, exact: true)}',
+                      v.item.isEnvelope
+                          ? '매달 약 ${won(v.item.amount, exact: true)} 예약 · "${v.item.matchPattern}" 결제가 들어오면 줄어요'
+                          : '매달 ${v.item.dueDay}일 · ${v.item.isEstimate ? '약 ' : ''}${won(v.item.amount, exact: true)}',
                     ),
                     trailing: _StateChip(view: v, onSkip: () => run(() => repo.skipMonth(v.item.id, now))),
                     onTap: () async {
@@ -87,7 +92,8 @@ class RecurringPage extends ConsumerWidget {
                               name: input.name,
                               amount: input.amount,
                               dueDay: input.dueDay,
-                              isEstimate: input.isEstimate,
+                              isEstimate: input.isEstimate || input.isEnvelope,
+                              isEnvelope: input.isEnvelope,
                               matchPattern: input.matchPattern.isEmpty ? input.name : input.matchPattern,
                             ),
                           ),
@@ -96,6 +102,27 @@ class RecurringPage extends ConsumerWidget {
                     },
                   ),
                 ),
+              for (final e in envelopes) ...[
+                const SizedBox(height: 24),
+                Text('매달 미리 떼어 둘까요?', style: theme.textTheme.titleMedium),
+                Card(
+                  child: ListTile(
+                    title: Text('${e.name} 약 ${won(e.amount, exact: true)}'),
+                    subtitle: Text(
+                      '타는 날 하루 ${won(e.perDay, exact: true)} × 이번 달 평일 ${e.weekdays}일. '
+                      '탈 때마다 알림이 없어도 예산에서 미리 빼 두고, 실제 결제가 들어오면 그만큼 줄어요.',
+                    ),
+                    isThreeLine: true,
+                    trailing: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        FilledButton.tonal(onPressed: () => run(() => repo.addEnvelope(e)), child: const Text('예약')),
+                        TextButton(onPressed: () => run(() => repo.dismiss(e.name)), child: const Text('아니요')),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
               if (suggestions.isNotEmpty) ...[
                 const SizedBox(height: 24),
                 Row(
@@ -156,6 +183,11 @@ class _StateChip extends StatelessWidget {
       ),
       MonthState.skipped => Text('이번 달 없음', style: theme.textTheme.bodySmall),
       MonthState.upcoming => Text('${view.due.month}/${view.due.day} 예정', style: theme.textTheme.bodySmall),
+      MonthState.envelope => Text(
+        '이번 달 ${won(view.envelopeUsed, exact: true)} 씀\n남은 예약 ${won(view.envelopeRemaining, exact: true)}',
+        textAlign: TextAlign.end,
+        style: theme.textTheme.bodySmall,
+      ),
       MonthState.overdue => TextButton(
         onPressed: onSkip,
         child: const Text('아직 결제 안 됨\n이번 달 없음', textAlign: TextAlign.center),
@@ -171,15 +203,24 @@ class _ItemInput {
     required this.dueDay,
     required this.isEstimate,
     required this.matchPattern,
+    this.isEnvelope = false,
   }) : delete = false;
 
-  const _ItemInput.delete() : name = '', amount = 0, dueDay = 1, isEstimate = false, matchPattern = '', delete = true;
+  const _ItemInput.delete()
+    : name = '',
+      amount = 0,
+      dueDay = 1,
+      isEstimate = false,
+      matchPattern = '',
+      isEnvelope = false,
+      delete = true;
 
   final String name;
   final int amount;
   final int dueDay;
   final bool isEstimate;
   final String matchPattern;
+  final bool isEnvelope;
   final bool delete;
 }
 
@@ -198,6 +239,7 @@ class _ItemDialogState extends State<_ItemDialog> {
   late final _day = TextEditingController(text: widget.initial?.dueDay.toString() ?? '');
   late final _pattern = TextEditingController(text: widget.initial?.matchPattern ?? '');
   late bool _estimate = widget.initial?.isEstimate ?? false;
+  late bool _envelope = widget.initial?.isEnvelope ?? false;
   String? _error;
 
   @override
@@ -210,7 +252,8 @@ class _ItemDialogState extends State<_ItemDialog> {
 
   void _submit() {
     final amount = int.tryParse(_amount.text);
-    final day = int.tryParse(_day.text);
+    // 월 예약형은 결제일이 없다
+    final day = _envelope ? 1 : int.tryParse(_day.text);
     if (_name.text.trim().isEmpty || amount == null || amount <= 0 || day == null || day < 1 || day > 31) {
       setState(() => _error = '이름, 금액, 결제일(1~31)을 확인해 주세요');
       return;
@@ -222,6 +265,7 @@ class _ItemDialogState extends State<_ItemDialog> {
         dueDay: day,
         isEstimate: _estimate,
         matchPattern: _pattern.text.trim(),
+        isEnvelope: _envelope,
       ),
     );
   }
@@ -245,18 +289,26 @@ class _ItemDialogState extends State<_ItemDialog> {
               inputFormatters: digits,
               decoration: const InputDecoration(labelText: '금액', suffixText: '원'),
             ),
-            TextField(
-              controller: _day,
-              keyboardType: TextInputType.number,
-              inputFormatters: digits,
-              decoration: const InputDecoration(labelText: '결제일', suffixText: '일'),
-            ),
             CheckboxListTile(
               contentPadding: EdgeInsets.zero,
-              value: _estimate,
-              onChanged: (v) => setState(() => _estimate = v ?? false),
-              title: const Text('금액이 달마다 달라요 (추정)'),
+              value: _envelope,
+              onChanged: (v) => setState(() => _envelope = v ?? false),
+              title: const Text('월 예약형 (교통비처럼 여러 번 나눠 나가요)'),
             ),
+            if (!_envelope)
+              TextField(
+                controller: _day,
+                keyboardType: TextInputType.number,
+                inputFormatters: digits,
+                decoration: const InputDecoration(labelText: '결제일', suffixText: '일'),
+              ),
+            if (!_envelope)
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                value: _estimate,
+                onChanged: (v) => setState(() => _estimate = v ?? false),
+                title: const Text('금액이 달마다 달라요 (추정)'),
+              ),
             TextField(
               controller: _pattern,
               decoration: const InputDecoration(labelText: '결제 내역의 가맹점 이름(일부)', helperText: '비우면 이름으로 찾아요'),

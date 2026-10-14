@@ -64,7 +64,7 @@ class AgentToolbox {
     final list = <Map<String, Object?>>[];
     for (var m = YearMonth.of(today); !m.firstDay.isAfter(end); m = m.plus(1)) {
       for (final i in engine.ledger.recurringItems) {
-        if (!i.active || handled.contains('${i.id}|$m')) continue;
+        if (!i.active || i.isEnvelope || handled.contains('${i.id}|$m')) continue;
         final due = m.dayClamped(i.dueDay);
         if (due.isBefore(today) || due.isAfter(end)) continue;
         list.add({
@@ -76,6 +76,13 @@ class AgentToolbox {
       }
     }
     list.sort((a, b) => (a['due_date'] as String).compareTo(b['due_date'] as String));
+    final month = YearMonth.of(today);
+    for (final i in engine.ledger.recurringItems) {
+      if (!i.active || !i.isEnvelope) continue;
+      final left = engine.envelopeRemaining(i, month);
+      if (left <= 0) continue;
+      list.add({'name': '${i.name}(이번 달 남은 예약분)', 'amount': left, 'amount_text': '약 ${won(left)}', 'due_date': null});
+    }
     return {'days': days, 'items': list, ..._money('total', list.fold(0, (s, e) => s + (e['amount'] as int)))};
   }
 

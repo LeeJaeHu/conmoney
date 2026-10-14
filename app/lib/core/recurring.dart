@@ -118,9 +118,12 @@ List<RecurringSuggestion> detectRecurring(
 
 /// 실제 결제가 이 정기 지출의 이번 달 결제인지(Spec F5 매칭 조건). 카드는 보지 않는다.
 bool matchesRecurring(RecurringItem item, SpendRecord r, {int dayWindow = 5}) {
-  if (!item.active || r.cancelled || r.amount <= 0) return false;
+  if (!item.active || r.cancelled) return false;
   final pattern = (item.matchPattern.isEmpty ? item.name : item.matchPattern).toLowerCase();
   if (!r.merchant.toLowerCase().contains(pattern)) return false;
+  // 월 예약형은 가맹점만 맞으면 금액·날짜와 상관없이 모두 연결(환불도 연결해 사용액에서 빠지게)
+  if (item.isEnvelope) return r.amount != 0;
+  if (r.amount <= 0) return false;
   final tol = item.amountTolerancePct;
   if (tol != null && (r.amount - item.amount).abs() * 100 > item.amount * tol) return false;
   final due = YearMonth.of(r.date).dayClamped(item.dueDay);
@@ -140,4 +143,35 @@ RecurringItem? bestMatch(List<RecurringItem> items, SpendRecord r, {Set<int> alr
     }
   }
   return best;
+}
+
+/// 월 예약형 예상액: 최근 [lookbackDays]일 중 결제가 있던 날의 하루 합계 중앙값 × 이번 달 평일 수.
+/// 1,000원 단위로 올린다. 결제한 날이 [minDays]일보다 적으면 null(예: 교통비 → 출근일 × 3,100원).
+({int amount, int perDay, int days})? estimateEnvelope(
+  List<SpendRecord> matching,
+  DateTime now, {
+  int lookbackDays = 30,
+  int minDays = 5,
+}) {
+  final today = dateOnly(now);
+  final from = today.subtract(Duration(days: lookbackDays));
+  final daily = <DateTime, int>{};
+  for (final r in matching) {
+    final day = dateOnly(r.date);
+    if (r.cancelled || day.isBefore(from) || day.isAfter(today)) continue;
+    daily[day] = (daily[day] ?? 0) + r.amount;
+  }
+  final totals = [
+    for (final v in daily.values)
+      if (v > 0) v,
+  ];
+  if (totals.length < minDays) return null;
+  final perDay = _median(totals);
+  final m = YearMonth.of(today);
+  final weekdays = [
+    for (var d = 1; d <= m.days; d++)
+      if (DateTime(m.year, m.month, d).weekday <= DateTime.friday) d,
+  ].length;
+  final amount = ((perDay * weekdays) + 999) ~/ 1000 * 1000;
+  return (amount: amount, perDay: perDay, days: weekdays);
 }

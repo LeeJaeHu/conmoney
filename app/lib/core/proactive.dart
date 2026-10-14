@@ -110,7 +110,7 @@ ProactiveAlert? evaluate({
   final threshold = bigFixedThreshold(budget);
   final soon = [
     for (final i in engine.ledger.recurringItems)
-      if (i.active && !handled.contains(i.id) && i.amount >= threshold)
+      if (i.active && !i.isEnvelope && !handled.contains(i.id) && i.amount >= threshold)
         (i, m.dayClamped(i.dueDay).difference(today).inDays),
   ].where((e) => e.$2 >= 0 && e.$2 <= 2).toList()..sort((a, b) => a.$2.compareTo(b.$2));
   if (soon.isNotEmpty) {

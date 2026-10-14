@@ -113,6 +113,7 @@ class RecurringItem {
     this.active = true,
     this.matchPattern = '',
     this.amountTolerancePct = 30,
+    this.isEnvelope = false,
   });
 
   final int id;
@@ -127,6 +128,10 @@ class RecurringItem {
 
   /// 예정액 대비 허용 오차(%). null이면 금액을 보지 않는다(전기·가스처럼 금액이 크게 변하는 항목).
   final int? amountTolerancePct;
+
+  /// 월 예약형(교통비처럼 한 달에 여러 번 나눠 나가는 지출, 10/14 결정).
+  /// 매달 [amount]를 미리 떼어 두고, 가맹점이 [matchPattern]에 맞는 결제가 들어올 때마다 그만큼 줄어든다.
+  final bool isEnvelope;
 }
 
 enum RecurringMatchStatus { paid, skipped }

@@ -142,4 +142,32 @@ void main() {
     expect(names.any((n) => n.startsWith('이마트24')), isFalse); // 2개월 추정형은 거름
     expect(s.firstWhere((x) => x.merchant == '한국전력 전기료').isEstimate, isTrue);
   }, skip: real.existsSync() ? false : 'data/transactions_v3.csv 없음');
+
+  group('월 예약형 예상액', () {
+    test('타는 날 하루 합계 중앙값 × 이번 달 평일 수, 1,000원 단위 올림', () {
+      final rides = [
+        for (final day in [1, 2, 5, 6, 7, 8, 12]) ...[
+          rec('후불교통 버스', 10, day, 1500),
+          rec('후불교통 지하철', 10, day, 50),
+          rec('후불교통 지하철', 10, day, 1550),
+        ],
+      ];
+      final e = estimateEnvelope(rides, DateTime(2026, 10, 13))!;
+      expect(e.perDay, 3100);
+      expect(e.days, 22); // 2026년 10월 평일
+      expect(e.amount, 69000); // 68,200 → 1,000원 단위 올림
+    });
+
+    test('탄 날이 5일보다 적으면 제안하지 않는다', () {
+      expect(estimateEnvelope([rec('후불교통 버스', 10, 1, 1500)], DateTime(2026, 10, 13)), isNull);
+    });
+
+    test('월 예약형 매칭은 가맹점만 본다(금액·날짜 무관, 0원 환승 제외)', () {
+      const transit = RecurringItem(id: 9, name: '교통', amount: 68000, dueDay: 1, isEnvelope: true, matchPattern: '후불');
+      expect(matchesRecurring(transit, rec('후불교통 지하철', 10, 20, 50)), isTrue);
+      expect(matchesRecurring(transit, rec('모바일후불티머니이용 0014건/월', 9, 11, 15350)), isTrue);
+      expect(matchesRecurring(transit, rec('후불교통 버스', 10, 20, 0)), isFalse);
+      expect(matchesRecurring(transit, rec('배달의민족', 10, 20, 15000)), isFalse);
+    });
+  });
 }

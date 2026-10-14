@@ -2337,6 +2337,17 @@ class $RecurringItemsTable extends RecurringItems with TableInfo<$RecurringItems
     requiredDuringInsert: false,
     defaultValue: const Constant(30),
   );
+  static const VerificationMeta _isEnvelopeMeta = const VerificationMeta('isEnvelope');
+  @override
+  late final GeneratedColumn<bool> isEnvelope = GeneratedColumn<bool>(
+    'is_envelope',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("is_envelope" IN (0, 1))'),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _activeMeta = const VerificationMeta('active');
   @override
   late final GeneratedColumn<bool> active = GeneratedColumn<bool>(
@@ -2358,6 +2369,7 @@ class $RecurringItemsTable extends RecurringItems with TableInfo<$RecurringItems
     cardId,
     matchPattern,
     amountTolerancePct,
+    isEnvelope,
     active,
   ];
   @override
@@ -2404,6 +2416,9 @@ class $RecurringItemsTable extends RecurringItems with TableInfo<$RecurringItems
         amountTolerancePct.isAcceptableOrUnknown(data['amount_tolerance_pct']!, _amountTolerancePctMeta),
       );
     }
+    if (data.containsKey('is_envelope')) {
+      context.handle(_isEnvelopeMeta, isEnvelope.isAcceptableOrUnknown(data['is_envelope']!, _isEnvelopeMeta));
+    }
     if (data.containsKey('active')) {
       context.handle(_activeMeta, active.isAcceptableOrUnknown(data['active']!, _activeMeta));
     }
@@ -2427,6 +2442,7 @@ class $RecurringItemsTable extends RecurringItems with TableInfo<$RecurringItems
         DriftSqlType.int,
         data['${effectivePrefix}amount_tolerance_pct'],
       ),
+      isEnvelope: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}is_envelope'])!,
       active: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}active'])!,
     );
   }
@@ -2446,6 +2462,7 @@ class RecurringItemRow extends DataClass implements Insertable<RecurringItemRow>
   final int? cardId;
   final String matchPattern;
   final int? amountTolerancePct;
+  final bool isEnvelope;
   final bool active;
   const RecurringItemRow({
     required this.id,
@@ -2456,6 +2473,7 @@ class RecurringItemRow extends DataClass implements Insertable<RecurringItemRow>
     this.cardId,
     required this.matchPattern,
     this.amountTolerancePct,
+    required this.isEnvelope,
     required this.active,
   });
   @override
@@ -2473,6 +2491,7 @@ class RecurringItemRow extends DataClass implements Insertable<RecurringItemRow>
     if (!nullToAbsent || amountTolerancePct != null) {
       map['amount_tolerance_pct'] = Variable<int>(amountTolerancePct);
     }
+    map['is_envelope'] = Variable<bool>(isEnvelope);
     map['active'] = Variable<bool>(active);
     return map;
   }
@@ -2487,6 +2506,7 @@ class RecurringItemRow extends DataClass implements Insertable<RecurringItemRow>
       cardId: cardId == null && nullToAbsent ? const Value.absent() : Value(cardId),
       matchPattern: Value(matchPattern),
       amountTolerancePct: amountTolerancePct == null && nullToAbsent ? const Value.absent() : Value(amountTolerancePct),
+      isEnvelope: Value(isEnvelope),
       active: Value(active),
     );
   }
@@ -2502,6 +2522,7 @@ class RecurringItemRow extends DataClass implements Insertable<RecurringItemRow>
       cardId: serializer.fromJson<int?>(json['cardId']),
       matchPattern: serializer.fromJson<String>(json['matchPattern']),
       amountTolerancePct: serializer.fromJson<int?>(json['amountTolerancePct']),
+      isEnvelope: serializer.fromJson<bool>(json['isEnvelope']),
       active: serializer.fromJson<bool>(json['active']),
     );
   }
@@ -2517,6 +2538,7 @@ class RecurringItemRow extends DataClass implements Insertable<RecurringItemRow>
       'cardId': serializer.toJson<int?>(cardId),
       'matchPattern': serializer.toJson<String>(matchPattern),
       'amountTolerancePct': serializer.toJson<int?>(amountTolerancePct),
+      'isEnvelope': serializer.toJson<bool>(isEnvelope),
       'active': serializer.toJson<bool>(active),
     };
   }
@@ -2530,6 +2552,7 @@ class RecurringItemRow extends DataClass implements Insertable<RecurringItemRow>
     Value<int?> cardId = const Value.absent(),
     String? matchPattern,
     Value<int?> amountTolerancePct = const Value.absent(),
+    bool? isEnvelope,
     bool? active,
   }) => RecurringItemRow(
     id: id ?? this.id,
@@ -2540,6 +2563,7 @@ class RecurringItemRow extends DataClass implements Insertable<RecurringItemRow>
     cardId: cardId.present ? cardId.value : this.cardId,
     matchPattern: matchPattern ?? this.matchPattern,
     amountTolerancePct: amountTolerancePct.present ? amountTolerancePct.value : this.amountTolerancePct,
+    isEnvelope: isEnvelope ?? this.isEnvelope,
     active: active ?? this.active,
   );
   RecurringItemRow copyWithCompanion(RecurringItemsCompanion data) {
@@ -2552,6 +2576,7 @@ class RecurringItemRow extends DataClass implements Insertable<RecurringItemRow>
       cardId: data.cardId.present ? data.cardId.value : this.cardId,
       matchPattern: data.matchPattern.present ? data.matchPattern.value : this.matchPattern,
       amountTolerancePct: data.amountTolerancePct.present ? data.amountTolerancePct.value : this.amountTolerancePct,
+      isEnvelope: data.isEnvelope.present ? data.isEnvelope.value : this.isEnvelope,
       active: data.active.present ? data.active.value : this.active,
     );
   }
@@ -2567,6 +2592,7 @@ class RecurringItemRow extends DataClass implements Insertable<RecurringItemRow>
           ..write('cardId: $cardId, ')
           ..write('matchPattern: $matchPattern, ')
           ..write('amountTolerancePct: $amountTolerancePct, ')
+          ..write('isEnvelope: $isEnvelope, ')
           ..write('active: $active')
           ..write(')'))
         .toString();
@@ -2574,7 +2600,7 @@ class RecurringItemRow extends DataClass implements Insertable<RecurringItemRow>
 
   @override
   int get hashCode =>
-      Object.hash(id, name, amount, isEstimate, dueDay, cardId, matchPattern, amountTolerancePct, active);
+      Object.hash(id, name, amount, isEstimate, dueDay, cardId, matchPattern, amountTolerancePct, isEnvelope, active);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2587,6 +2613,7 @@ class RecurringItemRow extends DataClass implements Insertable<RecurringItemRow>
           other.cardId == this.cardId &&
           other.matchPattern == this.matchPattern &&
           other.amountTolerancePct == this.amountTolerancePct &&
+          other.isEnvelope == this.isEnvelope &&
           other.active == this.active);
 }
 
@@ -2599,6 +2626,7 @@ class RecurringItemsCompanion extends UpdateCompanion<RecurringItemRow> {
   final Value<int?> cardId;
   final Value<String> matchPattern;
   final Value<int?> amountTolerancePct;
+  final Value<bool> isEnvelope;
   final Value<bool> active;
   const RecurringItemsCompanion({
     this.id = const Value.absent(),
@@ -2609,6 +2637,7 @@ class RecurringItemsCompanion extends UpdateCompanion<RecurringItemRow> {
     this.cardId = const Value.absent(),
     this.matchPattern = const Value.absent(),
     this.amountTolerancePct = const Value.absent(),
+    this.isEnvelope = const Value.absent(),
     this.active = const Value.absent(),
   });
   RecurringItemsCompanion.insert({
@@ -2620,6 +2649,7 @@ class RecurringItemsCompanion extends UpdateCompanion<RecurringItemRow> {
     this.cardId = const Value.absent(),
     required String matchPattern,
     this.amountTolerancePct = const Value.absent(),
+    this.isEnvelope = const Value.absent(),
     this.active = const Value.absent(),
   }) : name = Value(name),
        amount = Value(amount),
@@ -2634,6 +2664,7 @@ class RecurringItemsCompanion extends UpdateCompanion<RecurringItemRow> {
     Expression<int>? cardId,
     Expression<String>? matchPattern,
     Expression<int>? amountTolerancePct,
+    Expression<bool>? isEnvelope,
     Expression<bool>? active,
   }) {
     return RawValuesInsertable({
@@ -2645,6 +2676,7 @@ class RecurringItemsCompanion extends UpdateCompanion<RecurringItemRow> {
       if (cardId != null) 'card_id': cardId,
       if (matchPattern != null) 'match_pattern': matchPattern,
       if (amountTolerancePct != null) 'amount_tolerance_pct': amountTolerancePct,
+      if (isEnvelope != null) 'is_envelope': isEnvelope,
       if (active != null) 'active': active,
     });
   }
@@ -2658,6 +2690,7 @@ class RecurringItemsCompanion extends UpdateCompanion<RecurringItemRow> {
     Value<int?>? cardId,
     Value<String>? matchPattern,
     Value<int?>? amountTolerancePct,
+    Value<bool>? isEnvelope,
     Value<bool>? active,
   }) {
     return RecurringItemsCompanion(
@@ -2669,6 +2702,7 @@ class RecurringItemsCompanion extends UpdateCompanion<RecurringItemRow> {
       cardId: cardId ?? this.cardId,
       matchPattern: matchPattern ?? this.matchPattern,
       amountTolerancePct: amountTolerancePct ?? this.amountTolerancePct,
+      isEnvelope: isEnvelope ?? this.isEnvelope,
       active: active ?? this.active,
     );
   }
@@ -2700,6 +2734,9 @@ class RecurringItemsCompanion extends UpdateCompanion<RecurringItemRow> {
     if (amountTolerancePct.present) {
       map['amount_tolerance_pct'] = Variable<int>(amountTolerancePct.value);
     }
+    if (isEnvelope.present) {
+      map['is_envelope'] = Variable<bool>(isEnvelope.value);
+    }
     if (active.present) {
       map['active'] = Variable<bool>(active.value);
     }
@@ -2717,6 +2754,7 @@ class RecurringItemsCompanion extends UpdateCompanion<RecurringItemRow> {
           ..write('cardId: $cardId, ')
           ..write('matchPattern: $matchPattern, ')
           ..write('amountTolerancePct: $amountTolerancePct, ')
+          ..write('isEnvelope: $isEnvelope, ')
           ..write('active: $active')
           ..write(')'))
         .toString();
@@ -6055,6 +6093,7 @@ typedef $$RecurringItemsTableCreateCompanionBuilder = RecurringItemsCompanion Fu
   Value<int?> cardId,
   required String matchPattern,
   Value<int?> amountTolerancePct,
+  Value<bool> isEnvelope,
   Value<bool> active,
 });
 typedef $$RecurringItemsTableUpdateCompanionBuilder = RecurringItemsCompanion Function({
@@ -6066,6 +6105,7 @@ typedef $$RecurringItemsTableUpdateCompanionBuilder = RecurringItemsCompanion Fu
   Value<int?> cardId,
   Value<String> matchPattern,
   Value<int?> amountTolerancePct,
+  Value<bool> isEnvelope,
   Value<bool> active,
 });
 
@@ -6121,6 +6161,9 @@ class $$RecurringItemsTableFilterComposer extends Composer<_$AppDatabase, $Recur
   ColumnFilters<int> get amountTolerancePct =>
       $composableBuilder(column: $table.amountTolerancePct, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<bool> get isEnvelope =>
+      $composableBuilder(column: $table.isEnvelope, builder: (column) => ColumnFilters(column));
+
   ColumnFilters<bool> get active =>
       $composableBuilder(column: $table.active, builder: (column) => ColumnFilters(column));
 
@@ -6174,6 +6217,9 @@ class $$RecurringItemsTableOrderingComposer extends Composer<_$AppDatabase, $Rec
   ColumnOrderings<int> get amountTolerancePct =>
       $composableBuilder(column: $table.amountTolerancePct, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<bool> get isEnvelope =>
+      $composableBuilder(column: $table.isEnvelope, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<bool> get active =>
       $composableBuilder(column: $table.active, builder: (column) => ColumnOrderings(column));
 }
@@ -6203,6 +6249,8 @@ class $$RecurringItemsTableAnnotationComposer extends Composer<_$AppDatabase, $R
 
   GeneratedColumn<int> get amountTolerancePct =>
       $composableBuilder(column: $table.amountTolerancePct, builder: (column) => column);
+
+  GeneratedColumn<bool> get isEnvelope => $composableBuilder(column: $table.isEnvelope, builder: (column) => column);
 
   GeneratedColumn<bool> get active => $composableBuilder(column: $table.active, builder: (column) => column);
 
@@ -6260,6 +6308,7 @@ class $$RecurringItemsTableTableManager
                 Value<int?> cardId = const Value.absent(),
                 Value<String> matchPattern = const Value.absent(),
                 Value<int?> amountTolerancePct = const Value.absent(),
+                Value<bool> isEnvelope = const Value.absent(),
                 Value<bool> active = const Value.absent(),
               }) => RecurringItemsCompanion(
                 id: id,
@@ -6270,6 +6319,7 @@ class $$RecurringItemsTableTableManager
                 cardId: cardId,
                 matchPattern: matchPattern,
                 amountTolerancePct: amountTolerancePct,
+                isEnvelope: isEnvelope,
                 active: active,
               ),
           createCompanionCallback:
@@ -6282,6 +6332,7 @@ class $$RecurringItemsTableTableManager
                 Value<int?> cardId = const Value.absent(),
                 required String matchPattern,
                 Value<int?> amountTolerancePct = const Value.absent(),
+                Value<bool> isEnvelope = const Value.absent(),
                 Value<bool> active = const Value.absent(),
               }) => RecurringItemsCompanion.insert(
                 id: id,
@@ -6292,6 +6343,7 @@ class $$RecurringItemsTableTableManager
                 cardId: cardId,
                 matchPattern: matchPattern,
                 amountTolerancePct: amountTolerancePct,
+                isEnvelope: isEnvelope,
                 active: active,
               ),
           withReferenceMapper: (p0) => p0

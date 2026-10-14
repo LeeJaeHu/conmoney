@@ -42,7 +42,7 @@ class HomeData {
 
   /// 이번 달 예산이 없으면 null.
   final BudgetStatus? status;
-  final List<(RecurringItem, DateTime)> upcoming;
+  final List<(RecurringItem, DateTime, int)> upcoming;
   final int unconfirmed;
   final PlanStep? planStep;
 

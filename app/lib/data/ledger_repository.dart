@@ -56,6 +56,9 @@ class LedgerRepository {
             dueDay: i.dueDay,
             isEstimate: i.isEstimate,
             active: i.active,
+            matchPattern: i.matchPattern,
+            amountTolerancePct: i.amountTolerancePct,
+            isEnvelope: i.isEnvelope,
           ),
       ],
       recurringMatches: [
@@ -131,17 +134,20 @@ class LedgerRepository {
   }
 
   /// 이번 달 아직 처리되지 않은 정기 지출(홈 "다가오는 정기 지출").
-  Future<List<(RecurringItem, DateTime)>> upcomingRecurring(DateTime now) async {
+  /// (항목, 예정일, 이번 달 남은 금액). 월 예약형은 남은 예약분이 있을 때만, 맨 위에.
+  Future<List<(RecurringItem, DateTime, int)>> upcomingRecurring(DateTime now) async {
     final ledger = await loadLedger();
+    final engine = BudgetEngine(ledger);
     final m = YearMonth.of(now);
     final handled = {
       for (final x in ledger.recurringMatches)
         if (x.month == m) x.itemId,
     };
-    final list = [
+    final list = <(RecurringItem, DateTime, int)>[
       for (final i in ledger.recurringItems)
-        if (i.active && !handled.contains(i.id)) (i, m.dayClamped(i.dueDay)),
-    ]..sort((a, b) => a.$2.compareTo(b.$2));
+        if (i.active && !handled.contains(i.id))
+          (i, m.dayClamped(i.dueDay), i.isEnvelope ? engine.envelopeRemaining(i, m) : i.amount),
+    ].where((e) => e.$3 > 0).toList()..sort((a, b) => a.$2.compareTo(b.$2));
     return list;
   }
 }

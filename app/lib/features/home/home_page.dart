@@ -222,12 +222,12 @@ class _UpcomingCard extends StatelessWidget {
                         : '정기 지출을 등록하면 예산에서 미리 빼 드려요',
                   ),
                 ),
-              for (final (item, due) in data.upcoming)
+              for (final (item, due, amount) in data.upcoming)
                 ListTile(
                   dense: true,
-                  leading: Text('${due.month}/${due.day}'),
-                  title: Text(item.name),
-                  trailing: Text('${item.isEstimate ? '약 ' : ''}${won(item.amount)}'),
+                  leading: Text(item.isEnvelope ? '이번 달' : '${due.month}/${due.day}'),
+                  title: Text(item.isEnvelope ? '${item.name} 남은 예약' : item.name),
+                  trailing: Text('${item.isEstimate ? '약 ' : ''}${won(amount)}'),
                 ),
             ],
           ),

@@ -287,4 +287,50 @@ void main() {
       expect(st.overOnlyAfterFixed, isTrue);
     });
   });
+
+  group('월 예약형 (교통비, 10/14)', () {
+    const transit = RecurringItem(
+      id: 9,
+      name: '교통(후불)',
+      amount: 68200,
+      dueDay: 1,
+      isEnvelope: true,
+      matchPattern: '후불',
+    );
+    Txn ride(int id, int day, [int amount = 3100]) => Txn(id: id, amount: amount, date: d(10, day), recurringItemId: 9);
+
+    test('E1 남은 예약분 = 예상액 − 이번 달 실제 교통비(0 아래로 안 내려감)', () {
+      final engine = BudgetEngine(ledgerOf([ride(1, 1), ride(2, 2), ride(3, 6)], items: const [transit]));
+      expect(engine.envelopeRemaining(transit, ym(10)), 68200 - 9300);
+      expect(engine.status(DateTime(2026, 10, 13), 1000000).upcomingFixed, 68200 - 9300);
+      final over = BudgetEngine(ledgerOf([for (var i = 1; i <= 25; i++) ride(i, 1)], items: const [transit]));
+      expect(over.envelopeRemaining(transit, ym(10)), 0);
+    });
+
+    test('E2 오늘 탄 교통비는 예약분 안이면 오늘 쓸 수 있는 금액을 줄이지 않는다', () {
+      final before = BudgetEngine(ledgerOf([ride(1, 12)], items: const [transit]))
+          .status(DateTime(2026, 10, 13, 8), 1000000);
+      final after = BudgetEngine(ledgerOf([ride(1, 12), ride(2, 13)], items: const [transit]))
+          .status(DateTime(2026, 10, 13, 9), 1000000);
+      expect(after.dailyBase, before.dailyBase);
+      expect(after.spentToday, 0);
+      expect(after.available, before.available);
+      expect(after.remaining, before.remaining); // S가 늘고 F가 같은 만큼 줄어 R은 그대로
+    });
+
+    test('E3 예약분을 넘은 만큼만 오늘 지출로 친다', () {
+      const small = RecurringItem(id: 9, name: '교통', amount: 5000, dueDay: 1, isEnvelope: true, matchPattern: '후불');
+      final st = BudgetEngine(ledgerOf([ride(1, 12), ride(2, 13)], items: const [small]))
+          .status(DateTime(2026, 10, 13, 9), 1000000);
+      // 0시 기준 남은 예약 1,900원, 오늘 3,100원 → 1,200원만 오늘 지출
+      expect(st.spentToday, 1200);
+    });
+
+    test('E4 교통비(예약형에 연결된 결제)는 평소 패턴 P에서 빠진다', () {
+      final engine = BudgetEngine(
+        ledgerOf([ride(1, 2), Txn(id: 2, amount: 10000, date: d(10, 2))], items: const [transit]),
+      );
+      expect(engine.varSpend(ym(10), 1, 31), 10000);
+    });
+  });
 }

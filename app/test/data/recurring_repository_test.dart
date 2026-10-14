@@ -89,12 +89,44 @@ void main() {
     expect(st.upcomingFixed, 0);
   });
 
+  test('E5 교통비 예약 제안 → 예약하면 승차 결제가 모두 연결되고 남은 예약분이 F에 들어간다', () async {
+    final rides = [
+      for (final day in [1, 2, 5, 6, 7, 8, 12, 13]) ...[
+        row('후불교통 버스', DateTime(2026, 10, day), 1500),
+        row('후불교통 지하철', DateTime(2026, 10, day), 1600),
+      ],
+    ];
+    await importTransactions(db, rides);
+    final e = (await recurring.envelopeSuggestions(now)).single;
+    expect(e.name, '교통(후불)');
+    expect(e.amount, 69000);
+
+    await recurring.addEnvelope(e);
+    expect(await recurring.envelopeSuggestions(now), isEmpty);
+    final linked = (await db.select(db.transactions).get()).where((t) => t.merchantNorm.startsWith('후불'));
+    expect(linked.every((t) => t.recurringItemId != null), isTrue);
+
+    final view = (await recurring.view(now)).firstWhere((v) => v.item.isEnvelope);
+    expect(view.state, MonthState.envelope);
+    expect(view.envelopeUsed, 8 * 3100);
+    expect(view.envelopeRemaining, 69000 - 8 * 3100);
+
+    final st = BudgetEngine(await ledger.loadLedger()).status(now, 500000);
+    expect(st.spentToday, 0); // 오늘(10/13) 탄 3,100원은 예약분 안
+    expect(st.upcomingFixed, 69000 - 8 * 3100);
+    await recurring.relink(reset: true);
+    expect(BudgetEngine(await ledger.loadLedger()).status(now, 500000).upcomingFixed, 69000 - 8 * 3100);
+  });
+
   final real = File('../data/transactions_v3.csv');
   test('실데이터: 제안을 모두 등록하면 10/13 기준 F와 하루 금액', () async {
     await db.delete(db.transactions).go();
     await importTransactions(db, parseTransactionsCsv(real.readAsStringSync()));
     for (final x in await recurring.suggestions(now)) {
       await recurring.addSuggestion(x);
+    }
+    for (final e in await recurring.envelopeSuggestions(now)) {
+      await recurring.addEnvelope(e);
     }
     final engine = BudgetEngine(await ledger.loadLedger());
     final st = engine.status(now, 540000);
