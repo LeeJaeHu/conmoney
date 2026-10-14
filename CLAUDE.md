@@ -14,7 +14,7 @@ tools/   import_statements.py — 카드사 내역 파일 → CSV (PC에서 실�
 data/    가져온 거래 CSV, 라벨 (git 제외)
 카드내역/ 카드사 원본 파일 (git 제외)
 app/     Flutter 앱 + android/ Kotlin 알림 리스너
-server/  Cloud Run(Python) LLM 중계 (예정)
+server/  Cloud Run(Python) LLM 중계 (예정). 비밀값은 server/.env(git 제외), 형식은 server/.env.example
 ```
 
 ## 데이터 (git에 없음 — 노트북 사이 직접 복사)
@@ -32,13 +32,13 @@ server/  Cloud Run(Python) LLM 중계 (예정)
 - 특이 지출은 예산에 포함, 평소 패턴 통계에서 제외(닌텐도 결제는 특이 지출)
 - 신한카드는 알림 대상에서 제외, 과거 기록은 교통비로 포함
 - 카테고리: 식비/카페·간식/교통/게임/쇼핑/구독/API/통신/공과금/의료/교육/영화/경조사·선물/연회비/기타
-- AI: 0단계 코드 → 1단계 jev(분류, 확신도) → 2단계 상위 LLM(상담, 평가로 선택). 모든 금액 계산은 코드가 하고 LLM은 툴 결과 숫자만 인용
+- AI: 0단계 코드 → 1단계 jev(분류, 확신도) → 2단계 OpenAI(상담 gpt-6.1-sol, 가벼운 작업 gpt-6-luna). 모든 금액 계산은 코드가 하고 LLM은 툴 결과 숫자만 인용
 - 돈 상담·상담 기록(F11)은 P1
 
 ## 작업 방식
 - 계산 로직(BudgetEngine)은 Flutter 의존 없는 순수 Dart로 만들고 Spec 8장 테스트 ID(C1…, P1…)를 테스트 이름으로 쓴다
 - 낮에는 이 노트북, 저녁에는 집 노트북(Android Studio 있음)에서 작업 → 작업 끝에 push, 시작할 때 pull
-- Flutter 버전은 두 노트북에서 같게 맞춘다: **Flutter 3.47.7 (stable), Dart 3.13.5**. 이 노트북은 `C:lutter`에 설치(PATH 미등록이면 `C:lutterinlutter`로 실행)
+- Flutter 버전은 두 노트북에서 같게 맞춘다: **Flutter 3.47.7 (stable), Dart 3.13.5**. 이 노트북은 `C:/flutter`에 설치(PATH 등록됨. Claude Code의 bash에서는 `export PATH="/c/flutter/bin:$PATH"`가 필요할 수 있음)
 - 이 노트북에는 Android SDK가 없어 APK 빌드·폰 설치는 집 노트북에서 한다. `flutter test`는 양쪽 모두 가능
 
 ## 진행 상황
@@ -49,4 +49,6 @@ server/  Cloud Run(Python) LLM 중계 (예정)
 - [x] DB(drift, `app/lib/data/`) + CSV 가져오기(설정 메뉴 > 과거 기록 가져오기). 실데이터 월 합계가 부록 A와 일치(테스트)
 - [x] 홈 화면(오늘 금액 + 남은 예산 + 초과액 + 단계 표시), 예산 설정(고정/단계적, 만 원 단위 입력)
 - [x] 정기 지출(F5): 자동 탐지(실데이터 13개), 등록 시 지난 결제까지 연결, [아니요]·[이번 달 없음], 직접 추가·수정. 홈 메뉴 > 정기 지출
-- [ ] 알림 파서(F2), 확인 알림·확인 시트(F3), 서버·구매 상담(F6), 먼저 알림(F7), 카테고리 보기(F8)
+- [x] 카테고리 보기(F8): 기간 선택, 특이 지출 토글, 카테고리 막대, 6개월 추이, 거래 수정 시트(F3 시트 재사용). 거래 직접 추가는 미구현
+- [x] `server/.env.example`(모델: 상담 gpt-6.1-sol, 가벼운 작업 gpt-6-luna, 분류 jev). `server/.env`에 키를 채워야 함
+- [ ] 알림 파서(F2), 확인 알림(F3), 서버·구매 상담(F6), 먼저 알림(F7)

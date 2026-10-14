@@ -8,6 +8,8 @@ import '../budget/budget_settings_page.dart';
 import '../dev/import_page.dart';
 import '../recurring/recurring_page.dart';
 import '../samples/sample_collector_page.dart';
+import '../spending/category_page.dart';
+import '../spending/spending_providers.dart';
 
 /// 홈 화면(Spec F4): 오늘 쓸 수 있는 금액(크게) + 이번 달 남은 예산(작게). 총 사용액은 보여주지 않는다.
 class HomePage extends ConsumerWidget {
@@ -20,6 +22,7 @@ class HomePage extends ConsumerWidget {
     Future<void> open(Widget page) async {
       await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
       ref.invalidate(homeProvider);
+      ref.invalidate(spendItemsProvider);
     }
 
     return Scaffold(
@@ -31,11 +34,13 @@ class HomePage extends ConsumerWidget {
               'budget' => open(const BudgetSettingsPage()),
               'import' => open(const ImportPage()),
               'recurring' => open(const RecurringPage()),
+              'category' => open(const CategoryPage()),
               _ => open(const SampleCollectorPage()),
             },
             itemBuilder: (_) => const [
               PopupMenuItem(value: 'budget', child: Text('예산 설정')),
               PopupMenuItem(value: 'recurring', child: Text('정기 지출')),
+              PopupMenuItem(value: 'category', child: Text('카테고리별 지출')),
               PopupMenuItem(value: 'import', child: Text('과거 기록 가져오기')),
               PopupMenuItem(value: 'samples', child: Text('결제 알림 샘플')),
             ],
@@ -67,6 +72,12 @@ class HomePage extends ConsumerWidget {
                 ),
               _UpcomingCard(data: data, onOpen: () => open(const RecurringPage())),
               const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () => open(const CategoryPage()),
+                icon: const Icon(Icons.pie_chart_outline),
+                label: const Text('카테고리별 지출 보기'),
+              ),
+              const SizedBox(height: 8),
               OutlinedButton.icon(
                 onPressed: null,
                 icon: const Icon(Icons.chat_bubble_outline),
