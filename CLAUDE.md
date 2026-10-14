@@ -53,5 +53,5 @@ server/  Cloud Run(Python, FastAPI) LLM 중계. 비밀값은 server/.env(git 제
 - [x] `server/.env.example`(모델: 상담 gpt-6.1-sol, 가벼운 작업 gpt-6-luna, 분류 jev). `server/.env`에 키를 채워야 함
 - [x] 서버(`server/`): /v1/categorize(jev → gpt-6-luna), /v1/agent(gpt-6.1-sol, 숫자·판단 검증, 범위 밖 거절). 로컬에서 앱 코드↔서버↔OpenAI 전체 흐름 확인
 - [x] 구매 상담 화면(F6): 홈 > 살까 말까 물어보기. 서버 주소·토큰은 `app/config/dev.json`(git 제외) → `flutter run --dart-define-from-file=config/dev.json`
-- [ ] Cloud Run 배포(배포 전 사용자 확인), 폰에서 서버 주소 연결
+- [x] Cloud Run 배포: 프로젝트 `comoney`, 서울, https://conmoney-812487409574.asia-northeast3.run.app, 키는 Secret Manager(자세한 건 server/README.md). gcloud 계정은 morugureum@gmail.com(기본 프로젝트는 그대로 두고 `--project comoney`로 실행). `app/config/dev.json`에 이 주소가 들어 있음
 - [ ] 알림 파서(F2), 확인 알림(F3), 먼저 알림(F7), 상담 평가셋 50개

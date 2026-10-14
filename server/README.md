@@ -23,3 +23,17 @@ python -m venv .venv
 ## 앱 연결
 `app/config/dev.json`(git 제외)에 `CONMONEY_SERVER`, `CONMONEY_TOKEN`을 넣고
 `flutter run --dart-define-from-file=config/dev.json`. 에뮬레이터에서 PC의 로컬 서버는 `http://10.0.2.2:8080`.
+
+## 배포 (Cloud Run, 10/14)
+- 프로젝트 `comoney`, 리전 `asia-northeast3`(서울), 서비스 `conmoney`
+- 주소: https://conmoney-812487409574.asia-northeast3.run.app (`GET /health`로 확인)
+- 실행 계정: `conmoney-run@comoney.iam.gserviceaccount.com` — 아래 비밀값 3개만 읽을 수 있음
+- 비밀값(Secret Manager, 서울에만 저장): `conmoney-openai-api-key`, `conmoney-jev-api-key`, `conmoney-app-token`
+- 최소 인스턴스 0(안 쓸 때 비용 거의 없음), 최대 2
+- 공개 주소지만 `x-app-token` 없으면 401
+
+코드만 바뀌었을 때 다시 배포(환경 변수·비밀값 연결은 유지됨):
+```bash
+gcloud run deploy conmoney --source . --project comoney --region asia-northeast3 --quiet
+```
+키를 바꿀 때는 새 버전을 추가하고(`gcloud secrets versions add <이름> --data-file=-`) 다시 배포한다.

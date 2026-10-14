@@ -60,8 +60,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(401, "unauthorized")
         meter.hit()
 
-    @app.get("/healthz")
-    def healthz() -> dict:
+    @app.get("/health")  # Cloud Run은 /healthz 같은 z로 끝나는 경로를 예약해 둠
+    def health() -> dict:
         return {"ok": True}
 
     # ---------------------------------------------------------------- 분류
