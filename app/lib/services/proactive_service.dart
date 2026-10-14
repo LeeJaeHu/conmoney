@@ -6,6 +6,7 @@ import '../core/models.dart';
 import '../core/proactive.dart';
 import '../data/database.dart';
 import '../data/ledger_repository.dart';
+import '../data/metrics_repository.dart';
 
 /// 알림을 실제로 띄우는 쪽. 테스트에서는 가짜로 바꾼다.
 abstract interface class AlertNotifier {
@@ -67,6 +68,7 @@ class ProactiveService {
     if (alert == null) return null;
     await notifier.show(alert);
     await _log(alert.logType, now, alert.title);
+    await MetricsRepository(db, clock).alert(alert.logType);
     return alert;
   }
 }

@@ -83,3 +83,22 @@ def test_두_번_실패하면_숫자_없는_대체_문구(client, monkeypatch):
 
 def test_라운드_초과(client):
     assert client.post("/v1/agent", json={"items": ITEMS, "round": 6}, headers=H).status_code == 400
+
+
+def test_운영_로그는_수치만_남기고_본문은_남기지_않는다(client, monkeypatch, capsys):
+    call = {"type": "function_call", "call_id": "c1", "name": "simulate_purchase", "arguments": '{"amount":150000}'}
+    monkeypatch.setattr(llm, "openai_agent", lambda *a: llm.AgentTurn([call], "", U))
+    client.post("/v1/agent", json={"items": [{"role": "user", "content": "키보드 15만 원 살까?"}], "session": "s1"}, headers=H)
+    lines = [json.loads(line) for line in capsys.readouterr().out.splitlines() if line.startswith("{")]
+    ev = [x for x in lines if x.get("event") == "agent"][-1]
+    assert ev["session"] == "s1" and ev["status"] == "tool_calls" and ev["tool_calls"] == ["simulate_purchase"]
+    assert ev["input_tokens"] == 1000 and ev["latency_ms"] >= 0 and ev["retried"] is False
+    assert "키보드" not in json.dumps(lines, ensure_ascii=False)
+
+
+def test_재생성_여부와_원인이_로그에_남는다(client, monkeypatch, capsys):
+    texts = iter(["[판단] 미루는 걸 추천\n남은 예산 70,000원", "[판단] 미루는 걸 추천\n남은 예산 66,000원"])
+    monkeypatch.setattr(llm, "openai_agent", lambda *a: (t := next(texts), llm.AgentTurn([_msg(t)], t, U))[1])
+    client.post("/v1/agent", json={"items": ITEMS, "round": 2}, headers=H)
+    ev = [json.loads(x) for x in capsys.readouterr().out.splitlines() if '"event": "agent"' in x][-1]
+    assert ev["retried"] is True and ev["problem"] == "amount" and ev["verified"] is True

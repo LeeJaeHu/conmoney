@@ -144,6 +144,15 @@ class NotificationLogs extends Table {
   TextColumn get summary => text().nullable()();
 }
 
+/// 실사용 지표(PRD 8장 실사용 평가). 수치·선택만 남기고 대화 본문은 남기지 않는다. 스키마 v4
+@DataClassName('MetricEventRow')
+class MetricEvents extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get type => text()(); // CONSULT / CATEGORY_REVIEW / ALERT
+  DateTimeColumn get at => dateTime()();
+  TextColumn get data => text()(); // JSON
+}
+
 /// 기본 카테고리(PRD F3, 10/13 검수 반영).
 const defaultCategories = [
   '식비',
@@ -176,6 +185,7 @@ const defaultCategories = [
     MerchantRules,
     Settings,
     NotificationLogs,
+    MetricEvents,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -184,7 +194,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'conmoney', native: const DriftNativeOptions(shareAcrossIsolates: true)));
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -200,6 +210,7 @@ class AppDatabase extends _$AppDatabase {
     onUpgrade: (m, from, to) async {
       if (from < 2) await m.createTable(notificationLogs);
       if (from < 3) await m.addColumn(recurringItems, recurringItems.isEnvelope);
+      if (from < 4) await m.createTable(metricEvents);
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');

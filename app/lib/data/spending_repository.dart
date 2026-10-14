@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../core/category_summary.dart';
 import '../core/models.dart';
 import 'database.dart';
+import 'metrics_repository.dart';
 
 /// 가맹점 이름만으로 카테고리를 알 수 없는 결제대행형 가맹점(Spec F3).
 /// 사용자가 카테고리를 바꿔도 MerchantRule로 학습하지 않는다.
@@ -72,6 +73,11 @@ class SpendingRepository {
           memo: Value(memo == null || memo.trim().isEmpty ? null : memo.trim()),
           confirmed: const Value(true),
         ),
+      );
+      await MetricsRepository(db).categoryReview(
+        suggestSource: t.suggestSource,
+        accepted: categoryId != null && categoryId == t.suggestedCategoryId,
+        hadSuggestion: t.suggestedCategoryId != null,
       );
       if (categoryId != null && categoryId != t.suggestedCategoryId && !ambiguousMerchants.contains(t.merchantNorm)) {
         await db

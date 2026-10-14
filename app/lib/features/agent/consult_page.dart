@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +10,7 @@ import '../../core/budget_engine.dart';
 import '../../core/budget_plan.dart';
 import '../../core/models.dart';
 import '../../data/agent_client.dart';
+import '../../data/metrics_repository.dart';
 import '../spending/spending_providers.dart';
 
 final agentClientProvider = Provider<AgentClient>((ref) => AgentClient());
@@ -78,18 +80,35 @@ class _ConsultPageState extends ConsumerState<ConsultPage> {
     _items.add({'role': 'user', 'content': q});
 
     final client = ref.read(agentClientProvider);
+    final metrics = MetricsRepository(ref.read(databaseProvider));
+    final session = '${DateTime.now().millisecondsSinceEpoch}-${Random().nextInt(1 << 20)}';
+    final watch = Stopwatch()..start();
+    final tools = <String>[];
+    var krw = 0.0;
+    var rounds = 0;
     try {
       final toolbox = await buildToolbox(ref);
       for (var round = 1; round <= 5; round++) {
-        final reply = await client.step(_items, round);
+        rounds = round;
+        final reply = await client.step(_items, round, session: session);
+        krw += reply.krw;
         _items.addAll(reply.items);
         if (reply.status == 'final') {
           setState(
             () => _messages.add(_Msg.assistant(reply.text ?? '', verdict: reply.verdict, verified: reply.verified)),
           );
+          await metrics.consult(
+            rounds: round,
+            krw: krw,
+            latencyMs: watch.elapsedMilliseconds,
+            verdict: reply.verdict,
+            verified: reply.verified,
+            tools: tools,
+          );
           return;
         }
         for (final c in reply.toolCalls) {
+          tools.add(c.name);
           setState(() => _progress = _toolLabels[c.name] ?? '확인 중');
           _items.add({
             'type': 'function_call_output',
@@ -99,9 +118,27 @@ class _ConsultPageState extends ConsumerState<ConsultPage> {
         }
       }
       setState(() => _messages.add(_Msg.assistant('답을 정리하지 못했어요. 질문을 조금 바꿔서 다시 물어봐 주세요.', verified: false)));
+      await metrics.consult(
+        rounds: rounds,
+        krw: krw,
+        latencyMs: watch.elapsedMilliseconds,
+        verdict: null,
+        verified: false,
+        tools: tools,
+        error: true,
+      );
     } on AgentException catch (e) {
       _items.removeLast();
       setState(() => _messages.add(_Msg.assistant(e.message, verified: false)));
+      await metrics.consult(
+        rounds: rounds,
+        krw: krw,
+        latencyMs: watch.elapsedMilliseconds,
+        verdict: null,
+        verified: false,
+        tools: tools,
+        error: true,
+      );
     } finally {
       if (mounted) setState(() => _progress = null);
       WidgetsBinding.instance.addPostFrameCallback((_) {

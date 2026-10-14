@@ -4395,6 +4395,246 @@ class NotificationLogsCompanion extends UpdateCompanion<NotificationLogRow> {
   }
 }
 
+class $MetricEventsTable extends MetricEvents with TableInfo<$MetricEventsTable, MetricEventRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MetricEventsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'),
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _atMeta = const VerificationMeta('at');
+  @override
+  late final GeneratedColumn<DateTime> at = GeneratedColumn<DateTime>(
+    'at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dataMeta = const VerificationMeta('data');
+  @override
+  late final GeneratedColumn<String> data = GeneratedColumn<String>(
+    'data',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, type, at, data];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'metric_events';
+  @override
+  VerificationContext validateIntegrity(Insertable<MetricEventRow> instance, {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('type')) {
+      context.handle(_typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('at')) {
+      context.handle(_atMeta, at.isAcceptableOrUnknown(data['at']!, _atMeta));
+    } else if (isInserting) {
+      context.missing(_atMeta);
+    }
+    if (data.containsKey('data')) {
+      context.handle(_dataMeta, this.data.isAcceptableOrUnknown(data['data']!, _dataMeta));
+    } else if (isInserting) {
+      context.missing(_dataMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  MetricEventRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MetricEventRow(
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      type: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}type'])!,
+      at: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}at'])!,
+      data: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}data'])!,
+    );
+  }
+
+  @override
+  $MetricEventsTable createAlias(String alias) {
+    return $MetricEventsTable(attachedDatabase, alias);
+  }
+}
+
+class MetricEventRow extends DataClass implements Insertable<MetricEventRow> {
+  final int id;
+  final String type;
+  final DateTime at;
+  final String data;
+  const MetricEventRow({required this.id, required this.type, required this.at, required this.data});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['type'] = Variable<String>(type);
+    map['at'] = Variable<DateTime>(at);
+    map['data'] = Variable<String>(data);
+    return map;
+  }
+
+  MetricEventsCompanion toCompanion(bool nullToAbsent) {
+    return MetricEventsCompanion(id: Value(id), type: Value(type), at: Value(at), data: Value(data));
+  }
+
+  factory MetricEventRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MetricEventRow(
+      id: serializer.fromJson<int>(json['id']),
+      type: serializer.fromJson<String>(json['type']),
+      at: serializer.fromJson<DateTime>(json['at']),
+      data: serializer.fromJson<String>(json['data']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'type': serializer.toJson<String>(type),
+      'at': serializer.toJson<DateTime>(at),
+      'data': serializer.toJson<String>(data),
+    };
+  }
+
+  MetricEventRow copyWith({int? id, String? type, DateTime? at, String? data}) =>
+      MetricEventRow(id: id ?? this.id, type: type ?? this.type, at: at ?? this.at, data: data ?? this.data);
+  MetricEventRow copyWithCompanion(MetricEventsCompanion data) {
+    return MetricEventRow(
+      id: data.id.present ? data.id.value : this.id,
+      type: data.type.present ? data.type.value : this.type,
+      at: data.at.present ? data.at.value : this.at,
+      data: data.data.present ? data.data.value : this.data,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MetricEventRow(')
+          ..write('id: $id, ')
+          ..write('type: $type, ')
+          ..write('at: $at, ')
+          ..write('data: $data')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, type, at, data);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MetricEventRow &&
+          other.id == this.id &&
+          other.type == this.type &&
+          other.at == this.at &&
+          other.data == this.data);
+}
+
+class MetricEventsCompanion extends UpdateCompanion<MetricEventRow> {
+  final Value<int> id;
+  final Value<String> type;
+  final Value<DateTime> at;
+  final Value<String> data;
+  const MetricEventsCompanion({
+    this.id = const Value.absent(),
+    this.type = const Value.absent(),
+    this.at = const Value.absent(),
+    this.data = const Value.absent(),
+  });
+  MetricEventsCompanion.insert({
+    this.id = const Value.absent(),
+    required String type,
+    required DateTime at,
+    required String data,
+  }) : type = Value(type),
+       at = Value(at),
+       data = Value(data);
+  static Insertable<MetricEventRow> custom({
+    Expression<int>? id,
+    Expression<String>? type,
+    Expression<DateTime>? at,
+    Expression<String>? data,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (type != null) 'type': type,
+      if (at != null) 'at': at,
+      if (data != null) 'data': data,
+    });
+  }
+
+  MetricEventsCompanion copyWith({Value<int>? id, Value<String>? type, Value<DateTime>? at, Value<String>? data}) {
+    return MetricEventsCompanion(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      at: at ?? this.at,
+      data: data ?? this.data,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (at.present) {
+      map['at'] = Variable<DateTime>(at.value);
+    }
+    if (data.present) {
+      map['data'] = Variable<String>(data.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MetricEventsCompanion(')
+          ..write('id: $id, ')
+          ..write('type: $type, ')
+          ..write('at: $at, ')
+          ..write('data: $data')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4409,6 +4649,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $MerchantRulesTable merchantRules = $MerchantRulesTable(this);
   late final $SettingsTable settings = $SettingsTable(this);
   late final $NotificationLogsTable notificationLogs = $NotificationLogsTable(this);
+  late final $MetricEventsTable metricEvents = $MetricEventsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables => allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
@@ -4424,6 +4665,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     merchantRules,
     settings,
     notificationLogs,
+    metricEvents,
   ];
 }
 
@@ -7477,6 +7719,135 @@ typedef $$NotificationLogsTableProcessedTableManager =
       NotificationLogRow,
       PrefetchHooks Function()
     >;
+typedef $$MetricEventsTableCreateCompanionBuilder = MetricEventsCompanion Function({
+  Value<int> id,
+  required String type,
+  required DateTime at,
+  required String data,
+});
+typedef $$MetricEventsTableUpdateCompanionBuilder = MetricEventsCompanion Function({
+  Value<int> id,
+  Value<String> type,
+  Value<DateTime> at,
+  Value<String> data,
+});
+
+class $$MetricEventsTableFilterComposer extends Composer<_$AppDatabase, $MetricEventsTable> {
+  $$MetricEventsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get type => $composableBuilder(column: $table.type, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get at => $composableBuilder(column: $table.at, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get data => $composableBuilder(column: $table.data, builder: (column) => ColumnFilters(column));
+}
+
+class $$MetricEventsTableOrderingComposer extends Composer<_$AppDatabase, $MetricEventsTable> {
+  $$MetricEventsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get at =>
+      $composableBuilder(column: $table.at, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get data =>
+      $composableBuilder(column: $table.data, builder: (column) => ColumnOrderings(column));
+}
+
+class $$MetricEventsTableAnnotationComposer extends Composer<_$AppDatabase, $MetricEventsTable> {
+  $$MetricEventsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get type => $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get at => $composableBuilder(column: $table.at, builder: (column) => column);
+
+  GeneratedColumn<String> get data => $composableBuilder(column: $table.data, builder: (column) => column);
+}
+
+class $$MetricEventsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $MetricEventsTable,
+          MetricEventRow,
+          $$MetricEventsTableFilterComposer,
+          $$MetricEventsTableOrderingComposer,
+          $$MetricEventsTableAnnotationComposer,
+          $$MetricEventsTableCreateCompanionBuilder,
+          $$MetricEventsTableUpdateCompanionBuilder,
+          (MetricEventRow, BaseReferences<_$AppDatabase, $MetricEventsTable, MetricEventRow>),
+          MetricEventRow,
+          PrefetchHooks Function()
+        > {
+  $$MetricEventsTableTableManager(_$AppDatabase db, $MetricEventsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () => $$MetricEventsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$MetricEventsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$MetricEventsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> type = const Value.absent(),
+            Value<DateTime> at = const Value.absent(),
+            Value<String> data = const Value.absent(),
+          }) => MetricEventsCompanion(id: id, type: type, at: at, data: data),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String type,
+            required DateTime at,
+            required String data,
+          }) => MetricEventsCompanion.insert(id: id, type: type, at: at, data: data),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$MetricEventsTable, MetricEventRow>(table),
+                  BaseReferences<_$AppDatabase, $MetricEventsTable, MetricEventRow>(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MetricEventsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $MetricEventsTable,
+      MetricEventRow,
+      $$MetricEventsTableFilterComposer,
+      $$MetricEventsTableOrderingComposer,
+      $$MetricEventsTableAnnotationComposer,
+      $$MetricEventsTableCreateCompanionBuilder,
+      $$MetricEventsTableUpdateCompanionBuilder,
+      (MetricEventRow, BaseReferences<_$AppDatabase, $MetricEventsTable, MetricEventRow>),
+      MetricEventRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -7495,4 +7866,5 @@ class $AppDatabaseManager {
   $$SettingsTableTableManager get settings => $$SettingsTableTableManager(_db, _db.settings);
   $$NotificationLogsTableTableManager get notificationLogs =>
       $$NotificationLogsTableTableManager(_db, _db.notificationLogs);
+  $$MetricEventsTableTableManager get metricEvents => $$MetricEventsTableTableManager(_db, _db.metricEvents);
 }

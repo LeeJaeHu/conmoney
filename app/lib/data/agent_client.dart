@@ -76,8 +76,9 @@ class AgentClient {
     return jsonDecode(utf8.decode(r.bodyBytes)) as Map<String, Object?>;
   }
 
-  Future<AgentReply> step(List<Map<String, Object?>> items, int round) async {
-    final j = await _post('/v1/agent', {'items': items, 'round': round});
+  /// [session]은 한 질문의 여러 라운드를 서버 로그에서 묶는 임의 ID.
+  Future<AgentReply> step(List<Map<String, Object?>> items, int round, {String? session}) async {
+    final j = await _post('/v1/agent', {'items': items, 'round': round, 'session': ?session});
     return AgentReply(
       status: j['status'] as String,
       items: [for (final i in j['items'] as List) (i as Map).cast<String, Object?>()],

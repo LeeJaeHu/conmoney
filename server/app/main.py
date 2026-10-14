@@ -3,7 +3,9 @@
 - 서버는 상태를 저장하지 않는다. 대화 기록은 앱이 들고 매 요청에 보낸다.
 - 툴은 앱에서 실행된다. 서버는 툴 정의와 시스템 프롬프트, 숫자 검증, 가드레일만 맡는다.
 - 요청·응답 본문은 DEBUG=1일 때만 로그에 남긴다.
+- 요청마다 수치만 담은 구조화 로그(JSON 한 줄)를 남긴다. Cloud Run이 jsonPayload로 모아 준다(운영 지표).
 """
+import json
 import logging
 import secrets
 import time
@@ -21,6 +23,11 @@ log = logging.getLogger("conmoney")
 logging.basicConfig(level=logging.INFO)
 
 MAX_ROUNDS = 5
+
+
+def emit(event: str, **fields) -> None:
+    """운영 지표 로그. 대화 본문·가맹점 이름은 넣지 않는다(PRD 5장)."""
+    print(json.dumps({"severity": "INFO", "message": event, "event": event, **fields}, ensure_ascii=False), flush=True)
 
 
 class Meter:
@@ -71,6 +78,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/v1/categorize", dependencies=[Depends(auth)])
     def categorize(body: CategorizeIn) -> dict:
+        t0 = time.perf_counter()
+        out = _categorize(body)
+        emit(
+            "categorize",
+            latency_ms=round((time.perf_counter() - t0) * 1000),
+            model=out["model"],
+            category_none=out["category"] == "NONE",
+            confidence=out["confidence"],
+            ambiguous=out["ambiguous"],
+            fallback=bool(out["model"]) and not str(out["model"]).startswith("jev"),
+            n_categories=len(body.categories),
+        )
+        return out
+
+    def _categorize(body: CategorizeIn) -> dict:
         merchant = guard.mask(body.merchant)[:50]
         result: llm.Classification | None = None
         try:
@@ -93,6 +115,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     class AgentIn(BaseModel):
         items: list[dict] = Field(min_length=1, max_length=200)
         round: int = Field(default=1, ge=1)
+        # 한 질문(여러 라운드)을 묶는 앱 쪽 임의 ID. 로그 집계용
+        session: str | None = Field(default=None, max_length=64)
 
     def _final(text: str, items: list[dict], usage: list[llm.Usage], verdict: str | None, checked: bool) -> dict:
         return {
@@ -114,6 +138,31 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/v1/agent", dependencies=[Depends(auth)])
     def agent(body: AgentIn) -> dict:
+        t0 = time.perf_counter()
+        ev: dict = {"session": body.session, "round": body.round, "retried": False, "refused": False, "downgraded": False}
+        try:
+            out = _agent(body, ev)
+        except HTTPException as e:
+            ev["error"] = e.status_code
+            raise
+        finally:
+            ev["latency_ms"] = round((time.perf_counter() - t0) * 1000)
+        u = out.get("usage") or {}
+        emit(
+            "agent",
+            **ev,
+            status=out["status"],
+            model=u.get("model"),
+            input_tokens=u.get("input_tokens"),
+            output_tokens=u.get("output_tokens"),
+            krw=u.get("krw"),
+            tool_calls=[c["name"] for c in out.get("tool_calls", [])],
+            verdict=out.get("verdict"),
+            verified=out.get("verified"),
+        )
+        return out
+
+    def _agent(body: AgentIn, ev: dict) -> dict:
         if body.round > MAX_ROUNDS:
             raise HTTPException(400, "too many rounds")
         items = [_mask_user(i) for i in body.items]
@@ -123,12 +172,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         last = items[-1]
         if last.get("role") == "user" and guard.out_of_scope(_text_of(last)):
             msg = {"role": "assistant", "content": guard.REFUSAL}
+            ev["refused"] = True
             return _final(guard.REFUSAL, [msg], [], None, True)
 
         # 월 비용 상한에 가까우면 상담도 가벼운 모델로 내린다(Spec 5장)
         cfg = s
         if meter.month_krw() >= s.monthly_budget_krw * 0.8:
             cfg = replace(s, openai_model_agent=s.openai_model_light, openai_reasoning_agent=s.openai_reasoning_light)
+            ev["downgraded"] = True
 
         usage: list[llm.Usage] = []
         turn = llm.openai_agent(cfg, prompts.SYSTEM, items, prompts.TOOLS)
@@ -154,6 +205,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return _final(turn.text, turn.output_items, usage, verdict, True)
 
         log.info("숫자 검증 실패, 다시 생성: %s", problem if s.debug else "(숨김)")
+        ev["retried"] = True
+        ev["problem"] = "verdict" if problem.startswith("판단") else "amount"
         retry_items = items + turn.output_items + [{"role": "developer", "content": problem}]
         turn2 = llm.openai_agent(cfg, prompts.SYSTEM, retry_items, prompts.TOOLS)
         usage.append(turn2.usage)
