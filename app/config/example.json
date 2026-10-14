@@ -1,0 +1,4 @@
+{
+  "CONMONEY_SERVER": "http://10.0.2.2:8080",
+  "CONMONEY_TOKEN": "server/.env의 APP_TOKEN과 같은 값"
+}

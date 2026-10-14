@@ -14,7 +14,7 @@ tools/   import_statements.py — 카드사 내역 파일 → CSV (PC에서 실�
 data/    가져온 거래 CSV, 라벨 (git 제외)
 카드내역/ 카드사 원본 파일 (git 제외)
 app/     Flutter 앱 + android/ Kotlin 알림 리스너
-server/  Cloud Run(Python) LLM 중계 (예정). 비밀값은 server/.env(git 제외), 형식은 server/.env.example
+server/  Cloud Run(Python, FastAPI) LLM 중계. 비밀값은 server/.env(git 제외), 형식은 server/.env.example. 실행·테스트는 server/README.md
 ```
 
 ## 데이터 (git에 없음 — 노트북 사이 직접 복사)
@@ -51,4 +51,7 @@ server/  Cloud Run(Python) LLM 중계 (예정). 비밀값은 server/.env(git 제
 - [x] 정기 지출(F5): 자동 탐지(실데이터 13개), 등록 시 지난 결제까지 연결, [아니요]·[이번 달 없음], 직접 추가·수정. 홈 메뉴 > 정기 지출
 - [x] 카테고리 보기(F8): 기간 선택, 특이 지출 토글, 카테고리 막대, 6개월 추이, 거래 수정 시트(F3 시트 재사용). 거래 직접 추가는 미구현
 - [x] `server/.env.example`(모델: 상담 gpt-6.1-sol, 가벼운 작업 gpt-6-luna, 분류 jev). `server/.env`에 키를 채워야 함
-- [ ] 알림 파서(F2), 확인 알림(F3), 서버·구매 상담(F6), 먼저 알림(F7)
+- [x] 서버(`server/`): /v1/categorize(jev → gpt-6-luna), /v1/agent(gpt-6.1-sol, 숫자·판단 검증, 범위 밖 거절). 로컬에서 앱 코드↔서버↔OpenAI 전체 흐름 확인
+- [x] 구매 상담 화면(F6): 홈 > 살까 말까 물어보기. 서버 주소·토큰은 `app/config/dev.json`(git 제외) → `flutter run --dart-define-from-file=config/dev.json`
+- [ ] Cloud Run 배포(배포 전 사용자 확인), 폰에서 서버 주소 연결
+- [ ] 알림 파서(F2), 확인 알림(F3), 먼저 알림(F7), 상담 평가셋 50개

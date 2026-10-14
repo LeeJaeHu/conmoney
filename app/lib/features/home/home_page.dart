@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app_providers.dart';
 import '../../core/budget_engine.dart';
 import '../../ui/format.dart';
+import '../agent/consult_page.dart';
 import '../budget/budget_settings_page.dart';
 import '../dev/import_page.dart';
 import '../recurring/recurring_page.dart';
@@ -78,10 +79,10 @@ class HomePage extends ConsumerWidget {
                 label: const Text('카테고리별 지출 보기'),
               ),
               const SizedBox(height: 8),
-              OutlinedButton.icon(
-                onPressed: null,
+              FilledButton.icon(
+                onPressed: () => open(const ConsultPage()),
                 icon: const Icon(Icons.chat_bubble_outline),
-                label: const Text('살까 말까 물어보기 (준비 중)'),
+                label: const Text('살까 말까 물어보기'),
               ),
             ],
           ),

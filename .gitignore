@@ -30,3 +30,7 @@ server/.env
 .DS_Store
 Thumbs.db
 ~$*
+
+# 앱 빌드용 서버 주소·토큰(--dart-define-from-file)
+app/config/*.json
+!app/config/example.json
