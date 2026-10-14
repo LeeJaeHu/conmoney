@@ -132,6 +132,16 @@ class Settings extends Table {
   Set<Column> get primaryKey => {key};
 }
 
+/// 보낸 알림 기록(Spec 2.1). 먼저 알려주기의 하루 1회 제한에 쓴다.
+@DataClassName('NotificationLogRow')
+class NotificationLogs extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get type => text()(); // CONFIRM / TODAY_OVER / BIG_FIXED_SOON / PACE / MORNING_CHECKED
+  DateTimeColumn get sentAt => dateTime()();
+  TextColumn get localDate => text()();
+  TextColumn get summary => text().nullable()();
+}
+
 /// 기본 카테고리(PRD F3, 10/13 검수 반영).
 const defaultCategories = [
   '식비',
@@ -163,13 +173,16 @@ const defaultCategories = [
     BudgetPlans,
     MerchantRules,
     Settings,
+    NotificationLogs,
   ],
 )
 class AppDatabase extends _$AppDatabase {
-  AppDatabase([QueryExecutor? executor]) : super(executor ?? driftDatabase(name: 'conmoney'));
+  // 백그라운드 작업(먼저 알려주기)도 같은 DB를 열기 때문에 isolate 간 공유를 켠다
+  AppDatabase([QueryExecutor? executor])
+    : super(executor ?? driftDatabase(name: 'conmoney', native: const DriftNativeOptions(shareAcrossIsolates: true)));
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -181,6 +194,9 @@ class AppDatabase extends _$AppDatabase {
             CategoriesCompanion.insert(name: defaultCategories[i], sortOrder: Value(i), isDefault: const Value(true)),
         ]);
       });
+    },
+    onUpgrade: (m, from, to) async {
+      if (from < 2) await m.createTable(notificationLogs);
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');

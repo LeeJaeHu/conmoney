@@ -26,7 +26,10 @@ void main() {
 
   setUp(() async {
     db = AppDatabase(NativeDatabase.memory());
-    await importTransactions(db, parseTransactionsCsv(File('test/fixtures/sample_transactions.csv').readAsStringSync()));
+    await importTransactions(
+      db,
+      parseTransactionsCsv(File('test/fixtures/sample_transactions.csv').readAsStringSync()),
+    );
     await RecurringRepository(db).add(name: '가짜통신', amount: 40000, dueDay: 12, isEstimate: false);
   });
   tearDown(() => db.close());
@@ -83,7 +86,11 @@ void main() {
         items.addAll(reply.items);
         if (reply.status == 'final') break;
         for (final c in reply.toolCalls) {
-          items.add({'type': 'function_call_output', 'call_id': c.callId, 'output': jsonEncode(tb.run(c.name, c.arguments))});
+          items.add({
+            'type': 'function_call_output',
+            'call_id': c.callId,
+            'output': jsonEncode(tb.run(c.name, c.arguments)),
+          });
         }
       }
       // ignore: avoid_print

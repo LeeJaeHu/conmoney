@@ -9,6 +9,7 @@ import '../budget/budget_settings_page.dart';
 import '../dev/import_page.dart';
 import '../recurring/recurring_page.dart';
 import '../samples/sample_collector_page.dart';
+import '../settings/notification_settings_page.dart';
 import '../spending/category_page.dart';
 import '../spending/spending_providers.dart';
 
@@ -36,12 +37,14 @@ class HomePage extends ConsumerWidget {
               'import' => open(const ImportPage()),
               'recurring' => open(const RecurringPage()),
               'category' => open(const CategoryPage()),
+              'alerts' => open(const NotificationSettingsPage()),
               _ => open(const SampleCollectorPage()),
             },
             itemBuilder: (_) => const [
               PopupMenuItem(value: 'budget', child: Text('예산 설정')),
               PopupMenuItem(value: 'recurring', child: Text('정기 지출')),
               PopupMenuItem(value: 'category', child: Text('카테고리별 지출')),
+              PopupMenuItem(value: 'alerts', child: Text('먼저 알려주기')),
               PopupMenuItem(value: 'import', child: Text('과거 기록 가져오기')),
               PopupMenuItem(value: 'samples', child: Text('결제 알림 샘플')),
             ],

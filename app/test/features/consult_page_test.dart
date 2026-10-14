@@ -25,7 +25,12 @@ void main() {
           ? {
               'status': 'tool_calls',
               'items': [
-                {'type': 'function_call', 'call_id': 'c1', 'name': 'simulate_purchase', 'arguments': '{"amount":150000}'},
+                {
+                  'type': 'function_call',
+                  'call_id': 'c1',
+                  'name': 'simulate_purchase',
+                  'arguments': '{"amount":150000}',
+                },
               ],
               'tool_calls': [
                 {'call_id': 'c1', 'name': 'simulate_purchase', 'arguments': '{"amount":150000}'},
