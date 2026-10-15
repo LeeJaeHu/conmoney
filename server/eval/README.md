@@ -71,3 +71,11 @@ v1이 포화(luna/low·sol 100%)되어 실제 대화에서 틀리기 쉬운 상�
 .venv/Scripts/python -X utf8 -m eval.run_category                       # API 호출
 .venv/Scripts/python -X utf8 -m eval.run_category --from ../data/eval/category_<날짜>.jsonl   # 저장된 결과로 다시 집계
 ```
+
+## 3. 판단 탐색기 (`explorer/`)
+
+평가 문항을 골라 입력·정답 계산·모델별 실행 과정(툴 호출 → 답 → 채점)을 나란히 비교하고, 설계 결정마다 근거 사례로 이동하는 HTML 페이지. 계산 실험실에서 예산·금액을 바꿔 판단 규칙을 직접 확인할 수 있다.
+
+```bash
+.venv/Scripts/python -X utf8 -m eval.explorer_data   # explorer/data.json 다시 만들기(평가를 새로 돌린 뒤)
+```

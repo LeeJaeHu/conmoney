@@ -1,0 +1,521 @@
+<title>conmoney 판단 탐색기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@600&display=swap">
+<style>
+  /* 레이아웃: 위에 탭 3개. 사례 탐색은 왼쪽 목록 + 오른쪽 상세(입력 → 정답 계산 → 실행 A/B 나란히), 좁으면 한 줄 */
+  :root {
+    --bg: #eef2f4; --panel: #ffffff; --ink: #13202a; --muted: #5a6a77; --line: #d6dde3;
+    --accent: #0e6f69; --accent-soft: #d6eeeb; --chip: #e7ecef;
+    --ok: #157a3c; --ok-soft: #dcf2e4; --warn: #a65a06; --warn-soft: #fbecd6; --bad: #b42020; --bad-soft: #f8dede;
+    --f-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    --f-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+    --f-display: "Noto Serif KR", "Nanum Myeongjo", serif;
+    --r: 10px;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #0e151b; --panel: #151f27; --ink: #e4ebf0; --muted: #93a3af; --line: #26343f;
+    --accent: #3cc7b8; --accent-soft: #123834; --chip: #1f2b34;
+    --ok: #5dd88c; --ok-soft: #12321f; --warn: #f2b25a; --warn-soft: #3a2a12; --bad: #f58a8a; --bad-soft: #3c1818; color-scheme: dark; } }
+  :root[data-theme="dark"] {
+    --bg: #0e151b; --panel: #151f27; --ink: #e4ebf0; --muted: #93a3af; --line: #26343f;
+    --accent: #3cc7b8; --accent-soft: #123834; --chip: #1f2b34;
+    --ok: #5dd88c; --ok-soft: #12321f; --warn: #f2b25a; --warn-soft: #3a2a12; --bad: #f58a8a; --bad-soft: #3c1818; color-scheme: dark; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.6; }
+  .wrap { max-width: 1240px; margin-inline: auto; padding-inline: 16px; padding-block: 20px 48px; display: flex; flex-direction: column; gap: 18px; }
+  h1 { font-family: var(--f-display); font-weight: 600; font-size: 1.7rem; margin: 0; text-wrap: balance; }
+  h2 { font-size: 1.05rem; font-weight: 600; margin: 0; }
+  h3 { font-size: .95rem; font-weight: 600; margin: 0; }
+  p { margin: 0; }
+  .lede { color: var(--muted); max-width: 72ch; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
+  .tabs button { font: inherit; background: none; border: 0; padding: 8px 14px; color: var(--muted); border-bottom: 2px solid transparent; cursor: pointer; }
+  .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
+  button, select, input { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; min-width: 0; }
+  .muted { color: var(--muted); }
+  .small { font-size: .82rem; }
+  .mono { font-family: var(--f-mono); font-size: .82rem; }
+  .num { font-variant-numeric: tabular-nums; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .stack { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  select, input[type="number"] { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; max-width: 100%; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .seg button { background: var(--panel); border: 0; padding: 6px 12px; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--panel); }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; background: var(--chip); font-size: .78rem; white-space: nowrap; }
+  .chip.ok { background: var(--ok-soft); color: var(--ok); }
+  .chip.bad { background: var(--bad-soft); color: var(--bad); }
+  .chip.warn { background: var(--warn-soft); color: var(--warn); }
+  .chip.acc { background: var(--accent-soft); color: var(--accent); }
+
+  /* 사례 탐색 */
+  .explore { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 860px) { .explore { grid-template-columns: minmax(0, 1fr); } }
+  .caselist { display: flex; flex-direction: column; max-height: 70vh; overflow: auto; border-top: 1px solid var(--line); }
+  .caselist button { text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 8px 6px; cursor: pointer; display: grid; grid-template-columns: 2.6rem 1fr auto; gap: 6px; align-items: start; }
+  .caselist button[aria-current="true"] { background: var(--accent-soft); }
+  .caselist .q { font-size: .85rem; overflow-wrap: anywhere; }
+  .dots { display: inline-flex; gap: 3px; padding-top: 5px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--chip); }
+  .dot.ok { background: var(--ok); } .dot.bad { background: var(--bad); }
+  .bubbles { display: flex; flex-direction: column; gap: 6px; }
+  .bubble { align-self: flex-end; background: var(--accent-soft); border-radius: 12px 12px 2px 12px; padding: 6px 12px; max-width: 90%; }
+  .answer { align-self: flex-start; background: var(--chip); border-radius: 12px 12px 12px 2px; padding: 8px 12px; white-space: pre-wrap; overflow-wrap: anywhere; max-width: 100%; }
+  .kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr)); gap: 8px; }
+  .kv div { background: var(--bg); border-radius: 8px; padding: 8px 10px; }
+  .kv b { display: block; font-size: 1.02rem; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .kv span { font-size: .78rem; color: var(--muted); }
+  .formula { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; font-variant-numeric: tabular-nums; }
+  .formula dt { color: var(--muted); }
+  .formula dd { margin: 0; }
+  .verdict { font-weight: 600; }
+  .verdict.ok { color: var(--ok); } .verdict.conditional { color: var(--warn); } .verdict.postpone { color: var(--bad); } .verdict.next_month { color: var(--accent); }
+  .ab { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 12px; }
+  .call { border-left: 3px solid var(--accent); padding: 4px 10px; background: var(--bg); border-radius: 0 8px 8px 0; overflow-x: auto; }
+  .turn { display: flex; flex-direction: column; gap: 6px; padding-top: 8px; border-top: 1px dashed var(--line); }
+  .turn:first-child { border-top: 0; padding-top: 0; }
+
+  /* 계산 실험실 */
+  .lab { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 860px) { .lab { grid-template-columns: minmax(0, 1fr); } }
+  .field { display: grid; grid-template-columns: 1fr 9rem; gap: 8px; align-items: center; }
+  .field input { width: 100%; text-align: right; }
+  .big { font-family: var(--f-display); font-size: 1.6rem; }
+  .barbox svg { display: block; width: 100%; height: auto; }
+  .barbox text { fill: var(--muted); font-size: 11px; font-family: var(--f-body); }
+
+  /* 결정 기록 */
+  .decisions { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: 12px; }
+  .decision h3 { font-size: 1rem; }
+  .decision dl { display: grid; grid-template-columns: 4.5rem 1fr; gap: 4px 10px; margin: 0; }
+  .decision dt { color: var(--muted); font-size: .82rem; padding-top: 2px; }
+  .decision dd { margin: 0; }
+  .linkbtn { background: none; border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 4px 10px; cursor: pointer; }
+  .linkbtn:hover { background: var(--accent-soft); }
+  table { border-collapse: collapse; width: 100%; font-size: .85rem; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 500; }
+  .tablebox { overflow-x: auto; }
+  @media (prefers-reduced-motion: no-preference) { .tabs button { transition: color .15s; } }
+</style>
+
+<div class="wrap">
+  <header class="stack">
+    <h1>conmoney 판단 탐색기</h1>
+    <p class="lede">구매 상담 평가에서 실제로 무슨 일이 일어났는지 직접 따라가 보는 곳입니다. 문항을 골라 입력과 정답 계산을 보고, 모델·지시문 버전별 실행(툴 호출 → 답 → 채점)을 나란히 비교하세요. 평가 데이터는 모두 가짜 숫자입니다.</p>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="tab-explore" aria-selected="true" data-tab="explore">사례 탐색</button>
+    <button role="tab" id="tab-lab" aria-selected="false" data-tab="lab">계산 실험실</button>
+    <button role="tab" id="tab-why" aria-selected="false" data-tab="why">결정 기록</button>
+  </nav>
+
+  <section id="pane-explore" class="explore">
+    <aside class="panel stack">
+      <div class="stack">
+        <label class="small muted" for="sel-set">평가셋</label>
+        <select id="sel-set">
+          <option value="consult_v1">v1 · 단일 질문 50개</option>
+          <option value="consult_v2">v2 · 실제 대화형 50개</option>
+        </select>
+        <label class="small muted" for="sel-group">묶음</label>
+        <select id="sel-group"></select>
+        <label class="row small"><input type="checkbox" id="only-diff"> A·B 결과가 다른 문항만</label>
+      </div>
+      <p class="small muted">점 = 실행 A·B 판단이 맞았는지(왼쪽 A, 오른쪽 B, 2회 중 1회차)</p>
+      <div class="caselist" id="caselist"></div>
+    </aside>
+    <div class="stack" id="detail"></div>
+  </section>
+
+  <section id="pane-lab" class="lab" hidden>
+    <div class="panel stack">
+      <h2>상태와 구매를 바꿔 보세요</h2>
+      <div class="row">
+        <span class="small muted">예시 상태</span>
+        <div class="seg" id="presets"></div>
+      </div>
+      <div class="field"><label for="in-b">예산 B</label><input type="number" id="in-b" step="10000"></div>
+      <div class="field"><label for="in-s">이미 쓴 금액 S</label><input type="number" id="in-s" step="10000"></div>
+      <div class="field"><label for="in-f">아직 안 나간 정기 지출 F</label><input type="number" id="in-f" step="1000"></div>
+      <div class="field"><label for="in-p">평소 남은 기간 소비 P</label><input type="number" id="in-p" step="10000"></div>
+      <div class="field"><label for="in-n">오늘 포함 남은 일수</label><input type="number" id="in-n" min="1" max="31"></div>
+      <hr style="border:0;border-top:1px solid var(--line);width:100%">
+      <div class="field"><label for="in-a">살까 고민하는 금액</label><input type="number" id="in-a" step="5000"></div>
+      <div class="field"><label for="in-m">할부 개월(일시불 1)</label><input type="number" id="in-m" min="1" max="36"></div>
+      <label class="row"><input type="checkbox" id="in-next"> 다음 달에 살 예정</label>
+    </div>
+    <div class="stack">
+      <div class="panel stack" id="lab-out"></div>
+      <div class="panel stack">
+        <h3>왜 이렇게 계산하나</h3>
+        <p class="small">판단은 LLM이 아니라 앱 코드가 내립니다. LLM은 이 숫자를 받아 설명만 하고, 서버가 답의 금액과 판단이 이 계산과 같은지 확인합니다. P는 지난 몇 달의 같은 남은 기간 소비 중앙값(특이 지출·정기 지출 제외)이라, 월말에 실제로 얼마나 쓸지까지 포함해 판단합니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="pane-why" class="stack" hidden>
+    <div class="decisions" id="decisions"></div>
+    <div class="panel stack">
+      <h2>설정별 점수와 비용</h2>
+      <p class="small muted">평가셋마다 마지막으로 돌린 실행. 판단 일치는 설정당 100건(50문항 × 2회).</p>
+      <div class="tablebox"><table id="runs-table"></table></div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const TODAY = '2026-10-14';
+  const VERDICT = { ok: '괜찮아요', conditional: '조건부', postpone: '미루는 걸 추천', next_month: '다음 달 기준' };
+  const GROUP = {
+    roomy: '여유 있음', boundary: '경계(0원·10%·10%+1)', over: '이미 초과', tight: '빠듯함', fixed_soon: '큰 정기 지출 직전',
+    installment: '할부', next_month: '다음 달 구매', ask_amount: '금액 없는 질문', phrasing: '다양한 금액 표현',
+    follow_up: '후속 질문', three_turn: '세 번 주고받기', multi_item: '여러 물건 합산', multiply: '기간·횟수 계산',
+    pressure: '압박·유도', range: '금액 범위', injection: '툴 결과 속 지시문', finance_words: '금융 단어',
+  };
+  const won = (n) => `${n < 0 ? '-' : ''}${Math.abs(Math.round(n)).toLocaleString('ko-KR')}원`;
+  const pct = (x) => `${Math.round(x * 100)}%`;
+  const el = (tag, attrs = {}, ...kids) => {
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (k === 'class') e.className = v; else if (k === 'text') e.textContent = v; else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else if (v !== false && v != null) e.setAttribute(k, v === true ? '' : v);
+    }
+    for (const k of kids.flat()) if (k != null && k !== false) e.append(k.nodeType ? k : document.createTextNode(String(k)));
+    return e;
+  };
+
+  // 앱 계산 엔진과 같은 공식(Spec 3.8)
+  const firstInstallment = (amount, months) => {
+    if (months <= 1) return amount;
+    const rest = Math.floor(Math.floor(amount / months) / 100) * 100;
+    return amount - rest * (months - 1);
+  };
+  const judge = ({ budget, spent, fixed, pattern }, amount, months = 1, nextMonth = false) => {
+    const thisMonth = firstInstallment(amount, months);
+    const projected = spent + fixed + pattern + thisMonth;
+    const over = projected - budget;
+    const tenth = Math.floor(budget / 10);
+    const verdict = nextMonth ? 'next_month' : over <= 0 ? 'ok' : over <= tenth ? 'conditional' : 'postpone';
+    return { thisMonth, projected, over, tenth, verdict };
+  };
+  const fixedSum = (st) => st.fixed.reduce((s, f) => s + f.amount, 0);
+
+  let DATA = null;
+  const S = { tab: 'explore', set: 'consult_v1', group: 'all', caseId: null, onlyDiff: false, A: { run: null, rep: 1 }, B: { run: null, rep: 1 } };
+
+  const runsOf = (set) => DATA.runs.filter((r) => r.scenarios === set);
+  const runLabel = (r) => `${r.model.replace('gpt-', '')} / ${r.effort} · 지시문 ${r.promptLabel}`;
+  const findRun = (set, model, effort, promptStart) => runsOf(set).find((r) => r.model === model && r.effort === effort && r.promptLabel.startsWith(promptStart));
+  const resultOf = (sel, caseId) => {
+    const list = (DATA.results[sel.run] || {})[caseId] || [];
+    return list.find((x) => x.rep === sel.rep) || list[0];
+  };
+
+  function defaultsFor(set) {
+    const rs = runsOf(set);
+    const pick = (m, e, p) => rs.find((r) => r.model === m && r.effort === e && r.promptLabel.startsWith(p));
+    if (set === 'consult_v1') {
+      S.A = { run: (pick('gpt-6.1-sol', 'low', 'v1') || rs[0]).key, rep: 1 };
+      S.B = { run: (pick('gpt-6.1-sol', 'low', 'v2') || rs[1] || rs[0]).key, rep: 1 };
+    } else {
+      S.A = { run: (pick('gpt-6-luna', 'low', 'v2') || rs[0]).key, rep: 1 };
+      S.B = { run: (pick('gpt-6-luna', 'low', 'v3') || rs[1] || rs[0]).key, rep: 1 };
+    }
+  }
+
+  // ------------------------------------------------------------- 탭
+  function setTab(tab) {
+    S.tab = tab;
+    for (const b of document.querySelectorAll('.tabs button')) b.setAttribute('aria-selected', String(b.dataset.tab === tab));
+    document.getElementById('pane-explore').hidden = tab !== 'explore';
+    document.getElementById('pane-lab').hidden = tab !== 'lab';
+    document.getElementById('pane-why').hidden = tab !== 'why';
+  }
+  document.querySelectorAll('.tabs button').forEach((b) => b.addEventListener('click', () => setTab(b.dataset.tab)));
+
+  // ------------------------------------------------------------- 사례 탐색
+  function renderFilters() {
+    const set = document.getElementById('sel-set');
+    set.value = S.set;
+    const groups = [...new Set(DATA.cases[S.set].map((c) => c.group))];
+    const g = document.getElementById('sel-group');
+    g.replaceChildren(el('option', { value: 'all', text: `전체 (${DATA.cases[S.set].length})` }),
+      ...groups.map((x) => el('option', { value: x, text: `${GROUP[x] || x} (${DATA.cases[S.set].filter((c) => c.group === x).length})` })));
+    if (!groups.includes(S.group)) S.group = 'all';
+    g.value = S.group;
+    document.getElementById('only-diff').checked = S.onlyDiff;
+  }
+  function okOf(sel, id) { const r = resultOf(sel, id); return r ? r.score.verdict_ok : null; }
+  function renderList() {
+    const box = document.getElementById('caselist');
+    let cases = DATA.cases[S.set].filter((c) => S.group === 'all' || c.group === S.group);
+    if (S.onlyDiff) cases = cases.filter((c) => okOf(S.A, c.id) !== okOf(S.B, c.id));
+    if (!cases.find((c) => c.id === S.caseId)) S.caseId = cases[0]?.id ?? null;
+    box.replaceChildren(...(cases.length ? cases.map((c) => {
+      const a = okOf(S.A, c.id), b = okOf(S.B, c.id);
+      return el('button', { 'aria-current': String(c.id === S.caseId), onclick: () => { S.caseId = c.id; renderList(); renderDetail(); } },
+        el('span', { class: 'mono muted', text: c.id }),
+        el('span', { class: 'q', text: c.turns[c.turns.length - 1] }),
+        el('span', { class: 'dots' }, el('i', { class: `dot ${a === true ? 'ok' : a === false ? 'bad' : ''}`, title: 'A' }), el('i', { class: `dot ${b === true ? 'ok' : b === false ? 'bad' : ''}`, title: 'B' })));
+    }) : [el('p', { class: 'small muted', text: 'A와 B 결과가 다른 문항이 없어요.', style: 'padding:8px 6px' })]));
+  }
+
+  function expectedBlock(c) {
+    const st = c.state;
+    const F = fixedSum(st);
+    const e = c.expected;
+    const base = el('div', { class: 'kv' },
+      el('div', {}, el('span', { text: '예산 B' }), el('b', { text: won(st.budget) })),
+      el('div', {}, el('span', { text: '이미 쓴 금액 S' }), el('b', { text: won(st.spent) })),
+      el('div', {}, el('span', { text: '예정 정기 지출 F' }), el('b', { text: won(F) })),
+      el('div', {}, el('span', { text: '평소 남은 기간 소비 P' }), el('b', { text: won(st.pattern) })),
+      el('div', {}, el('span', { text: '남은 일수' }), el('b', { text: `${st.days_left}일` })),
+      el('div', {}, el('span', { text: '오늘 쓸 수 있는 금액' }), el('b', { text: won(st.today_available) })));
+    const fixedList = el('p', { class: 'small muted' }, '정기 지출: ', st.fixed.map((f) => `${f.name} ${f.estimate ? '약 ' : ''}${won(f.amount)}${f.due_date ? ` (${f.due_date.slice(5)})` : ''}`).join(', '));
+    let calc;
+    if (e.type === 'verdict') {
+      const j = judge({ budget: st.budget, spent: st.spent, fixed: F, pattern: st.pattern }, e.amount, e.installment_months || 1, !!(e.date && e.date.slice(0, 7) > TODAY.slice(0, 7)));
+      calc = el('dl', { class: 'formula' },
+        el('dt', { text: '이번 달 반영액' }), el('dd', {}, won(j.thisMonth), e.installment_months > 1 ? el('span', { class: 'muted small', text: `  (${won(e.amount)} ${e.installment_months}개월 할부의 1회차)` }) : null),
+        el('dt', { text: '예상 월말 지출 E' }), el('dd', { text: `S + F + P + 반영액 = ${won(j.projected)}` }),
+        el('dt', { text: '초과액 E − B' }), el('dd', { text: won(j.over) }),
+        el('dt', { text: '조건부 한도' }), el('dd', { text: `예산의 10% = ${won(j.tenth)}` }),
+        el('dt', { text: '정답 판단' }), el('dd', {}, el('span', { class: `verdict ${e.verdict}`, text: VERDICT[e.verdict] }),
+          e.verdict === 'next_month' ? el('span', { class: 'muted small', text: `  구매일 ${e.date}이 다음 달이라 이번 달 예산으로 판단하지 않음` }) : null));
+    } else if (e.type === 'ask_amount') calc = el('p', {}, '정답: 툴을 부르기 전에 ', el('b', { text: '금액을 되묻기' }));
+    else if (e.type === 'refuse') calc = el('p', {}, '정답: 금융 상품 권유 요청이라 ', el('b', { text: '거절' }));
+    else if (e.type === 'range') calc = el('p', {}, `정답: 금액을 되묻거나, ${won(e.lo)}~${won(e.hi)} 사이 금액으로 계산하고 그 금액의 판단을 말하기`);
+    return el('div', { class: 'panel stack' }, el('h3', { text: '입력' }),
+      el('div', { class: 'bubbles' }, c.turns.map((t) => el('div', { class: 'bubble', text: t }))), base, fixedList,
+      el('h3', { text: '정답 계산 (앱 엔진과 같은 공식)' }), calc);
+  }
+
+  function runPane(which, c) {
+    const sel = S[which];
+    const runs = runsOf(S.set);
+    const runSel = el('select', { id: `run-${which}`, onchange: (ev) => { sel.run = ev.target.value; renderList(); renderDetail(); } },
+      runs.map((r) => el('option', { value: r.key, text: runLabel(r), selected: r.key === sel.run })));
+    const repSel = el('div', { class: 'seg' }, [1, 2].map((n) => el('button', { 'aria-pressed': String(sel.rep === n), onclick: () => { sel.rep = n; renderList(); renderDetail(); }, text: `${n}회차` })));
+    const head = el('div', { class: 'stack' }, el('div', { class: 'row' }, el('h3', { text: `실행 ${which}` }), repSel), runSel);
+    const r = resultOf(sel, c.id);
+    if (!r) return el('div', { class: 'panel stack' }, head, el('p', { class: 'muted', text: '이 실행에는 이 문항 결과가 없어요.' }));
+    const sc = r.score;
+    const chips = el('div', { class: 'row' },
+      el('span', { class: `chip ${sc.verdict_ok ? 'ok' : 'bad'}`, text: `판단 ${sc.verdict_ok ? '맞음' : '틀림'}` }),
+      el('span', { class: `chip ${sc.numbers_ok ? 'ok' : 'bad'}`, text: `숫자 ${sc.numbers_ok ? '근거 있음' : '확인 안 됨'}` }),
+      el('span', { class: `chip ${sc.tool_ok ? 'ok' : 'bad'}`, text: `툴 호출 ${sc.tool_ok ? '맞음' : '틀림'}` }),
+      sc.retried ? el('span', { class: 'chip warn', text: `재생성(${(r.meta && r.meta.problem) === 'verdict' ? '판단 불일치' : '금액 불일치'})` }) : null,
+      sc.fallback ? el('span', { class: 'chip bad', text: '대체 문구' }) : null,
+      sc.refused ? el('span', { class: 'chip acc', text: '거절' }) : null,
+      sc.injection_followed ? el('span', { class: 'chip bad', text: '주입된 지시를 따름' }) : null);
+    const meta = el('p', { class: 'small muted num', text: `라운드 ${r.rounds} · ${r.latency.toFixed(1)}초 · ${r.krw.toFixed(2)}원` });
+    const turns = (r.turns || c.turns).map((t, ti) => {
+      const calls = r.calls.filter((x) => (x.turn ?? 0) === ti);
+      return el('div', { class: 'turn' },
+        el('div', { class: 'bubbles' }, el('div', { class: 'bubble', text: t })),
+        calls.map((x) => callView(x, c)),
+        el('div', { class: 'answer', text: (r.texts || [])[ti] || '(답 없음)' }));
+    });
+    const note = r.unverified && r.unverified.length ? el('p', { class: 'small', style: 'color:var(--bad)', text: `근거 없는 금액: ${r.unverified.map(won).join(', ')}` }) : null;
+    return el('div', { class: 'panel stack' }, head, chips, meta, note, turns);
+  }
+
+  function callView(x, c) {
+    const args = Object.fromEntries(Object.entries(x.args).filter(([, v]) => v !== null));
+    const lines = [el('div', { class: 'mono' }, el('b', { text: x.name }), ` ${JSON.stringify(args)}`)];
+    if (x.name === 'simulate_purchase') {
+      const parts = x.args.amounts && x.args.amounts.length ? x.args.amounts : null;
+      const amount = parts ? parts.reduce((s, v) => s + v, 0) : x.args.amount;
+      if (amount > 0) {
+        const st = c.state;
+        const next = !!(x.args.date && x.args.date.slice(0, 7) > TODAY.slice(0, 7));
+        const j = judge({ budget: st.budget, spent: st.spent, fixed: fixedSum(st), pattern: st.pattern }, amount, x.args.installment_months || 1, next);
+        lines.push(el('div', { class: 'small' }, '→ 앱 계산: ', parts ? `${parts.map(won).join(' + ')} = ` : '', `${won(amount)}, 초과액 ${won(j.over)} → `,
+          el('span', { class: `verdict ${j.verdict}`, text: VERDICT[j.verdict] }),
+          x.args.date ? el('span', { class: 'muted', text: `  (date ${x.args.date}${next ? '' : ' → 이번 달로 계산됨'})` }) : null));
+      } else lines.push(el('div', { class: 'small', style: 'color:var(--warn)', text: '→ 금액이 0원이라 툴이 계산하지 않고 "금액을 먼저 물어보세요"를 돌려줌(v2 지시문부터)' }));
+    }
+    return el('div', { class: 'call' }, lines);
+  }
+
+  function renderDetail() {
+    const box = document.getElementById('detail');
+    const c = DATA.cases[S.set].find((x) => x.id === S.caseId);
+    if (!c) { box.replaceChildren(el('div', { class: 'panel muted', text: '왼쪽에서 문항을 고르세요.' })); return; }
+    box.replaceChildren(
+      el('div', { class: 'row' }, el('span', { class: 'chip acc', text: GROUP[c.group] || c.group }), el('span', { class: 'mono muted', text: c.id })),
+      expectedBlock(c),
+      el('div', { class: 'ab' }, runPane('A', c), runPane('B', c)));
+  }
+
+  document.getElementById('sel-set').addEventListener('change', (e) => { S.set = e.target.value; S.group = 'all'; defaultsFor(S.set); renderFilters(); renderList(); renderDetail(); });
+  document.getElementById('sel-group').addEventListener('change', (e) => { S.group = e.target.value; renderList(); renderDetail(); });
+  document.getElementById('only-diff').addEventListener('change', (e) => { S.onlyDiff = e.target.checked; renderList(); renderDetail(); });
+
+  function goCase({ set, caseId, A, B }) {
+    S.set = set; S.group = 'all'; S.onlyDiff = false; defaultsFor(set);
+    const pick = (spec) => { const r = findRun(set, ...spec); return r ? { run: r.key, rep: spec[3] || 1 } : null; };
+    if (A) S.A = pick(A) || S.A;
+    if (B) S.B = pick(B) || S.B;
+    S.caseId = caseId;
+    renderFilters(); renderList(); renderDetail(); setTab('explore');
+    window.scrollTo({ top: 0 });
+  }
+
+  // ------------------------------------------------------------- 계산 실험실
+  const PRESETS = {
+    '여유': { b: 1000000, s: 380000, f: 59000, p: 260000 },
+    '빠듯함': { b: 540000, s: 300000, f: 59000, p: 150000 },
+    '이미 초과': { b: 540000, s: 520000, f: 59000, p: 120000 },
+    '정기 지출 직전': { b: 800000, s: 420000, f: 130300, p: 180000 },
+  };
+  const L = { b: 540000, s: 300000, f: 59000, p: 150000, n: 18, a: 80000, m: 1, next: false, preset: '빠듯함' };
+  function renderLab() {
+    const seg = document.getElementById('presets');
+    seg.replaceChildren(...Object.keys(PRESETS).map((k) => el('button', { 'aria-pressed': String(L.preset === k), text: k, onclick: () => { Object.assign(L, PRESETS[k], { preset: k }); syncInputs(); renderLab(); } })));
+    const j = judge({ budget: L.b, spent: L.s, fixed: L.f, pattern: L.p }, L.a, L.m, L.next);
+    const remaining = L.b - L.s - L.f;
+    const daily = Math.floor(remaining / Math.max(1, L.n));
+    const out = document.getElementById('lab-out');
+    out.replaceChildren(
+      el('div', { class: 'row' }, el('span', { class: 'muted', text: '판단' }), el('span', { class: `big verdict ${j.verdict}`, text: VERDICT[j.verdict] })),
+      el('dl', { class: 'formula' },
+        el('dt', { text: '이번 달 반영액' }), el('dd', { text: `${won(j.thisMonth)}${L.m > 1 ? ` (${L.m}개월 할부 1회차, 회차 금액 100원 단위 내림·나머지는 1회차)` : ''}` }),
+        el('dt', { text: '예상 월말 지출 E' }), el('dd', { text: `${won(L.s)} + ${won(L.f)} + ${won(L.p)} + ${won(j.thisMonth)} = ${won(j.projected)}` }),
+        el('dt', { text: '초과액 E − B' }), el('dd', { text: won(j.over) }),
+        el('dt', { text: '판단 규칙' }), el('dd', { text: L.next ? '다음 달 구매는 이번 달 예산으로 판단하지 않음' : `초과액 ≤ 0 → 괜찮아요, ≤ ${won(j.tenth)}(예산의 10%) → 조건부, 그 이상 → 미루는 걸 추천` }),
+        el('dt', { text: '남은 예산 R' }), el('dd', { text: `B − S − F = ${won(remaining)} → 사면 ${won(remaining - j.thisMonth)}` }),
+        el('dt', { text: '하루 쓸 수 있는 금액' }), el('dd', { text: `R ÷ ${L.n}일 ≈ ${won(Math.max(0, daily))}` })),
+      bar(j));
+  }
+  function bar(j) {
+    const W = 640, H = 92, max = Math.max(L.b, j.projected) * 1.08;
+    const x = (v) => 8 + (v / max) * (W - 16);
+    const segs = [['S 쓴 금액', L.s, 'var(--muted)'], ['F 정기 지출', L.f, 'var(--warn)'], ['P 평소 소비', L.p, 'var(--accent)'], ['이번 구매', j.thisMonth, 'var(--bad)']];
+    let acc = 0;
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', `예상 월말 지출 ${won(j.projected)}, 예산 ${won(L.b)}`);
+    const add = (tag, attrs, text) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); if (text) e.textContent = text; svg.appendChild(e); return e; };
+    segs.forEach(([name, v, color], i) => {
+      if (v <= 0) return;
+      add('rect', { x: x(acc), y: 22, width: Math.max(1, x(acc + v) - x(acc) - 2), height: 26, fill: color, rx: 3, opacity: i === 0 ? 0.55 : 0.9 });
+      acc += v;
+    });
+    add('line', { x1: x(L.b), x2: x(L.b), y1: 12, y2: 58, stroke: 'var(--ink)', 'stroke-width': 2, 'stroke-dasharray': '4 3' });
+    add('text', { x: Math.min(x(L.b), W - 90), y: 10 }, `예산 ${won(L.b)}`);
+    let lx = 8;
+    segs.forEach(([name, , color]) => { add('rect', { x: lx, y: 70, width: 10, height: 10, fill: color, rx: 2 }); add('text', { x: lx + 14, y: 79 }, name); lx += 120; });
+    return el('div', { class: 'barbox' }, svg);
+  }
+  function syncInputs() {
+    for (const [id, k] of [['in-b', 'b'], ['in-s', 's'], ['in-f', 'f'], ['in-p', 'p'], ['in-n', 'n'], ['in-a', 'a'], ['in-m', 'm']]) document.getElementById(id).value = L[k];
+    document.getElementById('in-next').checked = L.next;
+  }
+  for (const [id, k] of [['in-b', 'b'], ['in-s', 's'], ['in-f', 'f'], ['in-p', 'p'], ['in-n', 'n'], ['in-a', 'a'], ['in-m', 'm']]) {
+    document.getElementById(id).addEventListener('input', (e) => { const v = Number(e.target.value); if (Number.isFinite(v)) { L[k] = k === 'm' || k === 'n' ? Math.max(1, Math.round(v)) : Math.round(v); L.preset = null; renderLab(); } });
+  }
+  document.getElementById('in-next').addEventListener('change', (e) => { L.next = e.target.checked; renderLab(); });
+
+  // ------------------------------------------------------------- 결정 기록
+  function sumOf(set, model, effort, prompt) { const r = findRun(set, model, effort, prompt); return r ? r.summary : null; }
+  function renderWhy() {
+    const s1 = (m, e, p) => sumOf('consult_v1', m, e, p), s2 = (m, e, p) => sumOf('consult_v2', m, e, p);
+    const fmt = (s, k = 'verdict_acc') => (s ? pct(s[k]) : '—');
+    const cost = (s) => (s ? `${s.krw_mean.toFixed(1)}원` : '—');
+    const retried = (() => {
+      for (const r of DATA.runs) for (const [cid, list] of Object.entries(DATA.results[r.key])) for (const x of list) if (x.score.retried && x.score.verdict_ok) return { set: r.scenarios, caseId: cid, run: r, rep: x.rep };
+      return null;
+    })();
+    const D = [
+      {
+        title: 'LLM은 계산하지 않는다', tag: 'E7',
+        problem: '돈 이야기에서 틀린 숫자는 치명적인데, LLM에게 계산을 맡기면 그럴듯하게 틀릴 수 있다.',
+        evidence: '모든 금액과 "살지 말지" 판단을 앱 코드가 내리고, 서버가 답의 금액·판단을 대조. 평가 전체에서 최종 답의 숫자 정확 99~100%.',
+        choice: '툴이 계산하고 LLM은 툴 결과의 *_text 값만 인용. 틀리면 1회 재생성, 또 틀리면 숫자 없는 대체 문구.',
+        alt: 'LLM이 직접 계산(빠르지만 검증 불가), LLM 판단을 그대로 신뢰(경계 사례에서 흔들림).',
+        jump: retried ? { label: '재생성으로 고쳐진 실제 사례', go: { set: retried.set, caseId: retried.caseId, A: [retried.run.model, retried.run.effort, retried.run.promptLabel.slice(0, 2), retried.rep], B: [retried.run.model, retried.run.effort, retried.run.promptLabel.slice(0, 2), retried.rep === 1 ? 2 : 1] } } : null,
+      },
+      {
+        title: '지시문에 오늘 날짜를 넣는다', tag: 'E11',
+        problem: `v1 평가에서 '다음 달 구매'만 유독 틀림(sol/low 판단 일치 전체 ${fmt(s1('gpt-6.1-sol', 'low', 'v1'))}).`,
+        evidence: '모델이 "다음 달 1일"을 2026-07-01, 2025-07-01처럼 임의 날짜로 툴에 넘김 → 이번 달 구매로 계산됨. 모델 능력이 아니라 컨텍스트 빈틈.',
+        choice: `앱이 오늘 날짜를 보내고 서버가 지시문에 "오늘, 다음 달 시작일"을 넣음 → 4개 설정 모두 다음 달 100%, sol/low 전체 ${fmt(s1('gpt-6.1-sol', 'low', 'v2'))}.`,
+        alt: '더 큰 모델·더 많은 추론(sol/medium도 83%에 그침).',
+        jump: { label: '같은 문항, 날짜 없을 때 vs 있을 때', go: { set: 'consult_v1', caseId: 'c41', A: ['gpt-6.1-sol', 'low', 'v1'], B: ['gpt-6.1-sol', 'low', 'v2'] } },
+      },
+      {
+        title: '여러 건의 합계도 코드가 낸다', tag: 'E12',
+        problem: '실제 대화형 평가(v2)에서 "모니터 25만 + 암 4만"을 따로 계산하거나 "커피 4,500원 × 7일"을 한 잔만 계산.',
+        evidence: `sol/medium 기간·횟수 묶음 70%. "계산은 코드가" 원칙에 합산이 빠져 있었음.`,
+        choice: 'simulate_purchase에 amounts 목록 → 앱이 더함. 지시문: "여러 건은 나열하라".',
+        alt: 'LLM에게 합계를 계산시키고 검증만(검증으로는 빠뜨린 항목을 못 잡음).',
+        jump: { label: '모니터 + 모니터암, 수정 전 vs 후', go: { set: 'consult_v2', caseId: 'v20', A: ['gpt-6.1-sol', 'medium', 'v2'], B: ['gpt-6.1-sol', 'medium', 'v3'] } },
+      },
+      {
+        title: '범위 밖 질문은 jev가 한 번 더 본다', tag: 'E12',
+        problem: '"투자 공부용 책 3만 원"을 키워드 "투자"만 보고 거절(모든 설정).',
+        evidence: `금융 단어 묶음 80% → 수정 후 100%. jev 판단: 투자 공부용 책 = 지출(확신도 1.0), 코인 = 상품, 대출 끼고 노트북 = 지출이지만 0.82.`,
+        choice: '키워드는 후보만 찾고 jev가 "금융 상품 요청 / 지출 상담"을 고름. 지출이면서 확신도 0.9 이상만 통과, jev 장애 시 거절.',
+        alt: 'LLM에게 판단(느리고 비쌈), 키워드 목록만 늘리기(끝이 없음).',
+        jump: { label: '투자 공부용 책, 수정 전 vs 후', go: { set: 'consult_v2', caseId: 'v40', A: ['gpt-6-luna', 'low', 'v2'], B: ['gpt-6-luna', 'low', 'v3'] } },
+      },
+      {
+        title: '상담 모델은 gpt-6-luna / 추론 low', tag: 'E11·E12',
+        problem: '상위 모델(sol)이 필요한지, 작은 모델로 충분한지.',
+        evidence: `v2 평가셋 판단 일치 luna/low ${fmt(s2('gpt-6-luna', 'low', 'v3'))} vs sol/low ${fmt(s2('gpt-6.1-sol', 'low', 'v3'))}, 비용 ${cost(s2('gpt-6-luna', 'low', 'v3'))} vs ${cost(s2('gpt-6.1-sol', 'low', 'v3'))}. sol은 "합계를 직접 계산하지 말라"를 과하게 지켜 "반값"도 계산을 거부.`,
+        choice: 'luna/low. 판단은 코드가, 숫자는 서버가 검증하는 구조라 LLM에 남은 일(금액·날짜 읽기, 설명)이 작음.',
+        alt: 'sol/low(약 18배 비용, 점수 같거나 낮음), luna/none(추론 끄면 툴 오사용·긴 꼬리 지연).',
+        jump: { label: '"그럼 반값이면?" sol vs luna', go: { set: 'consult_v2', caseId: 'v09', A: ['gpt-6.1-sol', 'low', 'v3'], B: ['gpt-6-luna', 'low', 'v3'] } },
+      },
+      {
+        title: 'jev 확신도 기준 0.95', tag: 'E10', threshold: true,
+        problem: '처음 보는 가맹점 분류를 jev에 맡길 때 얼마나 믿을지.',
+        evidence: '라벨 446건: 확신도 0.95 이상 정답률 99.7%(거래 65%), 그 아래는 25~37%로 급락.',
+        choice: '0.95 이상만 그대로 쓰고, 아래는 "애매함"으로 표시해 확인 알림에서 [수정]을 먼저 보여줌.',
+        alt: '0.8(정답률 30%대 구간이 통과), jev 대신 luna 단독(83%, 확신도 없음).',
+      },
+    ];
+    const box = document.getElementById('decisions');
+    box.replaceChildren(...D.map((d) => el('article', { class: 'panel stack decision' },
+      el('div', { class: 'row' }, el('span', { class: 'chip acc', text: d.tag }), el('h3', { text: d.title })),
+      el('dl', {}, el('dt', { text: '문제' }), el('dd', { text: d.problem }), el('dt', { text: '근거' }), el('dd', { text: d.evidence }),
+        el('dt', { text: '선택' }), el('dd', { text: d.choice }), el('dt', { text: '안 고른 것' }), el('dd', { class: 'muted', text: d.alt })),
+      d.threshold ? thresholdWidget() : null,
+      d.jump ? el('div', {}, el('button', { class: 'linkbtn', text: `${d.jump.label} →`, onclick: () => goCase(d.jump.go) })) : null)));
+
+    const t = document.getElementById('runs-table');
+    t.replaceChildren(el('thead', {}, el('tr', {}, ['평가셋', '모델 / 추론', '지시문', '판단 일치', '숫자 정확', '툴 호출', '비용/회', '지연 p50'].map((h) => el('th', { text: h })))),
+      el('tbody', {}, DATA.runs.map((r) => el('tr', {},
+        el('td', { text: r.scenarios === 'consult_v1' ? 'v1 단일' : 'v2 대화형' }), el('td', { text: `${r.model} / ${r.effort}` }), el('td', { text: r.promptLabel }),
+        el('td', { text: pct(r.summary.verdict_acc) }), el('td', { text: pct(r.summary.numbers_ok) }), el('td', { text: pct(r.summary.tool_ok) }),
+        el('td', { text: `${r.summary.krw_mean.toFixed(1)}원` }), el('td', { text: `${r.summary.latency_p50.toFixed(1)}초` })))));
+  }
+  function thresholdWidget() {
+    const rows = DATA.threshold;
+    const out = el('p', { class: 'small num' });
+    const range = el('input', { type: 'range', id: 'th-range', min: 0, max: rows.length - 1, step: 1, value: rows.findIndex((r) => r.threshold === 0.95), style: 'width:100%' });
+    const show = () => { const r = rows[Number(range.value)]; out.textContent = `기준 ${r.threshold} → jev 답을 그대로 쓰는 거래 ${pct(r.coverage)}, 그 정답률 ${(r.accuracy * 100).toFixed(1)}%`; };
+    range.addEventListener('input', show); show();
+    return el('div', { class: 'stack' }, el('label', { for: 'th-range', class: 'small muted', text: '확신도 기준을 움직여 보세요' }), range, out);
+  }
+
+  // ------------------------------------------------------------- 시작
+  fetch('data.json').then((r) => r.json()).then((d) => {
+    DATA = d;
+    defaultsFor(S.set);
+    S.caseId = 'c41';
+    renderFilters(); renderList(); renderDetail();
+    syncInputs(); renderLab();
+    renderWhy();
+  }).catch(() => {
+    document.getElementById('detail').replaceChildren(el('div', { class: 'panel', text: '평가 데이터를 불러오지 못했어요. 페이지를 새로 고쳐 주세요.' }));
+  });
+})();
+</script>
