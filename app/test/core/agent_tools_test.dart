@@ -55,6 +55,18 @@ void main() {
     expect(none['error'], contains('예산'));
   });
 
+  test('simulate_purchase: 여러 건(amounts)은 코드가 합산한다(평가 v2)', () async {
+    final r = (await toolbox()).run('simulate_purchase', {
+      'amount': 80000,
+      'amounts': [80000, 40000],
+      'date': null,
+      'installment_months': null,
+    });
+    expect(r['amount'], 120000);
+    expect(r['parts_text'], '80,000원 + 40,000원');
+    expect(r['remaining_after'], 146500 - 120000);
+  });
+
   test('get_upcoming_fixed와 get_category_summary', () async {
     final tb = await toolbox();
     final up = tb.run('get_upcoming_fixed', {'days': 14});

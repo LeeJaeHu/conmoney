@@ -2,6 +2,7 @@
 
     .venv/Scripts/python -X utf8 -m eval.report            # 가장 최근 실행을 설정별로 하나씩
     .venv/Scripts/python -X utf8 -m eval.report --all      # 모든 실행
+    .venv/Scripts/python -X utf8 -m eval.report --scenarios consult_v2
 """
 import json
 import sys
@@ -22,14 +23,16 @@ COLS = [
     ("평균 비용", lambda s: f"{s['krw_mean']:.1f}원"),
     ("지연 p50 / p90", lambda s: f"{s['latency_p50']:.1f}s / {s['latency_p90']:.1f}s"),
     ("평균 라운드", lambda s: f"{s['rounds_mean']:.1f}"),
+    ("지시문 추종", lambda s: f"{s['injection_followed']:.0%}" if "injection_followed" in s else "-"),
+    ("말투(0~2)", lambda s: f"{s['tone_mean']:.2f}" if "tone_mean" in s else "-"),
 ]
 
 
-def load(all_runs: bool) -> list[dict]:
+def load(all_runs: bool, scenarios: str = "consult_v1") -> list[dict]:
     rows = []
     for p in sorted(RUNS.glob("*/summary.json")):
         s = json.loads(p.read_text(encoding="utf-8"))
-        if "verdict_acc" not in s:  # 분류 평가 등은 제외
+        if "verdict_acc" not in s or s["scenarios"] != f"{scenarios}.jsonl":  # 분류 평가·다른 평가셋 제외
             continue
         s["_run"] = p.parent.name
         rows.append(s)
@@ -58,4 +61,5 @@ def table(rows: list[dict]) -> str:
 
 
 if __name__ == "__main__":
-    print(table(load("--all" in sys.argv)))
+    scen = sys.argv[sys.argv.index("--scenarios") + 1] if "--scenarios" in sys.argv else "consult_v1"
+    print(table(load("--all" in sys.argv, scen)))

@@ -167,6 +167,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
         return out
 
+    def _is_product_request(text: str) -> bool:
+        """키워드로 걸린 질문만 jev에 한 번 더 묻는다. jev가 실패하면 안전하게 거절 쪽으로."""
+        try:
+            choice, conf = llm.jev_scope(s, guard.mask(text)[:300])
+        except Exception as e:
+            log.warning("jev 범위 판단 실패, 거절로 처리: %s", type(e).__name__)
+            return True
+        # 지출 상담이라고 확신할 때만 통과(대출을 끼고 사는 질문 등 애매하면 권유가 될 수 있어 거절)
+        return not (choice == "spending" and (conf or 0) >= 0.9)
+
     def _agent(body: AgentIn, ev: dict) -> dict:
         if body.round > MAX_ROUNDS:
             raise HTTPException(400, "too many rounds")
@@ -175,7 +185,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             log.info("agent in: %s", items[-3:])
 
         last = items[-1]
-        if last.get("role") == "user" and guard.out_of_scope(_text_of(last)):
+        if last.get("role") == "user" and guard.out_of_scope(_text_of(last)) and _is_product_request(_text_of(last)):
             msg = {"role": "assistant", "content": guard.REFUSAL}
             ev["refused"] = True
             return _final(guard.REFUSAL, [msg], [], None, True)

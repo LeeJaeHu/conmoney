@@ -1,0 +1,10 @@
+{
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "reps": 2,
+  "scenarios": "consult_v2.jsonl",
+  "n_scenarios": 50,
+  "prompt_hash": "e6f9c3f0",
+  "git_commit": "ea8d416",
+  "started": "2026-10-15T14:56:35"
+}

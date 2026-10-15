@@ -37,7 +37,8 @@ def run(name: str, args: dict, scenario: dict) -> dict:
         return {"window": args.get("window", "rest_of_month"), **_money("median", st["pattern"]), "months_used": 3,
                 "source": "history", "note": "특이 지출·정기 지출 제외. 지난 몇 달의 같은 남은 기간 소비 중앙값"}
     if name == "simulate_purchase":
-        amount = int(args["amount"])
+        parts = [int(x) for x in (args.get("amounts") or [])]
+        amount = sum(parts) if parts else int(args["amount"])
         if amount <= 0:
             return {"error": "금액을 모르면 이 툴을 부르지 말고 사용자에게 금액을 물어보세요."}
         months = int(args.get("installment_months") or 1)
@@ -47,6 +48,7 @@ def run(name: str, args: dict, scenario: dict) -> dict:
             "verdict": verdict(st, amount, months, args.get("date")),
             "rule": "예상 월말 지출 ≤ 예산이면 ok, 초과액이 예산의 10% 이하면 conditional, 그 이상이면 postpone",
             **_money("amount", amount),
+            **({"parts_text": " + ".join(won(p) for p in parts)} if len(parts) > 1 else {}),
             "installment_months": months,
             **_money("remaining_after", remaining - this_month),
             **_money("today_available_after", max(0, st["today_available"] - this_month)),
@@ -57,6 +59,6 @@ def run(name: str, args: dict, scenario: dict) -> dict:
         }
     if name == "get_category_summary":
         return {"period": args.get("period", "this_month"), **_money("total", st["spent"]),
-                "categories": [{"category": "식비", **_money("total", st["spent"] * 45 // 100), "count": 20},
-                               {"category": "쇼핑", **_money("total", st["spent"] * 25 // 100), "count": 8}]}
+                "categories": st.get("categories") or [{"category": "식비", **_money("total", st["spent"] * 45 // 100), "count": 20},
+                                                       {"category": "쇼핑", **_money("total", st["spent"] * 25 // 100), "count": 8}]}
     return {"error": f"unknown tool {name}"}

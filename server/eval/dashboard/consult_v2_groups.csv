@@ -1,0 +1,49 @@
+run,config,prompt,group,verdict_acc
+gpt-6-luna / low · v2 (오늘 날짜 추가),gpt-6-luna / low,v2 (오늘 날짜 추가),finance_words,0.8
+gpt-6-luna / low · v2 (오늘 날짜 추가),gpt-6-luna / low,v2 (오늘 날짜 추가),follow_up,1.0
+gpt-6-luna / low · v2 (오늘 날짜 추가),gpt-6-luna / low,v2 (오늘 날짜 추가),injection,1.0
+gpt-6-luna / low · v2 (오늘 날짜 추가),gpt-6-luna / low,v2 (오늘 날짜 추가),multi_item,1.0
+gpt-6-luna / low · v2 (오늘 날짜 추가),gpt-6-luna / low,v2 (오늘 날짜 추가),multiply,1.0
+gpt-6-luna / low · v2 (오늘 날짜 추가),gpt-6-luna / low,v2 (오늘 날짜 추가),pressure,1.0
+gpt-6-luna / low · v2 (오늘 날짜 추가),gpt-6-luna / low,v2 (오늘 날짜 추가),range,1.0
+gpt-6-luna / low · v2 (오늘 날짜 추가),gpt-6-luna / low,v2 (오늘 날짜 추가),three_turn,1.0
+gpt-6.1-sol / low · v2 (오늘 날짜 추가),gpt-6.1-sol / low,v2 (오늘 날짜 추가),finance_words,0.8
+gpt-6.1-sol / low · v2 (오늘 날짜 추가),gpt-6.1-sol / low,v2 (오늘 날짜 추가),follow_up,1.0
+gpt-6.1-sol / low · v2 (오늘 날짜 추가),gpt-6.1-sol / low,v2 (오늘 날짜 추가),injection,1.0
+gpt-6.1-sol / low · v2 (오늘 날짜 추가),gpt-6.1-sol / low,v2 (오늘 날짜 추가),multi_item,1.0
+gpt-6.1-sol / low · v2 (오늘 날짜 추가),gpt-6.1-sol / low,v2 (오늘 날짜 추가),multiply,1.0
+gpt-6.1-sol / low · v2 (오늘 날짜 추가),gpt-6.1-sol / low,v2 (오늘 날짜 추가),pressure,1.0
+gpt-6.1-sol / low · v2 (오늘 날짜 추가),gpt-6.1-sol / low,v2 (오늘 날짜 추가),range,1.0
+gpt-6.1-sol / low · v2 (오늘 날짜 추가),gpt-6.1-sol / low,v2 (오늘 날짜 추가),three_turn,1.0
+gpt-6.1-sol / medium · v2 (오늘 날짜 추가),gpt-6.1-sol / medium,v2 (오늘 날짜 추가),finance_words,0.8
+gpt-6.1-sol / medium · v2 (오늘 날짜 추가),gpt-6.1-sol / medium,v2 (오늘 날짜 추가),follow_up,1.0
+gpt-6.1-sol / medium · v2 (오늘 날짜 추가),gpt-6.1-sol / medium,v2 (오늘 날짜 추가),injection,1.0
+gpt-6.1-sol / medium · v2 (오늘 날짜 추가),gpt-6.1-sol / medium,v2 (오늘 날짜 추가),multi_item,1.0
+gpt-6.1-sol / medium · v2 (오늘 날짜 추가),gpt-6.1-sol / medium,v2 (오늘 날짜 추가),multiply,0.7
+gpt-6.1-sol / medium · v2 (오늘 날짜 추가),gpt-6.1-sol / medium,v2 (오늘 날짜 추가),pressure,1.0
+gpt-6.1-sol / medium · v2 (오늘 날짜 추가),gpt-6.1-sol / medium,v2 (오늘 날짜 추가),range,1.0
+gpt-6.1-sol / medium · v2 (오늘 날짜 추가),gpt-6.1-sol / medium,v2 (오늘 날짜 추가),three_turn,1.0
+"gpt-6-luna / low · v3 (합산은 코드, 범위 판단)",gpt-6-luna / low,"v3 (합산은 코드, 범위 판단)",finance_words,1.0
+"gpt-6-luna / low · v3 (합산은 코드, 범위 판단)",gpt-6-luna / low,"v3 (합산은 코드, 범위 판단)",follow_up,1.0
+"gpt-6-luna / low · v3 (합산은 코드, 범위 판단)",gpt-6-luna / low,"v3 (합산은 코드, 범위 판단)",injection,1.0
+"gpt-6-luna / low · v3 (합산은 코드, 범위 판단)",gpt-6-luna / low,"v3 (합산은 코드, 범위 판단)",multi_item,1.0
+"gpt-6-luna / low · v3 (합산은 코드, 범위 판단)",gpt-6-luna / low,"v3 (합산은 코드, 범위 판단)",multiply,1.0
+"gpt-6-luna / low · v3 (합산은 코드, 범위 판단)",gpt-6-luna / low,"v3 (합산은 코드, 범위 판단)",pressure,1.0
+"gpt-6-luna / low · v3 (합산은 코드, 범위 판단)",gpt-6-luna / low,"v3 (합산은 코드, 범위 판단)",range,1.0
+"gpt-6-luna / low · v3 (합산은 코드, 범위 판단)",gpt-6-luna / low,"v3 (합산은 코드, 범위 판단)",three_turn,1.0
+"gpt-6.1-sol / low · v3 (합산은 코드, 범위 판단)",gpt-6.1-sol / low,"v3 (합산은 코드, 범위 판단)",finance_words,1.0
+"gpt-6.1-sol / low · v3 (합산은 코드, 범위 판단)",gpt-6.1-sol / low,"v3 (합산은 코드, 범위 판단)",follow_up,0.958
+"gpt-6.1-sol / low · v3 (합산은 코드, 범위 판단)",gpt-6.1-sol / low,"v3 (합산은 코드, 범위 판단)",injection,1.0
+"gpt-6.1-sol / low · v3 (합산은 코드, 범위 판단)",gpt-6.1-sol / low,"v3 (합산은 코드, 범위 판단)",multi_item,1.0
+"gpt-6.1-sol / low · v3 (합산은 코드, 범위 판단)",gpt-6.1-sol / low,"v3 (합산은 코드, 범위 판단)",multiply,1.0
+"gpt-6.1-sol / low · v3 (합산은 코드, 범위 판단)",gpt-6.1-sol / low,"v3 (합산은 코드, 범위 판단)",pressure,1.0
+"gpt-6.1-sol / low · v3 (합산은 코드, 범위 판단)",gpt-6.1-sol / low,"v3 (합산은 코드, 범위 판단)",range,1.0
+"gpt-6.1-sol / low · v3 (합산은 코드, 범위 판단)",gpt-6.1-sol / low,"v3 (합산은 코드, 범위 판단)",three_turn,1.0
+"gpt-6.1-sol / medium · v3 (합산은 코드, 범위 판단)",gpt-6.1-sol / medium,"v3 (합산은 코드, 범위 판단)",finance_words,1.0
+"gpt-6.1-sol / medium · v3 (합산은 코드, 범위 판단)",gpt-6.1-sol / medium,"v3 (합산은 코드, 범위 판단)",follow_up,0.958
+"gpt-6.1-sol / medium · v3 (합산은 코드, 범위 판단)",gpt-6.1-sol / medium,"v3 (합산은 코드, 범위 판단)",injection,1.0
+"gpt-6.1-sol / medium · v3 (합산은 코드, 범위 판단)",gpt-6.1-sol / medium,"v3 (합산은 코드, 범위 판단)",multi_item,1.0
+"gpt-6.1-sol / medium · v3 (합산은 코드, 범위 판단)",gpt-6.1-sol / medium,"v3 (합산은 코드, 범위 판단)",multiply,1.0
+"gpt-6.1-sol / medium · v3 (합산은 코드, 범위 판단)",gpt-6.1-sol / medium,"v3 (합산은 코드, 범위 판단)",pressure,1.0
+"gpt-6.1-sol / medium · v3 (합산은 코드, 범위 판단)",gpt-6.1-sol / medium,"v3 (합산은 코드, 범위 판단)",range,1.0
+"gpt-6.1-sol / medium · v3 (합산은 코드, 범위 판단)",gpt-6.1-sol / medium,"v3 (합산은 코드, 범위 판단)",three_turn,0.9

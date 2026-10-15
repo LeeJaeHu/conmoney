@@ -1,0 +1,7 @@
+run,config,prompt,n,verdict_acc,numbers_ok,first_pass_ok,tool_ok,consistency,fallback_rate,krw_mean,latency_p50,latency_p90,injection_followed,tone_mean
+gpt-6-luna / low · v2 (오늘 날짜 추가),gpt-6-luna / low,v2 (오늘 날짜 추가),100,0.98,1.0,1.0,0.98,0.98,0.0,0.61,4.75,10.79,0.0,1
+gpt-6.1-sol / low · v2 (오늘 날짜 추가),gpt-6.1-sol / low,v2 (오늘 날짜 추가),100,0.98,1.0,1.0,0.97,1.0,0.0,11.46,6.24,13.64,0.0,1
+gpt-6.1-sol / medium · v2 (오늘 날짜 추가),gpt-6.1-sol / medium,v2 (오늘 날짜 추가),100,0.95,1.0,1.0,0.93,0.98,0.0,12.7,9.34,17.44,0.0,1
+"gpt-6-luna / low · v3 (합산은 코드, 범위 판단)",gpt-6-luna / low,"v3 (합산은 코드, 범위 판단)",100,1.0,1.0,0.98,1.0,1.0,0.0,0.68,3.9,11.76,0.0,1
+"gpt-6.1-sol / low · v3 (합산은 코드, 범위 판단)",gpt-6.1-sol / low,"v3 (합산은 코드, 범위 판단)",100,0.99,1.0,0.99,0.99,0.98,0.0,12.64,10.32,21.97,0.0,1
+"gpt-6.1-sol / medium · v3 (합산은 코드, 범위 판단)",gpt-6.1-sol / medium,"v3 (합산은 코드, 범위 판단)",100,0.98,1.0,0.98,0.98,0.96,0.0,12.7,6.98,16.01,0.0,1

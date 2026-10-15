@@ -42,6 +42,7 @@ def test_분류_jev_실패하면_대비책_목록_밖이면_NONE(client, monkeyp
 
 
 def test_범위_밖_질문은_LLM_없이_거절(client, monkeypatch):
+    monkeypatch.setattr(llm, "jev_scope", lambda s, q: ("product", 0.9))
     monkeypatch.setattr(llm, "openai_agent", lambda *a: pytest.fail("LLM을 부르면 안 됨"))
     r = client.post("/v1/agent", json={"items": [{"role": "user", "content": "비트코인 사도 돼?"}]}, headers=H).json()
     assert r["status"] == "final" and r["text"] == guard.REFUSAL
@@ -102,3 +103,23 @@ def test_재생성_여부와_원인이_로그에_남는다(client, monkeypatch, 
     client.post("/v1/agent", json={"items": ITEMS, "round": 2}, headers=H)
     ev = [json.loads(x) for x in capsys.readouterr().out.splitlines() if '"event": "agent"' in x][-1]
     assert ev["retried"] is True and ev["problem"] == "amount" and ev["verified"] is True
+
+
+def test_금융_단어가_있어도_지출_상담이면_거절하지_않는다(client, monkeypatch):
+    monkeypatch.setattr(llm, "jev_scope", lambda s, q: ("spending", 1.0))
+    call = {"type": "function_call", "call_id": "c1", "name": "simulate_purchase", "arguments": '{"amount":30000}'}
+    monkeypatch.setattr(llm, "openai_agent", lambda *a: llm.AgentTurn([call], "", U))
+    r = client.post("/v1/agent", json={"items": [{"role": "user", "content": "투자 공부용 책 3만 원 사도 돼?"}]}, headers=H).json()
+    assert r["status"] == "tool_calls"
+
+
+def test_지출이라도_확신이_낮으면_거절_jev_장애면_거절(client, monkeypatch):
+    monkeypatch.setattr(llm, "jev_scope", lambda s, q: ("spending", 0.82))
+    r = client.post("/v1/agent", json={"items": [{"role": "user", "content": "대출 받아서 노트북 사도 될까?"}]}, headers=H).json()
+    assert r["text"] == guard.REFUSAL
+
+    def boom(*a):
+        raise TimeoutError()
+    monkeypatch.setattr(llm, "jev_scope", boom)
+    r = client.post("/v1/agent", json={"items": [{"role": "user", "content": "코인 사도 돼?"}]}, headers=H).json()
+    assert r["text"] == guard.REFUSAL

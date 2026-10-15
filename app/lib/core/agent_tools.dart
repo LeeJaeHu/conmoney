@@ -27,7 +27,11 @@ class AgentToolbox {
     'get_upcoming_fixed' => upcomingFixed((args['days'] as num?)?.toInt() ?? 7),
     'get_spending_pattern' => spendingPattern(args['window'] as String? ?? 'rest_of_month'),
     'simulate_purchase' => simulatePurchase(
-      (args['amount'] as num).toInt(),
+      // 여러 건이면 amounts의 합계(LLM이 아니라 코드가 더한다, 평가 v2)
+      ((args['amounts'] as List?)?.isNotEmpty ?? false)
+          ? (args['amounts'] as List).fold<int>(0, (s, v) => s + (v as num).toInt())
+          : (args['amount'] as num).toInt(),
+      parts: [for (final v in (args['amounts'] as List?) ?? const []) (v as num).toInt()],
       date: args['date'] == null ? null : DateTime.tryParse(args['date'] as String),
       installmentMonths: (args['installment_months'] as num?)?.toInt() ?? 1,
     ),
@@ -111,7 +115,12 @@ class AgentToolbox {
     return {'window': window, 'from': _ymd(from), 'to': _ymd(today), ..._money('spent', sum), 'note': '특이 지출 제외'};
   }
 
-  Map<String, Object?> simulatePurchase(int amount, {DateTime? date, int installmentMonths = 1}) {
+  Map<String, Object?> simulatePurchase(
+    int amount, {
+    DateTime? date,
+    int installmentMonths = 1,
+    List<int> parts = const [],
+  }) {
     // 금액 없는 질문에 0원으로 부르는 경우가 있어(평가 v1) 계산하지 않고 되묻게 한다
     if (amount <= 0) return {'error': '금액을 모르면 이 툴을 부르지 말고 사용자에게 금액을 물어보세요.'};
     final b = budget;
@@ -126,6 +135,7 @@ class AgentToolbox {
       },
       'rule': '예상 월말 지출 ≤ 예산이면 ok, 초과액이 예산의 10% 이하면 conditional, 그 이상이면 postpone',
       ..._money('amount', amount),
+      if (parts.length > 1) 'parts_text': parts.map(won).join(' + '),
       'installment_months': installmentMonths,
       ..._money('remaining_after', sim.remainingAfter),
       ..._money('today_available_after', sim.todayAvailableAfter < 0 ? 0 : sim.todayAvailableAfter),

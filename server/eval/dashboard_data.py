@@ -13,7 +13,7 @@ RUNS = ROOT / "runs"
 OUT = ROOT / "dashboard"
 DATA = ROOT.parent.parent / "data"
 
-PROMPT_LABEL = {"36a0b422": "v1", "e6f9c3f0": "v2 (오늘 날짜 추가)"}
+PROMPT_LABEL = {"36a0b422": "v1", "e6f9c3f0": "v2 (오늘 날짜 추가)", "dbfec513": "v3 (합산은 코드, 범위 판단)"}
 CONFIG_ORDER = ["gpt-6-luna / none", "gpt-6-luna / low", "gpt-6.1-sol / low", "gpt-6.1-sol / medium"]
 
 
@@ -26,25 +26,27 @@ def write(name: str, rows: list[dict]) -> None:
     print(name, len(rows))
 
 
-def consult() -> None:
+def consult(scenarios: str = "consult_v1", prefix: str = "consult") -> None:
     latest: dict[tuple, dict] = {}
     for p in sorted(RUNS.glob("*/summary.json")):
         s = json.loads(p.read_text(encoding="utf-8"))
-        if "verdict_acc" in s and s["prompt_hash"] in PROMPT_LABEL:
+        if "verdict_acc" in s and s["prompt_hash"] in PROMPT_LABEL and s["scenarios"] == f"{scenarios}.jsonl":
             latest[(s["model"], s["effort"], s["prompt_hash"])] = s
     runs, groups = [], []
-    for (model, effort, ph), s in sorted(latest.items(), key=lambda kv: (kv[0][2] != "36a0b422", CONFIG_ORDER.index(f"{kv[0][0]} / {kv[0][1]}"))):
+    order = list(PROMPT_LABEL)
+    for (model, effort, ph), s in sorted(latest.items(), key=lambda kv: (order.index(kv[0][2]), CONFIG_ORDER.index(f"{kv[0][0]} / {kv[0][1]}"))):
         config = f"{model} / {effort}"
         runs.append({
             "run": f"{config} · {PROMPT_LABEL[ph]}", "config": config, "prompt": PROMPT_LABEL[ph], "n": s["n"],
             "verdict_acc": s["verdict_acc"], "numbers_ok": s["numbers_ok"], "first_pass_ok": s["first_pass_ok"],
             "tool_ok": s["tool_ok"], "consistency": s["consistency"], "fallback_rate": s["fallback_rate"],
             "krw_mean": s["krw_mean"], "latency_p50": s["latency_p50"], "latency_p90": s["latency_p90"],
+            "injection_followed": s.get("injection_followed", ""), "tone_mean": s.get("tone_mean", ""),
         })
         for g, v in s["verdict_acc_by_group"].items():
             groups.append({"run": f"{config} · {PROMPT_LABEL[ph]}", "config": config, "prompt": PROMPT_LABEL[ph], "group": g, "verdict_acc": v})
-    write("consult_runs.csv", runs)
-    write("consult_groups.csv", groups)
+    write(f"{prefix}_runs.csv", runs)
+    write(f"{prefix}_groups.csv", groups)
 
 
 def category() -> None:
@@ -87,10 +89,12 @@ EXPERIMENTS = [
     ("E8", "10/14", "비용·지연", "작업별 모델 단계(코드 → jev → LLM)", "jev 0.4초 vs luna 2.8초"),
     ("E10", "10/15", "분류", "jev 확신도 기준 0.8 → 0.95", "≥0.95 정답률 99.7%(거래 65%)"),
     ("E11", "10/15", "상담", "오늘 날짜를 지시문에 추가", "'다음 달' 33~83% → 100%, luna/low = sol"),
+    ("E12", "10/15", "상담", "평가셋 v2: 범위 밖 판단을 jev로, 합계는 코드가", "과잉 거절 해소, luna/low v2 98% → 100%"),
 ]
 
 
 if __name__ == "__main__":
     consult()
+    consult("consult_v2", "consult_v2")
     category()
     write("experiments.csv", [{"id": a, "date": b, "area": c, "change": d, "result": e} for a, b, c, d, e in EXPERIMENTS])
