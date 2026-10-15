@@ -1,6 +1,7 @@
 # 실제 카드 결제 내역 — 저장소에 올리지 않는다 (두 노트북 사이는 USB/개인 클라우드로 복사)
 카드내역/
 data/*.csv
+
 data/*.xlsx
 
 # Python
@@ -34,3 +35,5 @@ Thumbs.db
 # 앱 빌드용 서버 주소·토큰(--dart-define-from-file)
 app/config/*.json
 !app/config/example.json
+data/eval/
+server/eval/runs/_*.log

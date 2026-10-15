@@ -90,7 +90,7 @@ class _ConsultPageState extends ConsumerState<ConsultPage> {
       final toolbox = await buildToolbox(ref);
       for (var round = 1; round <= 5; round++) {
         rounds = round;
-        final reply = await client.step(_items, round, session: session);
+        final reply = await client.step(_items, round, session: session, today: _ymd(toolbox.now));
         krw += reply.krw;
         _items.addAll(reply.items);
         if (reply.status == 'final') {
@@ -263,3 +263,5 @@ class _Bubble extends StatelessWidget {
     );
   }
 }
+
+String _ymd(DateTime d) => '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';

@@ -1,0 +1,76 @@
+{
+  "date": "20261015-1334",
+  "n_transactions": 446,
+  "n_merchants": 109,
+  "n_categories": 15,
+  "upper_bound_merchant_only": 0.9843,
+  "rules": {
+    "acc": 0.9686,
+    "coverage": 0.9731,
+    "note": "같은 데이터로 만든 규칙이라 낙관값"
+  },
+  "jev": {
+    "model": "jev-1.13.0",
+    "acc": 0.7668,
+    "errors": 0,
+    "latency_s": {
+      "p50": 0.619,
+      "p90": 0.658,
+      "mean": 0.602
+    },
+    "krw_total": 3.57,
+    "calibration": [
+      {
+        "range": "[0.95, 1.0]",
+        "share": 0.65,
+        "acc": 0.997
+      },
+      {
+        "range": "[0.9, 0.95]",
+        "share": 0.018,
+        "acc": 0.25
+      },
+      {
+        "range": "[0.8, 0.9]",
+        "share": 0.036,
+        "acc": 0.375
+      },
+      {
+        "range": "[0.6, 0.8]",
+        "share": 0.099,
+        "acc": 0.318
+      },
+      {
+        "range": "[0.0, 0.6]",
+        "share": 0.197,
+        "acc": 0.352
+      }
+    ],
+    "confident_ge_0.8": {
+      "share": 0.704,
+      "acc": 0.946
+    }
+  },
+  "luna": {
+    "model": "gpt-6-luna",
+    "acc": 0.8296,
+    "errors": 0,
+    "latency_s": {
+      "p50": 1.225,
+      "p90": 1.763,
+      "mean": 1.346
+    },
+    "krw_total": 4.39
+  },
+  "cascades": {
+    "rules→jev": 0.9731,
+    "rules→luna": 0.9821,
+    "jev(≥0.95)→luna": 0.8296,
+    "rules→jev(≥0.95)→luna": 0.9821
+  },
+  "rule_uncovered": {
+    "n": 12,
+    "jev_acc": 0.167,
+    "luna_acc": 0.5
+  }
+}

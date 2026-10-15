@@ -112,6 +112,8 @@ class AgentToolbox {
   }
 
   Map<String, Object?> simulatePurchase(int amount, {DateTime? date, int installmentMonths = 1}) {
+    // 금액 없는 질문에 0원으로 부르는 경우가 있어(평가 v1) 계산하지 않고 되묻게 한다
+    if (amount <= 0) return {'error': '금액을 모르면 이 툴을 부르지 말고 사용자에게 금액을 물어보세요.'};
     final b = budget;
     if (b == null) return _noBudget();
     final sim = engine.simulatePurchase(now, b, amount, date: date, installmentMonths: installmentMonths);

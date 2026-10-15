@@ -1,5 +1,7 @@
 """구매 상담 에이전트의 시스템 프롬프트와 툴 정의(Spec F6, PRD 5장).
 툴은 앱(폰) 안에서 실행된다. 서버는 정의만 LLM에 전달한다."""
+from datetime import date
+
 
 SYSTEM = """\
 너는 개인용 예산 앱 conmoney의 구매 상담 도우미다. 사용자가 "이거 살까?", "이번 주말에 5만 원 써도 돼?"처럼 물으면
@@ -86,3 +88,15 @@ TOOLS = [
 ]
 
 TOOL_NAMES = {t["name"] for t in TOOLS}
+
+_WEEKDAYS = "월화수목금토일"
+
+
+def instructions(today: date) -> str:
+    """시스템 프롬프트 + 오늘 날짜. 날짜가 없으면 모델이 '다음 달'을 임의의 연·월로 바꾼다(평가 v1, E11)."""
+    nxt = date(today.year + (today.month == 12), today.month % 12 + 1, 1)
+    return (
+        SYSTEM
+        + f"\n오늘은 {today.isoformat()}({_WEEKDAYS[today.weekday()]})이다. 이번 달은 {today.month}월이고, "
+        f"'다음 달'은 {nxt.isoformat()}부터다. 날짜를 툴에 넘길 때는 이 날짜를 기준으로 yyyy-MM-dd로 바꾼다.\n"
+    )

@@ -77,8 +77,9 @@ class AgentClient {
   }
 
   /// [session]은 한 질문의 여러 라운드를 서버 로그에서 묶는 임의 ID.
-  Future<AgentReply> step(List<Map<String, Object?>> items, int round, {String? session}) async {
-    final j = await _post('/v1/agent', {'items': items, 'round': round, 'session': ?session});
+  /// [today]는 앱 기준 오늘(yyyy-MM-dd). 모델이 '다음 달'을 올바른 날짜로 바꾸려면 필요하다.
+  Future<AgentReply> step(List<Map<String, Object?>> items, int round, {String? session, String? today}) async {
+    final j = await _post('/v1/agent', {'items': items, 'round': round, 'session': ?session, 'today': ?today});
     return AgentReply(
       status: j['status'] as String,
       items: [for (final i in j['items'] as List) (i as Map).cast<String, Object?>()],

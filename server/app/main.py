@@ -11,7 +11,7 @@ import secrets
 import time
 from collections import defaultdict, deque
 from dataclasses import replace
-from datetime import datetime
+from datetime import date, datetime, timedelta, timezone
 
 from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field
@@ -23,6 +23,7 @@ log = logging.getLogger("conmoney")
 logging.basicConfig(level=logging.INFO)
 
 MAX_ROUNDS = 5
+KST = timezone(timedelta(hours=9))
 
 
 def emit(event: str, **fields) -> None:
@@ -117,6 +118,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         round: int = Field(default=1, ge=1)
         # 한 질문(여러 라운드)을 묶는 앱 쪽 임의 ID. 로그 집계용
         session: str | None = Field(default=None, max_length=64)
+        # 앱의 오늘 날짜(yyyy-MM-dd). 없으면 서버 날짜(KST)
+        today: date | None = None
 
     def _final(text: str, items: list[dict], usage: list[llm.Usage], verdict: str | None, checked: bool) -> dict:
         return {
@@ -147,6 +150,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise
         finally:
             ev["latency_ms"] = round((time.perf_counter() - t0) * 1000)
+        # 평가·디버깅용: 재생성 여부와 원인(본문 아님)
+        out["meta"] = {"retried": ev["retried"], "problem": ev.get("problem"), "refused": ev["refused"]}
         u = out.get("usage") or {}
         emit(
             "agent",
@@ -182,7 +187,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             ev["downgraded"] = True
 
         usage: list[llm.Usage] = []
-        turn = llm.openai_agent(cfg, prompts.SYSTEM, items, prompts.TOOLS)
+        system = prompts.instructions(body.today or datetime.now(KST).date())
+        turn = llm.openai_agent(cfg, system, items, prompts.TOOLS)
         usage.append(turn.usage)
         meter.add(turn.usage, s.usd_krw)
 
@@ -208,7 +214,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         ev["retried"] = True
         ev["problem"] = "verdict" if problem.startswith("판단") else "amount"
         retry_items = items + turn.output_items + [{"role": "developer", "content": problem}]
-        turn2 = llm.openai_agent(cfg, prompts.SYSTEM, retry_items, prompts.TOOLS)
+        turn2 = llm.openai_agent(cfg, system, retry_items, prompts.TOOLS)
         usage.append(turn2.usage)
         meter.add(turn2.usage, s.usd_krw)
         if turn2.text and not any(o.get("type") == "function_call" for o in turn2.output_items):

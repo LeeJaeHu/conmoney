@@ -16,9 +16,24 @@ void main() {
   tearDown(() => db.close());
 
   test('상담 지표: 검증 통과율·평균 비용·오류 수', () async {
-    await metrics.consult(rounds: 2, krw: 6, latencyMs: 4000, verdict: 'ok', verified: true, tools: ['simulate_purchase']);
+    await metrics.consult(
+      rounds: 2,
+      krw: 6,
+      latencyMs: 4000,
+      verdict: 'ok',
+      verified: true,
+      tools: ['simulate_purchase'],
+    );
     await metrics.consult(rounds: 3, krw: 10, latencyMs: 8000, verdict: null, verified: false, tools: const []);
-    await metrics.consult(rounds: 1, krw: 0, latencyMs: 500, verdict: null, verified: false, tools: const [], error: true);
+    await metrics.consult(
+      rounds: 1,
+      krw: 0,
+      latencyMs: 500,
+      verdict: null,
+      verified: false,
+      tools: const [],
+      error: true,
+    );
     final s = await metrics.summary();
     expect(s.consults, 3);
     expect(s.consultErrors, 1);
@@ -40,10 +55,7 @@ void main() {
             approvedAt: DateTime(2026, 10, 14),
             localDate: '2026-10-14',
             dedupeKey: key,
-          ).copyWith(
-            suggestedCategoryId: Value(cats['식비']),
-            suggestSource: Value(source),
-          ),
+          ).copyWith(suggestedCategoryId: Value(cats['식비']), suggestSource: Value(source)),
         );
     final spending = SpendingRepository(db);
     await spending.saveReview(await txn('a', 'USER_RULE'), categoryId: cats['식비'], isUnusual: false, memo: null);
