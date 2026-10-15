@@ -3,7 +3,7 @@
 > 총액을 보는 것 자체가 스트레스라서 가계부 앱을 열지 않게 된다.
 > 그래서 **"오늘 쓸 수 있는 금액" 하나만** 보여주고, 살까 말까 고민될 때 **내 소비 패턴과 실제 숫자로** 답하는 개인용 Android 앱을 만들고 있습니다.
 
-1인 개발 · 2026-10-13 시작 · Flutter(Android) + Kotlin + Python(Cloud Run) · OpenAI `gpt-6.1-sol` / `gpt-6-luna` · TypeSafe `jev`
+1인 개발 · 2026-10-13 시작 · Flutter(Android) + Kotlin + Python(Cloud Run) · OpenAI `gpt-6-luna`(평가로 `gpt-6.1-sol`에서 교체) · TypeSafe `jev`
 
 | | |
 |---|---|
@@ -50,7 +50,7 @@ flowchart LR
     V[숫자·판단 검증<br/>→ 1회 재생성]
   end
   T -- "집계 숫자만" --> G
-  G --> O["gpt-6.1-sol<br/>상담"]
+  G --> O["gpt-6-luna (추론 low)<br/>상담"]
   G --> J["jev<br/>분류+확신도"]
   J -. 실패 .-> LU[gpt-6-luna]
   O --> V

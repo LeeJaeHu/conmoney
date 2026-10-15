@@ -28,7 +28,7 @@ def load() -> Settings:
     e = os.environ.get
     return Settings(
         app_token=e("APP_TOKEN", ""),
-        openai_model_agent=e("OPENAI_MODEL_AGENT", "gpt-6.1-sol"),
+        openai_model_agent=e("OPENAI_MODEL_AGENT", "gpt-6-luna"),
         openai_reasoning_agent=e("OPENAI_REASONING_AGENT", "low"),
         openai_model_light=e("OPENAI_MODEL_LIGHT", "gpt-6-luna"),
         openai_reasoning_light=e("OPENAI_REASONING_LIGHT", "none"),

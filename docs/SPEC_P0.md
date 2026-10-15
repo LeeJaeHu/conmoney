@@ -512,7 +512,7 @@ class ParsedPayment {
 | 엔드포인트 | `POST /v1/agent` (상담 루프), `POST /v1/categorize` (가맹점 1건 분류) |
 | 인증 | 앱에 넣은 고정 토큰 `X-App-Token` + Cloud Run 최소 인스턴스 0. 개인용이라 이 수준으로 충분 `[가정]` |
 | 제한 | 분당 30회, 하루 500회. 초과 시 429 |
-| 모델 | `server/.env`(형식: `server/.env.example`)로 작업별 모델을 정한다. **구매 상담·분석 `gpt-6.1-sol`(추론 low)**, **가벼운 작업(jev 대비책·질문 종류 파악) `gpt-6-luna`(추론 none)**, 분류는 jev. 공급자별 어댑터(jev, OpenAI, 나중에 Gemini·xAI)를 같은 인터페이스로 둔다(10/14 결정: LLM은 OpenAI로 시작) |
+| 모델 | `server/.env`(형식: `server/.env.example`)로 작업별 모델을 정한다. **구매 상담·분석 `gpt-6-luna`(추론 low, 10/15 평가 E11·E12로 sol에서 변경)**, **가벼운 작업(jev 대비책·질문 종류 파악) `gpt-6-luna`(추론 none)**, 분류는 jev. 공급자별 어댑터(jev, OpenAI, 나중에 Gemini·xAI)를 같은 인터페이스로 둔다(10/14 결정: LLM은 OpenAI로 시작) |
 | 로그 | 요청·응답 본문 저장 안 함. 상태 코드·지연·토큰 수만 기록. `DEBUG=1`일 때만 본문 로그 |
 | 비용 | 토큰 수로 월 누적 비용 추정, 8,000원 넘으면 `/v1/categorize` 비활성화(규칙만 사용) `[가정]` |
 
