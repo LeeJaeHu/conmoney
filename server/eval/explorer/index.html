@@ -120,12 +120,13 @@
         <select id="sel-set">
           <option value="consult_v1">v1 · 단일 질문 50개</option>
           <option value="consult_v2">v2 · 실제 대화형 50개</option>
+          <option value="consult_v3">v3 · 다음 달·할부·예정 지출·금액대 24개</option>
         </select>
         <label class="small muted" for="sel-group">묶음</label>
         <select id="sel-group"></select>
         <label class="row small"><input type="checkbox" id="only-diff"> A·B 결과가 다른 문항만</label>
       </div>
-      <p class="small muted">점 = 실행 A·B 판단이 맞았는지(왼쪽 A, 오른쪽 B, 2회 중 1회차)</p>
+      <p class="small muted">점 = 실행 A·B 판단이 맞았는지(왼쪽 A, 오른쪽 B, 각 실행에서 고른 회차)</p>
       <div class="caselist" id="caselist"></div>
     </aside>
     <div class="stack" id="detail"></div>
@@ -146,12 +147,13 @@
       <hr style="border:0;border-top:1px solid var(--line);width:100%">
       <div class="field"><label for="in-a">살까 고민하는 금액</label><input type="number" id="in-a" step="5000"></div>
       <div class="field"><label for="in-m">할부 개월(일시불 1)</label><input type="number" id="in-m" min="1" max="36"></div>
-      <label class="row"><input type="checkbox" id="in-next"> 다음 달에 살 예정</label>
+      <label class="row"><input type="checkbox" id="in-next"> 다음 달에 살 예정(위 값을 그 달 예상으로 봄)</label>
     </div>
     <div class="stack">
       <div class="panel stack" id="lab-out"></div>
       <div class="panel stack">
         <h3>왜 이렇게 계산하나</h3>
+        <p class="small">다음 달에 산다면 S는 그 달로 넘어온 할부 회차, F는 정기·예정 지출 전체, P는 평소 한 달 소비, B는 그 달 예산(없으면 이번 달 예산을 이어 씀)으로 같은 규칙을 씁니다(10/15부터).</p>
         <p class="small">판단은 LLM이 아니라 앱 코드가 내립니다. LLM은 이 숫자를 받아 설명만 하고, 서버가 답의 금액과 판단이 이 계산과 같은지 확인합니다. P는 지난 몇 달의 같은 남은 기간 소비 중앙값(특이 지출·정기 지출 제외)이라, 월말에 실제로 얼마나 쓸지까지 포함해 판단합니다.</p>
       </div>
     </div>
@@ -161,7 +163,7 @@
     <div class="decisions" id="decisions"></div>
     <div class="panel stack">
       <h2>설정별 점수와 비용</h2>
-      <p class="small muted">평가셋마다 마지막으로 돌린 실행. 판단 일치는 설정당 100건(50문항 × 2회).</p>
+      <p class="small muted">설정·지시문마다 마지막으로 돌린 실행. 판단 일치는 v1·v2 100건(50문항 × 2회), v3 72건(24문항 × 3회).</p>
       <div class="tablebox"><table id="runs-table"></table></div>
     </div>
   </section>
@@ -170,12 +172,13 @@
 <script>
 (() => {
   const TODAY = '2026-10-14';
-  const VERDICT = { ok: '괜찮아요', conditional: '조건부', postpone: '미루는 걸 추천', next_month: '다음 달 기준' };
+  const VERDICT = { ok: '괜찮아요', conditional: '조건부', postpone: '미루는 걸 추천', next_month: '다음 달 기준(10/15 이전)' };
   const GROUP = {
     roomy: '여유 있음', boundary: '경계(0원·10%·10%+1)', over: '이미 초과', tight: '빠듯함', fixed_soon: '큰 정기 지출 직전',
     installment: '할부', next_month: '다음 달 구매', ask_amount: '금액 없는 질문', phrasing: '다양한 금액 표현',
     follow_up: '후속 질문', three_turn: '세 번 주고받기', multi_item: '여러 물건 합산', multiply: '기간·횟수 계산',
     pressure: '압박·유도', range: '금액 범위', injection: '툴 결과 속 지시문', finance_words: '금융 단어',
+    installment_alt: '할부 대안', plan: '예정 지출 등록', planned_state: '예정 지출이 있는 상태', range_split: '금액대 구간',
   };
   const won = (n) => `${n < 0 ? '-' : ''}${Math.abs(Math.round(n)).toLocaleString('ko-KR')}원`;
   const pct = (x) => `${Math.round(x * 100)}%`;
@@ -194,15 +197,42 @@
     const rest = Math.floor(Math.floor(amount / months) / 100) * 100;
     return amount - rest * (months - 1);
   };
-  const judge = ({ budget, spent, fixed, pattern }, amount, months = 1, nextMonth = false) => {
+  const verdictOf = (over, budget) => (over <= 0 ? 'ok' : over <= Math.floor(budget / 10) ? 'conditional' : 'postpone');
+  // 이번 달: S + F + P + 반영액. 다음 달(10/15부터): 이월 할부 + 정기·예정 지출 전체 + 평소 한 달 소비 + 1회차를 그 달 예산과 비교
+  const judge = ({ budget, spent, fixed, pattern }, amount, months = 1) => {
     const thisMonth = firstInstallment(amount, months);
     const projected = spent + fixed + pattern + thisMonth;
     const over = projected - budget;
     const tenth = Math.floor(budget / 10);
-    const verdict = nextMonth ? 'next_month' : over <= 0 ? 'ok' : over <= tenth ? 'conditional' : 'postpone';
-    return { thisMonth, projected, over, tenth, verdict };
+    return { thisMonth, projected, over, tenth, verdict: verdictOf(over, budget) };
   };
   const fixedSum = (st) => st.fixed.reduce((s, f) => s + f.amount, 0);
+  const isFuture = (date) => !!(date && date.slice(0, 7) > TODAY.slice(0, 7));
+  // 평가셋의 다음 달 예상(eval/consult_scenarios.py next_month와 같음)
+  const nextOf = (st) => {
+    const n = st.next || {};
+    return {
+      budget: n.budget ?? null, known: n.known ?? 0,
+      fixed: n.fixed ?? st.fixed.filter((f) => f.due_date).reduce((s, f) => s + f.amount, 0),
+      usual: n.usual ?? st.spent + st.pattern,
+    };
+  };
+  const judgeCase = (st, amount, months = 1, date = null) => {
+    if (!isFuture(date)) return { ...judge({ budget: st.budget, spent: st.spent, fixed: fixedSum(st), pattern: st.pattern }, amount, months), future: false, budget: st.budget };
+    const nx = nextOf(st);
+    const b = nx.budget ?? st.budget;
+    const j = judge({ budget: b, spent: nx.known, fixed: nx.fixed, pattern: nx.usual }, amount, months);
+    return { ...j, future: true, budget: b, carried: nx.budget == null, nx };
+  };
+  const splitParts = (amount, n) => { const rest = Math.floor(Math.floor(amount / n) / 100) * 100; return [amount - rest * (n - 1), ...Array(n - 1).fill(rest)]; };
+  // 일시불이 괜찮아요가 아닐 때 2·3개월 할부안(첫 달은 구매 달, 이후는 다음 달 예상)
+  const installmentOptions = (st, amount, date) => {
+    if (judgeCase(st, amount, 1, date).verdict === 'ok') return [];
+    return [2, 3].map((n) => ({ months: n, rows: splitParts(amount, n).map((part, k) => {
+      const j = judgeCase(st, part, 1, isFuture(date) || k > 0 ? '2099-01-01' : null);
+      return { k, part, verdict: j.verdict, over: j.over };
+    }) }));
+  };
 
   let DATA = null;
   const S = { tab: 'explore', set: 'consult_v1', group: 'all', caseId: null, onlyDiff: false, A: { run: null, rep: 1 }, B: { run: null, rep: 1 } };
@@ -218,7 +248,10 @@
   function defaultsFor(set) {
     const rs = runsOf(set);
     const pick = (m, e, p) => rs.find((r) => r.model === m && r.effort === e && r.promptLabel.startsWith(p));
-    if (set === 'consult_v1') {
+    if (set === 'consult_v3') {
+      S.A = { run: (pick('gpt-6-luna', 'low', 'v4.1') || rs[0]).key, rep: 1 };
+      S.B = { run: (pick('gpt-6-luna', 'low', 'v4.4') || rs[rs.length - 1]).key, rep: 1 };
+    } else if (set === 'consult_v1') {
       S.A = { run: (pick('gpt-6.1-sol', 'low', 'v1') || rs[0]).key, rep: 1 };
       S.B = { run: (pick('gpt-6.1-sol', 'low', 'v2') || rs[1] || rs[0]).key, rep: 1 };
     } else {
@@ -277,21 +310,40 @@
       el('div', {}, el('span', { text: '오늘 쓸 수 있는 금액' }), el('b', { text: won(st.today_available) })));
     const fixedList = el('p', { class: 'small muted' }, '정기 지출: ', st.fixed.map((f) => `${f.name} ${f.estimate ? '약 ' : ''}${won(f.amount)}${f.due_date ? ` (${f.due_date.slice(5)})` : ''}`).join(', '));
     let calc;
-    if (e.type === 'verdict') {
-      const j = judge({ budget: st.budget, spent: st.spent, fixed: F, pattern: st.pattern }, e.amount, e.installment_months || 1, !!(e.date && e.date.slice(0, 7) > TODAY.slice(0, 7)));
-      calc = el('dl', { class: 'formula' },
-        el('dt', { text: '이번 달 반영액' }), el('dd', {}, won(j.thisMonth), e.installment_months > 1 ? el('span', { class: 'muted small', text: `  (${won(e.amount)} ${e.installment_months}개월 할부의 1회차)` }) : null),
-        el('dt', { text: '예상 월말 지출 E' }), el('dd', { text: `S + F + P + 반영액 = ${won(j.projected)}` }),
+    if (e.type === 'verdict' || e.type === 'installment_alt') {
+      const j = judgeCase(st, e.amount, e.installment_months || 1, e.date);
+      const m = j.future ? `${Number(e.date.slice(5, 7))}월` : '이번 달';
+      calc = el('div', { class: 'stack' }, el('dl', { class: 'formula' },
+        j.future ? [el('dt', { text: '판단 기준 달' }), el('dd', { text: `${m} (구매일 ${e.date}). 예산 ${won(j.budget)}${j.carried ? ' — 그 달 예산이 없어 이번 달 예산을 이어 씀' : ''}` })] : null,
+        el('dt', { text: `${m} 반영액` }), el('dd', {}, won(j.thisMonth), e.installment_months > 1 ? el('span', { class: 'muted small', text: `  (${won(e.amount)} ${e.installment_months}개월 할부의 1회차)` }) : null),
+        el('dt', { text: '예상 월말 지출 E' }), el('dd', { text: j.future
+          ? `이월 할부 ${won(j.nx.known)} + 정기·예정 지출 ${won(j.nx.fixed)} + 평소 한 달 소비 ${won(j.nx.usual)} + 반영액 = ${won(j.projected)}`
+          : `S + F + P + 반영액 = ${won(j.projected)}` }),
         el('dt', { text: '초과액 E − B' }), el('dd', { text: won(j.over) }),
         el('dt', { text: '조건부 한도' }), el('dd', { text: `예산의 10% = ${won(j.tenth)}` }),
-        el('dt', { text: '정답 판단' }), el('dd', {}, el('span', { class: `verdict ${e.verdict}`, text: VERDICT[e.verdict] }),
-          e.verdict === 'next_month' ? el('span', { class: 'muted small', text: `  구매일 ${e.date}이 다음 달이라 이번 달 예산으로 판단하지 않음` }) : null));
-    } else if (e.type === 'ask_amount') calc = el('p', {}, '정답: 툴을 부르기 전에 ', el('b', { text: '금액을 되묻기' }));
+        el('dt', { text: '정답 판단' }), el('dd', {}, el('span', { class: `verdict ${e.verdict}`, text: VERDICT[e.verdict] }))),
+        e.type === 'installment_alt' ? installmentTable(st, e) : null);
+    } else if (e.type === 'plan') calc = el('p', {}, '정답: ', el('b', { text: `add_planned_expense(금액 ${won(e.amount)}, 날짜 ${e.date})` }), '로 등록을 제안하고 "[등록]을 누르면 예산에 반영"이라고 안내. 저장은 사용자가 버튼을 눌러야 됨');
+    else if (e.type === 'ask_date') calc = el('p', {}, '정답: 날짜를 지어내지 말고 ', el('b', { text: '언제 낼지 되묻기' }), ' (날짜 없이 부른 툴이 오류를 돌려준 뒤 묻는 것도 정답)');
+    else if (e.type === 'ask_amount') calc = el('p', {}, '정답: 툴을 부르기 전에 ', el('b', { text: '금액을 되묻기' }));
     else if (e.type === 'refuse') calc = el('p', {}, '정답: 금융 상품 권유 요청이라 ', el('b', { text: '거절' }));
-    else if (e.type === 'range') calc = el('p', {}, `정답: 금액을 되묻거나, ${won(e.lo)}~${won(e.hi)} 사이 금액으로 계산하고 그 금액의 판단을 말하기`);
+    else if (e.type === 'range') calc = el('div', { class: 'stack' },
+      el('p', {}, `정답(10/15부터): 되묻지 말고 ${won(e.lo)}~${won(e.hi)}를 판단별 구간으로 나눠 말하기. 경계 = 예산에 맞는 최대 금액, 거기에 예산의 10%를 더한 금액(1,000원 단위 내림)`),
+      el('dl', { class: 'formula' }, (e.segments || []).flatMap((x, i) => [
+        el('dt', { text: i === 0 ? `${won(e.lo)}부터` : '그보다 비싸고' }),
+        el('dd', {}, `${won(x.to)}까지 `, el('span', { class: `verdict ${x.verdict}`, text: VERDICT[x.verdict] }))])));
     return el('div', { class: 'panel stack' }, el('h3', { text: '입력' }),
       el('div', { class: 'bubbles' }, c.turns.map((t) => el('div', { class: 'bubble', text: t }))), base, fixedList,
       el('h3', { text: '정답 계산 (앱 엔진과 같은 공식)' }), calc);
+  }
+
+  function installmentTable(st, e) {
+    const opts = installmentOptions(st, e.amount, e.date);
+    const base = isFuture(e.date) ? Number(e.date.slice(5, 7)) : Number(TODAY.slice(5, 7));
+    return el('div', { class: 'stack' }, el('p', { class: 'small muted', text: '대안: 2·3개월 할부안(각 달에 그 회차를 더해 판단). 답에 "할부"와 괜찮은 쪽 안의 회차 금액이 나와야 정답' }),
+      el('dl', { class: 'formula' }, opts.flatMap((o) => [
+        el('dt', { text: `${o.months}개월` }),
+        el('dd', {}, o.rows.map((x) => el('span', {}, `${(base + x.k - 1) % 12 + 1}월 ${won(x.part)} `, el('span', { class: `verdict ${x.verdict}`, text: VERDICT[x.verdict] }), '  ')))])));
   }
 
   function runPane(which, c) {
@@ -299,7 +351,8 @@
     const runs = runsOf(S.set);
     const runSel = el('select', { id: `run-${which}`, onchange: (ev) => { sel.run = ev.target.value; renderList(); renderDetail(); } },
       runs.map((r) => el('option', { value: r.key, text: runLabel(r), selected: r.key === sel.run })));
-    const repSel = el('div', { class: 'seg' }, [1, 2].map((n) => el('button', { 'aria-pressed': String(sel.rep === n), onclick: () => { sel.rep = n; renderList(); renderDetail(); }, text: `${n}회차` })));
+    const reps = [...new Set(Object.values(DATA.results[sel.run] || {}).flat().map((x) => x.rep))].sort();
+    const repSel = el('div', { class: 'seg' }, (reps.length ? reps : [1, 2]).map((n) => el('button', { 'aria-pressed': String(sel.rep === n), onclick: () => { sel.rep = n; renderList(); renderDetail(); }, text: `${n}회차` })));
     const head = el('div', { class: 'stack' }, el('div', { class: 'row' }, el('h3', { text: `실행 ${which}` }), repSel), runSel);
     const r = resultOf(sel, c.id);
     if (!r) return el('div', { class: 'panel stack' }, head, el('p', { class: 'muted', text: '이 실행에는 이 문항 결과가 없어요.' }));
@@ -331,14 +384,17 @@
       const parts = x.args.amounts && x.args.amounts.length ? x.args.amounts : null;
       const amount = parts ? parts.reduce((s, v) => s + v, 0) : x.args.amount;
       if (amount > 0) {
-        const st = c.state;
-        const next = !!(x.args.date && x.args.date.slice(0, 7) > TODAY.slice(0, 7));
-        const j = judge({ budget: st.budget, spent: st.spent, fixed: fixedSum(st), pattern: st.pattern }, amount, x.args.installment_months || 1, next);
-        lines.push(el('div', { class: 'small' }, '→ 앱 계산: ', parts ? `${parts.map(won).join(' + ')} = ` : '', `${won(amount)}, 초과액 ${won(j.over)} → `,
+        const j = judgeCase(c.state, amount, x.args.installment_months || 1, x.args.date);
+        lines.push(el('div', { class: 'small' }, '→ 앱 계산(현재 규칙): ', parts ? `${parts.map(won).join(' + ')} = ` : '', `${won(amount)}, `,
+          j.future ? `${Number(x.args.date.slice(5, 7))}월 기준 ` : '', `초과액 ${won(j.over)} → `,
           el('span', { class: `verdict ${j.verdict}`, text: VERDICT[j.verdict] }),
-          x.args.date ? el('span', { class: 'muted', text: `  (date ${x.args.date}${next ? '' : ' → 이번 달로 계산됨'})` }) : null));
+          x.args.date ? el('span', { class: 'muted', text: `  (date ${x.args.date}${j.future ? '' : ' → 이번 달로 계산됨'})` }) : null));
       } else lines.push(el('div', { class: 'small', style: 'color:var(--warn)', text: '→ 금액이 0원이라 툴이 계산하지 않고 "금액을 먼저 물어보세요"를 돌려줌(v2 지시문부터)' }));
     }
+    if (x.name === 'add_planned_expense') lines.push(el('div', { class: 'small', text: x.args.date
+      ? `→ 저장하지 않고 화면에 [등록] 카드를 띄움 (${won(x.args.amount)}, ${x.args.date})`
+      : '→ 날짜가 없어 툴이 "날짜가 필요해요" 오류를 돌려줌' }));
+    if (x.name === 'simulate_range') lines.push(el('div', { class: 'small', text: `→ ${won(x.args.min)}~${won(x.args.max)}를 판단별 구간으로 나눠 돌려줌(경계 1,000원 단위 내림)` }));
     return el('div', { class: 'call' }, lines);
   }
 
@@ -377,17 +433,17 @@
   function renderLab() {
     const seg = document.getElementById('presets');
     seg.replaceChildren(...Object.keys(PRESETS).map((k) => el('button', { 'aria-pressed': String(L.preset === k), text: k, onclick: () => { Object.assign(L, PRESETS[k], { preset: k }); syncInputs(); renderLab(); } })));
-    const j = judge({ budget: L.b, spent: L.s, fixed: L.f, pattern: L.p }, L.a, L.m, L.next);
+    const j = judge({ budget: L.b, spent: L.s, fixed: L.f, pattern: L.p }, L.a, L.m);
     const remaining = L.b - L.s - L.f;
     const daily = Math.floor(remaining / Math.max(1, L.n));
     const out = document.getElementById('lab-out');
     out.replaceChildren(
       el('div', { class: 'row' }, el('span', { class: 'muted', text: '판단' }), el('span', { class: `big verdict ${j.verdict}`, text: VERDICT[j.verdict] })),
       el('dl', { class: 'formula' },
-        el('dt', { text: '이번 달 반영액' }), el('dd', { text: `${won(j.thisMonth)}${L.m > 1 ? ` (${L.m}개월 할부 1회차, 회차 금액 100원 단위 내림·나머지는 1회차)` : ''}` }),
+        el('dt', { text: L.next ? '그 달 반영액' : '이번 달 반영액' }), el('dd', { text: `${won(j.thisMonth)}${L.m > 1 ? ` (${L.m}개월 할부 1회차, 회차 금액 100원 단위 내림·나머지는 1회차)` : ''}` }),
         el('dt', { text: '예상 월말 지출 E' }), el('dd', { text: `${won(L.s)} + ${won(L.f)} + ${won(L.p)} + ${won(j.thisMonth)} = ${won(j.projected)}` }),
         el('dt', { text: '초과액 E − B' }), el('dd', { text: won(j.over) }),
-        el('dt', { text: '판단 규칙' }), el('dd', { text: L.next ? '다음 달 구매는 이번 달 예산으로 판단하지 않음' : `초과액 ≤ 0 → 괜찮아요, ≤ ${won(j.tenth)}(예산의 10%) → 조건부, 그 이상 → 미루는 걸 추천` }),
+        el('dt', { text: '판단 규칙' }), el('dd', { text: `${L.next ? '다음 달 예상에 같은 규칙: ' : ''}초과액 ≤ 0 → 괜찮아요, ≤ ${won(j.tenth)}(예산의 10%) → 조건부, 그 이상 → 미루는 걸 추천` }),
         el('dt', { text: '남은 예산 R' }), el('dd', { text: `B − S − F = ${won(remaining)} → 사면 ${won(remaining - j.thisMonth)}` }),
         el('dt', { text: '하루 쓸 수 있는 금액' }), el('dd', { text: `R ÷ ${L.n}일 ≈ ${won(Math.max(0, daily))}` })),
       bar(j));
@@ -426,7 +482,7 @@
   // ------------------------------------------------------------- 결정 기록
   function sumOf(set, model, effort, prompt) { const r = findRun(set, model, effort, prompt); return r ? r.summary : null; }
   function renderWhy() {
-    const s1 = (m, e, p) => sumOf('consult_v1', m, e, p), s2 = (m, e, p) => sumOf('consult_v2', m, e, p);
+    const s1 = (m, e, p) => sumOf('consult_v1', m, e, p), s2 = (m, e, p) => sumOf('consult_v2', m, e, p), s3 = (m, e, p) => sumOf('consult_v3', m, e, p);
     const fmt = (s, k = 'verdict_acc') => (s ? pct(s[k]) : '—');
     const cost = (s) => (s ? `${s.krw_mean.toFixed(1)}원` : '—');
     const retried = (() => {
@@ -440,7 +496,7 @@
         evidence: '모든 금액과 "살지 말지" 판단을 앱 코드가 내리고, 서버가 답의 금액·판단을 대조. 평가 전체에서 최종 답의 숫자 정확 99~100%.',
         choice: '툴이 계산하고 LLM은 툴 결과의 *_text 값만 인용. 틀리면 1회 재생성, 또 틀리면 숫자 없는 대체 문구.',
         alt: 'LLM이 직접 계산(빠르지만 검증 불가), LLM 판단을 그대로 신뢰(경계 사례에서 흔들림).',
-        jump: retried ? { label: '재생성으로 고쳐진 실제 사례', go: { set: retried.set, caseId: retried.caseId, A: [retried.run.model, retried.run.effort, retried.run.promptLabel.slice(0, 2), retried.rep], B: [retried.run.model, retried.run.effort, retried.run.promptLabel.slice(0, 2), retried.rep === 1 ? 2 : 1] } } : null,
+        jump: retried ? { label: '재생성으로 고쳐진 실제 사례', go: { set: retried.set, caseId: retried.caseId, A: [retried.run.model, retried.run.effort, retried.run.promptLabel, retried.rep], B: [retried.run.model, retried.run.effort, retried.run.promptLabel, retried.rep === 1 ? 2 : 1] } } : null,
       },
       {
         title: '지시문에 오늘 날짜를 넣는다', tag: 'E11',
@@ -475,6 +531,22 @@
         jump: { label: '"그럼 반값이면?" sol vs luna', go: { set: 'consult_v2', caseId: 'v09', A: ['gpt-6.1-sol', 'low', 'v3'], B: ['gpt-6-luna', 'low', 'v3'] } },
       },
       {
+        title: '다음 달은 그 달 예산으로, 비싸면 할부 대안, 미래 지출은 미리', tag: 'E13',
+        problem: '답을 직접 읽어 본 사용 피드백: 다음 달 질문마다 "예산이 안 잡혀 있다"로 시작, 비싼 건 그냥 "미루기", 축의금처럼 정해진 미래 지출을 넣을 곳이 없음, "10만 원대"에 정확한 금액을 되물음.',
+        evidence: `평가셋 v3(24문항 × 3회)를 새로 만들어 측정. 첫 시안 ${fmt(s3('gpt-6-luna', 'low', 'v4.1'))} → 최종 ${fmt(s3('gpt-6-luna', 'low', 'v4.4'))}, v1·v2 회귀도 100%. 비용 ${cost(s3('gpt-6-luna', 'low', 'v4.4'))}/회.`,
+        choice: '다음 달 예상 = 이월 할부 + 정기·예정 지출 + 평소 한 달 소비, 예산이 없으면 이어 씀. 일시불이 괜찮아요가 아니면 2·3개월 할부안을 달마다 판단해 대안으로. 예정 지출은 상담이 제안만 하고 저장은 사용자가 [등록]. 금액대는 구간별 판단. 모든 경계·합계는 앱 코드가 계산.',
+        alt: '다음 달은 판단 보류(이전 방식, 쓸모없다는 피드백), 할부를 판단 자체에 섞기(일시불로 살 사람에게 잘못된 "괜찮아요"), 상담이 바로 저장(사용자 확인 없이 예산이 바뀜).',
+        jump: { label: '날짜 없는 축의금, 첫 시안 vs 최종', go: { set: 'consult_v3', caseId: 'w18', A: ['gpt-6-luna', 'low', 'v4.1'], B: ['gpt-6-luna', 'low', 'v4.4'] } },
+      },
+      {
+        title: '새 규칙은 이웃 규칙을 깬다: 이전 평가셋을 같이 돌린다', tag: 'E13',
+        problem: '기능 하나를 넣을 때마다 다른 곳이 틀렸다. "[판단]은 일시불 그대로"가 사용자가 직접 "3개월 할부면?"이라 물을 때까지 덮었고, "범위면 simulate_range"가 "20만 원 신발"까지 범위로 처리.',
+        evidence: '5번 반복: 날짜를 오늘로 지어 넣음 → 범위 밖 경계 인용 → 예산 800,000원을 "남은 예산"이라 부름(숫자 검증은 통과: 툴 결과에 있는 숫자) → 할부 질문에 일시불 판단 → 단일 금액을 범위로. 매번 v1·v2도 같이 돌려서 발견.',
+        choice: '규칙의 적용 범위를 문장으로 좁히고, 툴 결과에서 필요 없는 숫자(예산, 범위 밖 경계, 구간 시작 금액)를 뺌. 스키마에서 날짜 null 허용 + "모르면 null".',
+        alt: '새 평가셋만 돌리기(회귀를 못 봄), 숫자 검증만 믿기(다른 뜻으로 인용한 숫자는 못 잡음).',
+        jump: { label: '"20만 원 신발", 시안 v4.3 vs 최종', go: { set: 'consult_v2', caseId: 'v25', A: ['gpt-6-luna', 'low', 'v4.3'], B: ['gpt-6-luna', 'low', 'v4.4'] } },
+      },
+      {
         title: 'jev 확신도 기준 0.95', tag: 'E10', threshold: true,
         problem: '처음 보는 가맹점 분류를 jev에 맡길 때 얼마나 믿을지.',
         evidence: '라벨 446건: 확신도 0.95 이상 정답률 99.7%(거래 65%), 그 아래는 25~37%로 급락.',
@@ -493,7 +565,7 @@
     const t = document.getElementById('runs-table');
     t.replaceChildren(el('thead', {}, el('tr', {}, ['평가셋', '모델 / 추론', '지시문', '판단 일치', '숫자 정확', '툴 호출', '비용/회', '지연 p50'].map((h) => el('th', { text: h })))),
       el('tbody', {}, DATA.runs.map((r) => el('tr', {},
-        el('td', { text: r.scenarios === 'consult_v1' ? 'v1 단일' : 'v2 대화형' }), el('td', { text: `${r.model} / ${r.effort}` }), el('td', { text: r.promptLabel }),
+        el('td', { text: { consult_v1: 'v1 단일', consult_v2: 'v2 대화형', consult_v3: 'v3 새 기능' }[r.scenarios] || r.scenarios }), el('td', { text: `${r.model} / ${r.effort}` }), el('td', { text: r.promptLabel }),
         el('td', { text: pct(r.summary.verdict_acc) }), el('td', { text: pct(r.summary.numbers_ok) }), el('td', { text: pct(r.summary.tool_ok) }),
         el('td', { text: `${r.summary.krw_mean.toFixed(1)}원` }), el('td', { text: `${r.summary.latency_p50.toFixed(1)}초` })))));
   }

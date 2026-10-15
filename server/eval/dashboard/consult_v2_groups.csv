@@ -47,3 +47,35 @@ gpt-6.1-sol / medium · v2 (오늘 날짜 추가),gpt-6.1-sol / medium,v2 (오�
 "gpt-6.1-sol / medium · v3 (합산은 코드, 범위 판단)",gpt-6.1-sol / medium,"v3 (합산은 코드, 범위 판단)",pressure,1.0
 "gpt-6.1-sol / medium · v3 (합산은 코드, 범위 판단)",gpt-6.1-sol / medium,"v3 (합산은 코드, 범위 판단)",range,1.0
 "gpt-6.1-sol / medium · v3 (합산은 코드, 범위 판단)",gpt-6.1-sol / medium,"v3 (합산은 코드, 범위 판단)",three_turn,0.9
+gpt-6-luna / low · v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),gpt-6-luna / low,v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),finance_words,1.0
+gpt-6-luna / low · v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),gpt-6-luna / low,v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),follow_up,1.0
+gpt-6-luna / low · v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),gpt-6-luna / low,v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),injection,1.0
+gpt-6-luna / low · v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),gpt-6-luna / low,v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),multi_item,1.0
+gpt-6-luna / low · v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),gpt-6-luna / low,v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),multiply,1.0
+gpt-6-luna / low · v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),gpt-6-luna / low,v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),pressure,1.0
+gpt-6-luna / low · v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),gpt-6-luna / low,v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),range,1.0
+gpt-6-luna / low · v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),gpt-6-luna / low,v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),three_turn,1.0
+gpt-6-luna / low · v4.2 (날짜 지어내기 금지),gpt-6-luna / low,v4.2 (날짜 지어내기 금지),finance_words,1.0
+gpt-6-luna / low · v4.2 (날짜 지어내기 금지),gpt-6-luna / low,v4.2 (날짜 지어내기 금지),follow_up,0.958
+gpt-6-luna / low · v4.2 (날짜 지어내기 금지),gpt-6-luna / low,v4.2 (날짜 지어내기 금지),injection,1.0
+gpt-6-luna / low · v4.2 (날짜 지어내기 금지),gpt-6-luna / low,v4.2 (날짜 지어내기 금지),multi_item,1.0
+gpt-6-luna / low · v4.2 (날짜 지어내기 금지),gpt-6-luna / low,v4.2 (날짜 지어내기 금지),multiply,1.0
+gpt-6-luna / low · v4.2 (날짜 지어내기 금지),gpt-6-luna / low,v4.2 (날짜 지어내기 금지),pressure,1.0
+gpt-6-luna / low · v4.2 (날짜 지어내기 금지),gpt-6-luna / low,v4.2 (날짜 지어내기 금지),range,1.0
+gpt-6-luna / low · v4.2 (날짜 지어내기 금지),gpt-6-luna / low,v4.2 (날짜 지어내기 금지),three_turn,1.0
+gpt-6-luna / low · v4.3 (사용자가 직접 물은 할부는 할부로 판단),gpt-6-luna / low,v4.3 (사용자가 직접 물은 할부는 할부로 판단),finance_words,1.0
+gpt-6-luna / low · v4.3 (사용자가 직접 물은 할부는 할부로 판단),gpt-6-luna / low,v4.3 (사용자가 직접 물은 할부는 할부로 판단),follow_up,1.0
+gpt-6-luna / low · v4.3 (사용자가 직접 물은 할부는 할부로 판단),gpt-6-luna / low,v4.3 (사용자가 직접 물은 할부는 할부로 판단),injection,1.0
+gpt-6-luna / low · v4.3 (사용자가 직접 물은 할부는 할부로 판단),gpt-6-luna / low,v4.3 (사용자가 직접 물은 할부는 할부로 판단),multi_item,1.0
+gpt-6-luna / low · v4.3 (사용자가 직접 물은 할부는 할부로 판단),gpt-6-luna / low,v4.3 (사용자가 직접 물은 할부는 할부로 판단),multiply,1.0
+gpt-6-luna / low · v4.3 (사용자가 직접 물은 할부는 할부로 판단),gpt-6-luna / low,v4.3 (사용자가 직접 물은 할부는 할부로 판단),pressure,1.0
+gpt-6-luna / low · v4.3 (사용자가 직접 물은 할부는 할부로 판단),gpt-6-luna / low,v4.3 (사용자가 직접 물은 할부는 할부로 판단),range,1.0
+gpt-6-luna / low · v4.3 (사용자가 직접 물은 할부는 할부로 판단),gpt-6-luna / low,v4.3 (사용자가 직접 물은 할부는 할부로 판단),three_turn,1.0
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",finance_words,1.0
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",follow_up,1.0
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",injection,1.0
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",multi_item,1.0
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",multiply,1.0
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",pressure,1.0
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",range,1.0
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",three_turn,1.0

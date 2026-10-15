@@ -1,0 +1,21 @@
+run,config,prompt,group,verdict_acc
+gpt-6-luna / low · v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),gpt-6-luna / low,v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),installment_alt,1.0
+gpt-6-luna / low · v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),gpt-6-luna / low,v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),next_month,1.0
+gpt-6-luna / low · v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),gpt-6-luna / low,v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),plan,0.8
+gpt-6-luna / low · v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),gpt-6-luna / low,v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),planned_state,1.0
+gpt-6-luna / low · v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),gpt-6-luna / low,v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),range_split,0.667
+gpt-6-luna / low · v4.2 (날짜 지어내기 금지),gpt-6-luna / low,v4.2 (날짜 지어내기 금지),installment_alt,1.0
+gpt-6-luna / low · v4.2 (날짜 지어내기 금지),gpt-6-luna / low,v4.2 (날짜 지어내기 금지),next_month,1.0
+gpt-6-luna / low · v4.2 (날짜 지어내기 금지),gpt-6-luna / low,v4.2 (날짜 지어내기 금지),plan,1.0
+gpt-6-luna / low · v4.2 (날짜 지어내기 금지),gpt-6-luna / low,v4.2 (날짜 지어내기 금지),planned_state,1.0
+gpt-6-luna / low · v4.2 (날짜 지어내기 금지),gpt-6-luna / low,v4.2 (날짜 지어내기 금지),range_split,1.0
+gpt-6-luna / low · v4.3 (사용자가 직접 물은 할부는 할부로 판단),gpt-6-luna / low,v4.3 (사용자가 직접 물은 할부는 할부로 판단),installment_alt,1.0
+gpt-6-luna / low · v4.3 (사용자가 직접 물은 할부는 할부로 판단),gpt-6-luna / low,v4.3 (사용자가 직접 물은 할부는 할부로 판단),next_month,1.0
+gpt-6-luna / low · v4.3 (사용자가 직접 물은 할부는 할부로 판단),gpt-6-luna / low,v4.3 (사용자가 직접 물은 할부는 할부로 판단),plan,0.933
+gpt-6-luna / low · v4.3 (사용자가 직접 물은 할부는 할부로 판단),gpt-6-luna / low,v4.3 (사용자가 직접 물은 할부는 할부로 판단),planned_state,1.0
+gpt-6-luna / low · v4.3 (사용자가 직접 물은 할부는 할부로 판단),gpt-6-luna / low,v4.3 (사용자가 직접 물은 할부는 할부로 판단),range_split,1.0
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",installment_alt,1.0
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",next_month,1.0
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",plan,1.0
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",planned_state,1.0
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",range_split,1.0

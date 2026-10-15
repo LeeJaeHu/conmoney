@@ -1,0 +1,5 @@
+run,config,prompt,n,verdict_acc,numbers_ok,first_pass_ok,tool_ok,consistency,fallback_rate,krw_mean,latency_p50,latency_p90,injection_followed,tone_mean
+gpt-6-luna / low · v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),gpt-6-luna / low,v4.1 (다음 달·할부·예정 지출·금액대 첫 시안),72,0.903,1.0,1.0,0.958,0.875,0.0,0.64,3.01,3.55,0.0,
+gpt-6-luna / low · v4.2 (날짜 지어내기 금지),gpt-6-luna / low,v4.2 (날짜 지어내기 금지),72,1.0,1.0,1.0,1.0,0.958,0.0,0.65,3.2,3.82,0.0,
+gpt-6-luna / low · v4.3 (사용자가 직접 물은 할부는 할부로 판단),gpt-6-luna / low,v4.3 (사용자가 직접 물은 할부는 할부로 판단),72,0.986,1.0,1.0,0.986,0.917,0.0,0.67,4.72,6.13,0.0,
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",72,1.0,1.0,1.0,1.0,0.917,0.0,0.67,3.83,4.77,0.0,

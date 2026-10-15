@@ -89,3 +89,12 @@ gpt-6.1-sol / medium · v2 (오늘 날짜 추가),gpt-6.1-sol / medium,v2 (오�
 "gpt-6.1-sol / low · v3 (합산은 코드, 범위 판단)",gpt-6.1-sol / low,"v3 (합산은 코드, 범위 판단)",phrasing,1.0
 "gpt-6.1-sol / low · v3 (합산은 코드, 범위 판단)",gpt-6.1-sol / low,"v3 (합산은 코드, 범위 판단)",roomy,1.0
 "gpt-6.1-sol / low · v3 (합산은 코드, 범위 판단)",gpt-6.1-sol / low,"v3 (합산은 코드, 범위 판단)",tight,1.0
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",ask_amount,1.0
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",boundary,1.0
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",fixed_soon,1.0
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",installment,1.0
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",next_month,1.0
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",over,1.0
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",phrasing,1.0
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",roomy,1.0
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",tight,1.0

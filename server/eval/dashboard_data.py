@@ -13,7 +13,16 @@ RUNS = ROOT / "runs"
 OUT = ROOT / "dashboard"
 DATA = ROOT.parent.parent / "data"
 
-PROMPT_LABEL = {"36a0b422": "v1", "e6f9c3f0": "v2 (오늘 날짜 추가)", "dbfec513": "v3 (합산은 코드, 범위 판단)"}
+PROMPT_LABEL = {
+    "36a0b422": "v1",
+    "e6f9c3f0": "v2 (오늘 날짜 추가)",
+    "dbfec513": "v3 (합산은 코드, 범위 판단)",
+    # 10/15 사용 피드백 반영(E13): 같은 기능을 5번 고친 시안들. 시안 2·3은 툴 결과만 바뀌어 해시가 같다
+    "b996bc4b": "v4.1 (다음 달·할부·예정 지출·금액대 첫 시안)",
+    "d4b8e199": "v4.2 (날짜 지어내기 금지)",
+    "e83d04c8": "v4.3 (사용자가 직접 물은 할부는 할부로 판단)",
+    "cc9999e4": "v4.4 (금액이 하나면 범위 아님, 최종)",
+}
 CONFIG_ORDER = ["gpt-6-luna / none", "gpt-6-luna / low", "gpt-6.1-sol / low", "gpt-6.1-sol / medium"]
 
 
@@ -90,11 +99,13 @@ EXPERIMENTS = [
     ("E10", "10/15", "분류", "jev 확신도 기준 0.8 → 0.95", "≥0.95 정답률 99.7%(거래 65%)"),
     ("E11", "10/15", "상담", "오늘 날짜를 지시문에 추가", "'다음 달' 33~83% → 100%, luna/low = sol"),
     ("E12", "10/15", "상담", "평가셋 v2: 범위 밖 판단을 jev로, 합계는 코드가", "과잉 거절 해소, luna/low v2 98% → 100%"),
+    ("E13", "10/15", "상담", "사용 피드백: 다음 달 판단·할부 대안·예정 지출·금액대 구간 + 평가셋 v3", "v3 90.3% → 100%(5회 반복), v1·v2 회귀 100%"),
 ]
 
 
 if __name__ == "__main__":
     consult()
     consult("consult_v2", "consult_v2")
+    consult("consult_v3", "consult_v3")
     category()
     write("experiments.csv", [{"id": a, "date": b, "area": c, "change": d, "result": e} for a, b, c, d, e in EXPERIMENTS])

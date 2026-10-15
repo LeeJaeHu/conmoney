@@ -17,7 +17,7 @@ OUT = ROOT / "explorer" / "data.json"
 
 def main() -> None:
     cases = {}
-    for name in ("consult_v1", "consult_v2"):
+    for name in ("consult_v1", "consult_v2", "consult_v3"):
         rows = [json.loads(line) for line in (ROOT / "scenarios" / f"{name}.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
         for r in rows:
             r.setdefault("turns", [r.pop("question")] if "question" in r else r.get("turns"))
