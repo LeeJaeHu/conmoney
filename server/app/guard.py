@@ -103,7 +103,6 @@ VERDICT_WORDS = {
     "ok": "괜찮아요",
     "conditional": "조건부",
     "postpone": "미루는 걸 추천",
-    "next_month": "다음 달",
 }
 
 
@@ -112,6 +111,8 @@ def last_verdict(items: list[dict]) -> str | None:
     calls = {i.get("call_id"): i.get("name") for i in items if i.get("type") == "function_call"}
     verdict = None
     for i in items:
+        if i.get("type") == "function_call_output" and calls.get(i.get("call_id")) == "simulate_range":
+            verdict = None  # 범위 답은 구간마다 판단이 달라 한 판단으로 검사하지 않는다
         if i.get("type") == "function_call_output" and calls.get(i.get("call_id")) == "simulate_purchase":
             try:
                 verdict = json.loads(i["output"]).get("verdict")
@@ -125,7 +126,7 @@ def verdict_mismatch(text: str, verdict: str | None) -> bool:
     if verdict is None or verdict not in VERDICT_WORDS:
         return False
     expected = VERDICT_WORDS[verdict]
-    others = [w for k, w in VERDICT_WORDS.items() if k != verdict and k != "next_month"]
+    others = [w for k, w in VERDICT_WORDS.items() if k != verdict]
     first_line = text.strip().splitlines()[0] if text.strip() else ""
     return expected not in text or any(w in first_line for w in others)
 

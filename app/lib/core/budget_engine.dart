@@ -8,6 +8,7 @@ class Ledger {
     required this.installments,
     this.recurringItems = const [],
     this.recurringMatches = const [],
+    this.plannedExpenses = const [],
     this.firstRecordDate,
   });
 
@@ -15,6 +16,7 @@ class Ledger {
   final List<InstallmentRow> installments;
   final List<RecurringItem> recurringItems;
   final List<RecurringMatch> recurringMatches;
+  final List<PlannedExpense> plannedExpenses;
 
   /// 첫 기록일. 이 날이 속한 달이 1일부터 시작하지 않으면 P 계산에서 뺀다(Spec 3.7).
   final DateTime? firstRecordDate;
@@ -87,26 +89,75 @@ class BudgetStatus {
   bool get overOnlyAfterFixed => remaining < 0 && budget - spent >= 0;
 }
 
-enum Verdict { ok, conditional, postpone, nextMonth }
+enum Verdict { ok, conditional, postpone }
+
+Verdict judgeOver(int over, int budget) =>
+    over <= 0 ? Verdict.ok : (over <= budget ~/ 10 ? Verdict.conditional : Verdict.postpone);
+
+/// 미래 달의 예상(다음 달 구매 판단, 할부 뒷 회차용).
+class MonthProjection {
+  const MonthProjection(this.month, this.known, this.fixed, this.usual);
+
+  final YearMonth month;
+
+  /// 이미 정해진 지출: 할부 이월 회차 등 그 달에 기여하는 기존 거래
+  final int known;
+
+  /// 정기 지출 전체 + 예정 지출
+  final int fixed;
+
+  /// 평소 한 달 소비(최근 완료된 달들의 중앙값, 특이·정기 지출 제외)
+  final int usual;
+
+  int get total => known + fixed + usual;
+}
+
+/// 2·3개월 할부로 샀을 때 달마다의 영향.
+class InstallmentOption {
+  const InstallmentOption(this.months, this.perMonth);
+
+  final int months;
+
+  /// (달, 그 달에 잡히는 회차 금액, 그 달 판단, 그 달 예상 초과액)
+  final List<(YearMonth, int, Verdict, int)> perMonth;
+
+  Verdict get worst => perMonth.map((e) => e.$3).reduce((a, b) => a.index >= b.index ? a : b);
+}
 
 class PurchaseSimulation {
   const PurchaseSimulation({
     required this.verdict,
+    required this.month,
+    required this.budget,
     required this.remainingAfter,
     required this.todayAvailableAfter,
     required this.projectedMonthEnd,
     required this.projectedOver,
     required this.pattern,
+    this.installmentOptions = const [],
   });
 
   final Verdict verdict;
+
+  /// 판단 기준 달(구매일이 다음 달이면 그 달).
+  final YearMonth month;
+
+  /// 판단에 쓴 그 달 예산.
+  final int budget;
   final int remainingAfter;
-  final int todayAvailableAfter;
+
+  /// 이번 달 구매일 때만 의미 있음.
+  final int? todayAvailableAfter;
   final int projectedMonthEnd;
 
   /// 예상 월말 초과액(음수면 남음).
   final int projectedOver;
-  final Pattern pattern;
+
+  /// 남은 기간(이번 달) 또는 한 달 전체(미래 달)의 평소 소비.
+  final int pattern;
+
+  /// 일시불 판단이 괜찮아요가 아닐 때 2·3개월 할부안(대안, 10/15 결정).
+  final List<InstallmentOption> installmentOptions;
 }
 
 /// 음수에서도 내림이 되는 정수 나눗셈(Dart의 `~/`는 0 쪽으로 자른다).
@@ -164,6 +215,17 @@ class BudgetEngine {
       if (!i.active || handled.contains(i.id)) continue;
       sum += i.isEnvelope ? envelopeRemaining(i, m, before: decidedBefore) : i.amount;
     }
+    return sum + plannedIn(m, decidedBefore: decidedBefore);
+  }
+
+  /// 그 달에 아직 내지 않은 예정 지출 합. [decidedBefore] 이후에 낸 것은 아직 안 낸 것으로 본다(0시 기준 F).
+  int plannedIn(YearMonth m, {DateTime? decidedBefore}) {
+    var sum = 0;
+    for (final p in ledger.plannedExpenses) {
+      if (!m.contains(p.date)) continue;
+      final done = p.doneOn != null && (decidedBefore == null || dateOnly(p.doneOn!).isBefore(decidedBefore));
+      if (!done) sum += p.amount;
+    }
     return sum;
   }
 
@@ -195,6 +257,10 @@ class BudgetEngine {
         final item = byId[x.itemId];
         if (item != null && !item.isEnvelope) sum += item.amount;
       }
+    }
+    // 오늘 [냈어요]한 예정 지출(그 금액의 MANUAL 거래가 오늘 지출로 들어오므로)
+    for (final p in ledger.plannedExpenses) {
+      if (p.doneOn != null && dateOnly(p.doneOn!) == today && m.contains(p.date)) sum += p.amount;
     }
     for (final i in ledger.recurringItems) {
       if (!i.active || !i.isEnvelope) continue;
@@ -269,6 +335,31 @@ class BudgetEngine {
     return Pattern(pace, PatternSource.thisMonthPace, 0);
   }
 
+  /// 평소 한 달 소비: 최근 완료된 달(최대 3개) 전체 기간 varSpend의 중앙값.
+  /// 없으면 이번 달 일평균 × 그 달 일수(데이터 부족).
+  int usualMonth(DateTime now, YearMonth target) {
+    final m = YearMonth.of(dateOnly(now));
+    final samples = <int>[
+      for (var k = 1; k <= 3; k++)
+        if (_hasFullMonth(m.plus(-k))) varSpend(m.plus(-k), 1, m.plus(-k).days),
+    ];
+    if (samples.isNotEmpty) return _median(samples);
+    final d = dateOnly(now).day;
+    if (d <= 1) return 0;
+    return varSpend(m, 1, d - 1) * target.days ~/ (d - 1);
+  }
+
+  /// 미래 달 예상: 이미 정해진 할부 회차 + 정기 지출 전체 + 예정 지출 + 평소 한 달 소비.
+  MonthProjection project(DateTime now, YearMonth target) {
+    final known = ledger.txns.fold(0, (s, t) => s + contrib(t, target));
+    var fixed = 0;
+    for (final i in ledger.recurringItems) {
+      if (i.active) fixed += i.amount;
+    }
+    fixed += plannedIn(target);
+    return MonthProjection(target, known, fixed, usualMonth(now, target));
+  }
+
   static int _median(List<int> xs) {
     final s = [...xs]..sort();
     final mid = s.length ~/ 2;
@@ -277,38 +368,104 @@ class BudgetEngine {
 
   // ---------------------------------------------------------------- 3.8 구매 판단
 
+  /// 구매 판단(Spec 3.8). 구매일이 다음 달 이후면 그 달 예산·예상으로 판단한다(10/15 결정).
+  /// [budgetOf]는 그 달 예산(없으면 직전 달 예산을 이어 쓴 값)을 돌려준다.
   PurchaseSimulation simulatePurchase(
     DateTime now,
     int budget,
     int amount, {
     DateTime? date,
     int installmentMonths = 1,
+    int? Function(YearMonth)? budgetOf,
+    bool withOptions = true,
   }) {
-    final st = status(now, budget);
-    final p = pattern(now);
     final today = dateOnly(now);
-    final thisMonth = splitInstallment(amount, installmentMonths).first;
-    final projected = st.spent + st.upcomingFixed + p.amount + thisMonth;
-    final over = projected - budget;
+    final thisM = YearMonth.of(today);
+    final target = date != null && YearMonth.of(date).compareTo(thisM) > 0 ? YearMonth.of(date) : thisM;
+    final parts = splitInstallment(amount, installmentMonths);
 
-    final Verdict verdict;
-    if (date != null && YearMonth.of(date).compareTo(YearMonth.of(today)) > 0) {
-      verdict = Verdict.nextMonth;
-    } else if (over <= 0) {
-      verdict = Verdict.ok;
-    } else if (over <= budget ~/ 10) {
-      verdict = Verdict.conditional;
+    late final PurchaseSimulation sim;
+    if (target == thisM) {
+      final st = status(now, budget);
+      final p = pattern(now).amount;
+      final projected = st.spent + st.upcomingFixed + p + parts.first;
+      final over = projected - budget;
+      sim = PurchaseSimulation(
+        verdict: judgeOver(over, budget),
+        month: thisM,
+        budget: budget,
+        remainingAfter: st.remaining - parts.first,
+        todayAvailableAfter: st.available - parts.first,
+        projectedMonthEnd: projected,
+        projectedOver: over,
+        pattern: p,
+      );
     } else {
-      verdict = Verdict.postpone;
+      final b = budgetOf?.call(target) ?? budget;
+      final proj = project(now, target);
+      final projected = proj.total + parts.first;
+      sim = PurchaseSimulation(
+        verdict: judgeOver(projected - b, b),
+        month: target,
+        budget: b,
+        remainingAfter: b - proj.known - proj.fixed - parts.first,
+        todayAvailableAfter: null,
+        projectedMonthEnd: projected,
+        projectedOver: projected - b,
+        pattern: proj.usual,
+      );
     }
-
+    if (!withOptions || installmentMonths > 1 || sim.verdict == Verdict.ok) return sim;
     return PurchaseSimulation(
-      verdict: verdict,
-      remainingAfter: st.remaining - thisMonth,
-      todayAvailableAfter: st.available - thisMonth,
-      projectedMonthEnd: projected,
-      projectedOver: over,
-      pattern: p,
+      verdict: sim.verdict,
+      month: sim.month,
+      budget: sim.budget,
+      remainingAfter: sim.remainingAfter,
+      todayAvailableAfter: sim.todayAvailableAfter,
+      projectedMonthEnd: sim.projectedMonthEnd,
+      projectedOver: sim.projectedOver,
+      pattern: sim.pattern,
+      installmentOptions: [for (final n in [2, 3]) _installmentOption(now, budget, amount, n, target, budgetOf)],
     );
+  }
+
+  /// 금액 범위 질문("10만 원대")용 경계(10/15 결정): 일시불로 이 금액까지는 ok, 그다음 금액까지는 conditional.
+  /// 1,000원 단위로 내려(보수적으로) 읽기 쉽게 한다. 음수면 그 판단이 나오는 금액이 없다.
+  (int okMax, int conditionalMax, YearMonth month, int budget) thresholds(
+    DateTime now,
+    int budget, {
+    DateTime? date,
+    int? Function(YearMonth)? budgetOf,
+  }) {
+    final base = simulatePurchase(now, budget, 0, date: date, budgetOf: budgetOf, withOptions: false);
+    int floor(int v) => v < 0 ? -1 : v ~/ 1000 * 1000;
+    return (floor(-base.projectedOver), floor(base.budget ~/ 10 - base.projectedOver), base.month, base.budget);
+  }
+
+  /// n개월 할부일 때 달마다(구매 달부터) 그 회차를 더한 예상과 판단.
+  InstallmentOption _installmentOption(
+    DateTime now,
+    int budget,
+    int amount,
+    int n,
+    YearMonth start,
+    int? Function(YearMonth)? budgetOf,
+  ) {
+    final parts = splitInstallment(amount, n);
+    final thisM = YearMonth.of(dateOnly(now));
+    final rows = <(YearMonth, int, Verdict, int)>[];
+    for (var k = 0; k < n; k++) {
+      final m = start.plus(k);
+      if (m == thisM) {
+        final st = status(now, budget);
+        final over = st.spent + st.upcomingFixed + pattern(now).amount + parts[k] - budget;
+        rows.add((m, parts[k], judgeOver(over, budget), over));
+      } else {
+        final b = budgetOf?.call(m) ?? budget;
+        final over = project(now, m).total + parts[k] - b;
+        rows.add((m, parts[k], judgeOver(over, b), over));
+      }
+    }
+    return InstallmentOption(n, rows);
   }
 }

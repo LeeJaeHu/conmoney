@@ -1,5 +1,5 @@
 """평가용 툴 실행기. 앱의 AgentToolbox(app/lib/core/agent_tools.dart)와 같은 키·형식으로 시나리오 숫자에서 결과를 만든다."""
-from .consult_scenarios import first_installment, verdict
+from .consult_scenarios import TODAY, thresholds, installment_options, is_future, month_over, next_month, split, verdict
 
 
 def won(v: int) -> str:
@@ -28,8 +28,8 @@ def run(name: str, args: dict, scenario: dict) -> dict:
         }
     if name == "get_upcoming_fixed":
         items = [
-            {"name": f["name"], "amount": f["amount"], "amount_text": ("약 " if f["estimate"] else "") + won(f["amount"]),
-             "due_date": f["due_date"]}
+            {"name": f["name"], "kind": f.get("kind", "recurring"), "amount": f["amount"],
+             "amount_text": ("약 " if f["estimate"] else "") + won(f["amount"]), "due_date": f["due_date"]}
             for f in st["fixed"]
         ]
         return {"days": args.get("days", 7), "items": items, **_money("total", fixed)}
@@ -42,21 +42,63 @@ def run(name: str, args: dict, scenario: dict) -> dict:
         if amount <= 0:
             return {"error": "금액을 모르면 이 툴을 부르지 말고 사용자에게 금액을 물어보세요."}
         months = int(args.get("installment_months") or 1)
-        this_month = first_installment(amount, months)
-        projected = st["spent"] + fixed + st["pattern"] + this_month
-        return {
-            "verdict": verdict(st, amount, months, args.get("date")),
+        date = args.get("date")
+        future = is_future(date)
+        first = split(amount, months)[0]
+        over, b = month_over(st, first, future)
+        m = int(date[5:7]) if future else int(TODAY[5:7])
+        out = {
+            "verdict": verdict(st, amount, months, date),
             "rule": "예상 월말 지출 ≤ 예산이면 ok, 초과액이 예산의 10% 이하면 conditional, 그 이상이면 postpone",
+            "judged_month": f"{date[:7] if future else TODAY[:7]}",
+            "judged_month_text": f"{m}월" if future else f"이번 달({m}월)",
+        }
+        if future:
+            nx = next_month(st)
+            out["month_note"] = (f"{m}월 예산이 아직 없어 직전 달 예산을 이어 썼고, 정기 지출 전체·예정 지출·평소 한 달 소비로 예상함"
+                                 if nx["budget"] is None else f"{m}월 예산과 정기 지출 전체·예정 지출·평소 한 달 소비로 예상함")
+        out.update({
             **_money("amount", amount),
             **({"parts_text": " + ".join(won(p) for p in parts)} if len(parts) > 1 else {}),
             "installment_months": months,
-            **_money("remaining_after", remaining - this_month),
-            **_money("today_available_after", max(0, st["today_available"] - this_month)),
-            **_money("projected_month_end", projected),
-            **_money("projected_over", projected - st["budget"]),
-            **_money("usual_rest_of_month", st["pattern"]),
-            **_money("budget", st["budget"]),
-        }
+            **_money("remaining_after", (b - nx["known"] - nx["fixed"] if future else remaining) - first),
+            **({} if future else _money("today_available_after", max(0, st["today_available"] - first))),
+            **_money("projected_month_end", over + b),
+            **_money("projected_over", over),
+            **(_money("usual_month", nx["usual"]) if future else _money("usual_rest_of_month", st["pattern"])),
+            **_money("budget", b),
+        })
+        opts = installment_options(st, amount, date) if months == 1 else []
+        if opts:
+            base = int(date[5:7]) if future else int(TODAY[5:7])
+            out["installment_options"] = [
+                {"months": o["months"], "worst_verdict": o["worst"], "per_month": [
+                    {"month": f"{(base + x['k'] - 1) % 12 + 1}월", **_money("amount", x["amount"]), "verdict": x["verdict"],
+                     **_money("projected_over", x["over"])} for x in o["per_month"]]}
+                for o in opts]
+            out["installment_note"] = "2·3개월 무이자 할부는 카드사·가맹점마다 다르므로 결제 전에 카드사 앱에서 확인"
+        return out
+    if name == "simulate_range":
+        lo, hi, date = int(args.get("min") or 0), int(args.get("max") or 0), args.get("date")
+        if lo <= 0 or hi < lo:
+            return {"error": "min ≤ max인 원 단위 금액 범위가 필요해요."}
+        ok_max, cond_max, b = thresholds(st, date)
+        segs = []
+        for f, t, v in [(lo, ok_max, "ok"), (lo if ok_max < 0 else ok_max + 1, cond_max, "conditional"),
+                        (lo if cond_max < 0 else cond_max + 1, hi, "postpone")]:
+            if f > hi or t < lo or t < f:
+                continue
+            segs.append({**_money("up_to", min(t, hi)), "verdict": v})
+        m = int(date[5:7]) if is_future(date) else int(TODAY[5:7])
+        return {"judged_month_text": f"{m}월" if is_future(date) else f"이번 달({m}월)", **_money("min", lo), **_money("max", hi),
+                "segments": segs,
+                "note": "일시불 기준. 경계는 1,000원 단위로 내림. 구간은 min부터 순서대로, 각 구간은 up_to까지"}
+    if name == "add_planned_expense":
+        amount, date = int(args.get("amount") or 0), args.get("date") or ""
+        if amount <= 0 or len(date) != 10:
+            return {"error": "예정 지출은 금액과 날짜(yyyy-MM-dd)가 필요해요. 사용자에게 물어보세요."}
+        return {"status": "needs_user_confirmation", "name": args.get("name", "예정 지출"), **_money("amount", amount), "date": date,
+                "note": "아직 등록 안 됨. 사용자가 화면의 [등록] 버튼을 눌러야 예산에 반영된다. 등록 전 계산에는 포함되지 않았다"}
     if name == "get_category_summary":
         return {"period": args.get("period", "this_month"), **_money("total", st["spent"]),
                 "categories": st.get("categories") or [{"category": "식비", **_money("total", st["spent"] * 45 // 100), "count": 20},

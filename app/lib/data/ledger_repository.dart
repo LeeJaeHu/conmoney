@@ -16,6 +16,7 @@ class LedgerRepository {
     final rows = await db.select(db.installmentSchedules).get();
     final items = await db.select(db.recurringItems).get();
     final matches = await db.select(db.recurringMatches).get();
+    final planned = await db.select(db.plannedExpenses).get();
     final first = await db.setting('first_record_date');
 
     return Ledger(
@@ -69,6 +70,16 @@ class LedgerRepository {
             status: m.status == 'SKIPPED' ? RecurringMatchStatus.skipped : RecurringMatchStatus.paid,
             decidedOn: DateTime.parse(m.decidedOn),
             txnId: m.transactionId,
+          ),
+      ],
+      plannedExpenses: [
+        for (final p in planned)
+          PlannedExpense(
+            id: p.id,
+            name: p.name,
+            amount: p.amount,
+            date: DateTime.parse(p.date),
+            doneOn: p.doneOn == null ? null : DateTime.parse(p.doneOn!),
           ),
       ],
       firstRecordDate: first == null ? null : DateTime.parse(first),
@@ -133,7 +144,7 @@ class LedgerRepository {
     return (await q.getSingle()).read(c) ?? 0;
   }
 
-  /// 이번 달 아직 처리되지 않은 정기 지출(홈 "다가오는 정기 지출").
+  /// 이번 달 아직 처리되지 않은 정기 지출과 예정 지출(홈 "다가오는 지출").
   /// (항목, 예정일, 이번 달 남은 금액). 월 예약형은 남은 예약분이 있을 때만, 맨 위에.
   Future<List<(RecurringItem, DateTime, int)>> upcomingRecurring(DateTime now) async {
     final ledger = await loadLedger();
@@ -147,6 +158,10 @@ class LedgerRepository {
       for (final i in ledger.recurringItems)
         if (i.active && !handled.contains(i.id))
           (i, m.dayClamped(i.dueDay), i.isEnvelope ? engine.envelopeRemaining(i, m) : i.amount),
+      // 이번 달 예정 지출(축의금 등)도 같은 목록에. id는 정기 지출과 겹치지 않게 음수로
+      for (final p in ledger.plannedExpenses)
+        if (p.doneOn == null && m.contains(p.date))
+          (RecurringItem(id: -p.id, name: '${p.name}(예정)', amount: p.amount, dueDay: p.date.day), p.date, p.amount),
     ].where((e) => e.$3 > 0).toList()..sort((a, b) => a.$2.compareTo(b.$2));
     return list;
   }

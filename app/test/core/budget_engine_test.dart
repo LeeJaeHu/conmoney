@@ -18,6 +18,7 @@ Ledger ledgerOf(
   List<Txn> txns, {
   List<RecurringItem> items = const [telecom, gas],
   List<RecurringMatch> matches = const [],
+  List<PlannedExpense> planned = const [],
   DateTime? firstRecordDate,
 }) => Ledger(
   txns: txns,
@@ -27,6 +28,7 @@ Ledger ledgerOf(
   ],
   recurringItems: items,
   recurringMatches: matches,
+  plannedExpenses: planned,
   firstRecordDate: firstRecordDate,
 );
 
@@ -237,12 +239,62 @@ void main() {
       expect(engine.simulatePurchase(now, 1000000, 1100001).verdict, Verdict.postpone);
     });
 
-    test('할부 구매는 이번 달 1회차만 반영, 다음 달 날짜면 NEXT_MONTH', () {
+    test('할부 구매는 이번 달 1회차만 반영', () {
       final engine = BudgetEngine(ledgerOf(const [], items: const [], firstRecordDate: d(10, 1)));
       final now = DateTime(2026, 10, 1, 10);
       final sim = engine.simulatePurchase(now, 1000000, 150000, installmentMonths: 3);
       expect(sim.projectedMonthEnd, 50000);
-      expect(engine.simulatePurchase(now, 1000000, 150000, date: d(11, 1)).verdict, Verdict.nextMonth);
+    });
+
+    test('C19 다음 달 구매는 그 달 예산(없으면 직전 달 이어 씀)과 예상으로 판단', () {
+      final engine = BudgetEngine(ledgerOf(const [], items: const [telecom], firstRecordDate: d(10, 1)));
+      final now = DateTime(2026, 10, 1, 10);
+      // 11월 예상 = 정기 65,000 + 평소 0 + 구매 150,000 = 215,000
+      final sim = engine.simulatePurchase(now, 1000000, 150000, date: d(11, 3), budgetOf: (_) => 205000);
+      expect(sim.month, ym(11));
+      expect(sim.budget, 205000);
+      expect(sim.projectedMonthEnd, 215000);
+      expect(sim.verdict, Verdict.conditional);
+      expect(sim.todayAvailableAfter, isNull);
+      // budgetOf가 없으면 이번 달 예산을 쓴다
+      expect(engine.simulatePurchase(now, 1000000, 150000, date: d(11, 3)).verdict, Verdict.ok);
+    });
+
+    test('C20 일시불이 괜찮아요가 아니면 2·3개월 할부안을 같이 계산', () {
+      final engine = BudgetEngine(ledgerOf(const [], items: const [], firstRecordDate: d(10, 1)));
+      final now = DateTime(2026, 10, 1, 10);
+      final sim = engine.simulatePurchase(now, 100000, 300000);
+      expect(sim.verdict, Verdict.postpone);
+      expect(sim.installmentOptions.map((o) => o.months), [2, 3]);
+      final three = sim.installmentOptions[1];
+      expect(three.perMonth.map((e) => e.$1), [ym(10), ym(11), ym(12)]);
+      expect(three.perMonth.map((e) => e.$2), [100000, 100000, 100000]);
+      expect(three.worst, Verdict.ok);
+      expect(sim.installmentOptions[0].worst, Verdict.postpone);
+      expect(engine.simulatePurchase(now, 1000000, 300000).installmentOptions, isEmpty);
+    });
+
+    test('C22 금액 범위: ok·조건부 경계를 1,000원 단위로 내림', () {
+      final engine = BudgetEngine(ledgerOf(const [], items: const [telecom], firstRecordDate: d(10, 1)));
+      final now = DateTime(2026, 10, 1, 10);
+      // 여유 = 200,000 - 65,000 = 135,000, 조건부는 +20,000
+      final (okMax, condMax, month, b) = engine.thresholds(now, 200000);
+      expect((okMax, condMax, month, b), (135000, 155000, ym(10), 200000));
+      expect(engine.thresholds(now, 50000).$1, -1);
+    });
+
+    test('C21 예정 지출은 그 달 F에 들어가고, 낸 뒤에는 빠진다', () {
+      final now = DateTime(2026, 10, 13, 9);
+      final gift = PlannedExpense(id: 1, name: "축의금", amount: 50000, date: d(10, 20));
+      final st = BudgetEngine(ledgerOf(baseTxns(), planned: [gift])).status(now, 1000000);
+      expect(st.upcomingFixed, 165000);
+      expect(st.remaining, 235000);
+      final nov = PlannedExpense(id: 2, name: '축의금', amount: 100000, date: d(11, 7));
+      final engine = BudgetEngine(ledgerOf(baseTxns(), planned: [nov]));
+      expect(engine.status(now, 1000000).upcomingFixed, 115000);
+      expect(engine.project(now, ym(11)).fixed, 115000 + 100000);
+      final paid = PlannedExpense(id: 1, name: '축의금', amount: 50000, date: d(10, 20), doneOn: d(10, 10));
+      expect(BudgetEngine(ledgerOf(baseTxns(), planned: [paid])).status(now, 1000000).upcomingFixed, 115000);
     });
   });
 

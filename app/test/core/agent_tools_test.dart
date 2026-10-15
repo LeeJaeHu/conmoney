@@ -55,6 +55,20 @@ void main() {
     expect(none['error'], contains('예산'));
   });
 
+  test('simulate_range: 범위를 판단별 구간으로 나누고, 구간은 빈틈없이 이어진다', () async {
+    final tb = await toolbox();
+    final r = tb.run('simulate_range', {'min': 10000, 'max': 400000, 'date': null});
+    final segs = (r['segments'] as List).cast<Map<String, Object?>>();
+    expect(segs.last['up_to'], 400000);
+    for (var i = 1; i < segs.length; i++) {
+      expect(segs[i]['up_to'] as int, greaterThan(segs[i - 1]['up_to'] as int));
+    }
+    // 각 구간 끝 금액의 판단이 simulate_purchase와 같다
+    for (final s in segs) {
+      expect(tb.run('simulate_purchase', {'amount': s['up_to']})['verdict'], s['verdict']);
+    }
+  });
+
   test('simulate_purchase: 여러 건(amounts)은 코드가 합산한다(평가 v2)', () async {
     final r = (await toolbox()).run('simulate_purchase', {
       'amount': 80000,
@@ -72,6 +86,7 @@ void main() {
     final up = tb.run('get_upcoming_fixed', {'days': 14});
     expect((up['items'] as List).single, {
       'name': '가짜통신',
+      'kind': 'recurring',
       'amount': 40000,
       'amount_text': '40,000원',
       'due_date': '2026-10-12',

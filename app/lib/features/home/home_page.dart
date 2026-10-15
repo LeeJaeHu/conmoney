@@ -7,6 +7,7 @@ import '../../ui/format.dart';
 import '../agent/consult_page.dart';
 import '../budget/budget_settings_page.dart';
 import '../dev/import_page.dart';
+import '../planned/planned_page.dart';
 import '../recurring/recurring_page.dart';
 import '../samples/sample_collector_page.dart';
 import '../settings/metrics_page.dart';
@@ -37,6 +38,7 @@ class HomePage extends ConsumerWidget {
               'budget' => open(const BudgetSettingsPage()),
               'import' => open(const ImportPage()),
               'recurring' => open(const RecurringPage()),
+              'planned' => open(const PlannedPage()),
               'category' => open(const CategoryPage()),
               'alerts' => open(const NotificationSettingsPage()),
               'metrics' => open(const MetricsPage()),
@@ -45,6 +47,7 @@ class HomePage extends ConsumerWidget {
             itemBuilder: (_) => const [
               PopupMenuItem(value: 'budget', child: Text('예산 설정')),
               PopupMenuItem(value: 'recurring', child: Text('정기 지출')),
+              PopupMenuItem(value: 'planned', child: Text('예정 지출(축의금 등)')),
               PopupMenuItem(value: 'category', child: Text('카테고리별 지출')),
               PopupMenuItem(value: 'alerts', child: Text('먼저 알려주기')),
               PopupMenuItem(value: 'metrics', child: Text('사용 기록')),
@@ -138,13 +141,13 @@ class _TodayCard extends StatelessWidget {
                 style: theme.textTheme.titleMedium?.copyWith(color: overColor),
               ),
               if (status.overOnlyAfterFixed)
-                Text('예정된 정기 지출 ${won(status.upcomingFixed)}을 반영한 금액이에요', style: secondary),
+                Text('예정된 정기·예정 지출 ${won(status.upcomingFixed)}을 반영한 금액이에요', style: secondary),
             ] else
               Text('이번 달 남은 예산 ${won(status.remaining)}', style: theme.textTheme.titleMedium),
             const SizedBox(height: 2),
             Text(
               '남은 ${status.daysLeft}일'
-              '${status.upcomingFixed > 0 ? ' · 정기 지출 ${won(status.upcomingFixed)} 미리 뺌' : ''}',
+              '${status.upcomingFixed > 0 ? ' · 정기·예정 지출 ${won(status.upcomingFixed)} 미리 뺌' : ''}',
               style: secondary,
             ),
             if (data.planStep case final step?)
@@ -211,7 +214,7 @@ class _UpcomingCard extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                 child: Row(
                   children: [
-                    Expanded(child: Text('다가오는 정기 지출', style: theme.textTheme.titleSmall)),
+                    Expanded(child: Text('다가오는 지출', style: theme.textTheme.titleSmall)),
                     const Icon(Icons.chevron_right, size: 20),
                   ],
                 ),

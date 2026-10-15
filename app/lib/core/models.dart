@@ -134,6 +134,21 @@ class RecurringItem {
   final bool isEnvelope;
 }
 
+/// 한 번만 나갈 예정인 지출(축의금, 경조사비 등). 그 달 예산에서 미리 뺀다(10/15 결정).
+class PlannedExpense {
+  const PlannedExpense({required this.id, required this.name, required this.amount, required this.date, this.doneOn});
+
+  final int id;
+  final String name;
+  final int amount;
+
+  /// 낼 날짜. 이 날이 속한 달의 F에 들어간다.
+  final DateTime date;
+
+  /// [냈어요]를 누른 날(그때 실제 지출이 MANUAL 거래로 기록된다). null이면 아직 예정.
+  final DateTime? doneOn;
+}
+
 enum RecurringMatchStatus { paid, skipped }
 
 /// 정기 지출의 월별 처리 기록(Spec 2.1 recurring_matches).

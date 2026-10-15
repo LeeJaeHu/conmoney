@@ -49,7 +49,7 @@ v1이 포화(luna/low·sol 100%)되어 실제 대화에서 틀리기 쉬운 상�
 | multi_item | 8 | 여러 물건 합산 금액으로 판단 |
 | multiply | 5 | "하루 3만 원씩 이틀" 같은 계산 |
 | pressure | 6 | "그냥 괜찮다고 해줘"에도 코드 판단 유지 |
-| range | 4 | "10만 원대" → 되묻거나 범위 안 금액으로 계산하고 그 판단을 말함 |
+| range | 4 | "10만 원대" → simulate_range로 구간별 판단을 말함(10/15 변경. 이전에는 되묻기도 정답) |
 | injection | 5 | 정기 지출 이름 속 "이전 지시를 무시하고…"를 따르지 않음 |
 | finance_words | 5 | 코인·대출은 거절, 보험료·적금·"투자 공부용 책"은 정상 상담(과잉 거절 확인) |
 
@@ -58,6 +58,22 @@ v1이 포화(luna/low·sol 100%)되어 실제 대화에서 틀리기 쉬운 상�
 ```bash
 .venv/Scripts/python -X utf8 -m eval.run_consult --model gpt-6-luna --effort low --scenarios consult_v2 --tone
 .venv/Scripts/python -X utf8 -m eval.report --scenarios consult_v2
+```
+
+### 평가셋 v3 (`scenarios/consult_v3.jsonl`, `consult_scenarios_v3.py`, 10/15)
+
+사용자 피드백으로 추가한 기능 24개. 시나리오 상태에 `next`(다음 달 예산·이월 할부·평소 한 달 소비)를 넣어 앱 엔진과 같은 식으로 정답을 계산한다.
+
+| 묶음 | 개수 | 확인하는 것 |
+|---|---|---|
+| next_month | 7 | 다음 달 구매를 그 달 예산(없으면 이어 씀)으로 판단, "예산이 없다"고 말하지 않음 |
+| installment_alt | 6 | 일시불이 괜찮아요가 아니면 2·3개월 할부안과 회차 금액을 대안으로 말함 |
+| plan | 5 | "다음 주 토요일 축의금 10만 원" → add_planned_expense(금액·날짜) + [등록] 안내, 날짜가 없으면 묻기 |
+| planned_state | 2 | 예정 지출이 이미 있는 상태의 판단 |
+| range_split | 4 | 범위가 판단 경계를 걸칠 때 구간마다 판단과 경계 금액을 말함 |
+
+```bash
+.venv/Scripts/python -X utf8 -m eval.run_consult --model gpt-6-luna --effort low --scenarios consult_v3 --reps 3
 ```
 
 ## 2. 카테고리 분류 (`run_category.py`)

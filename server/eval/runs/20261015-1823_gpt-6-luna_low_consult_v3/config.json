@@ -1,0 +1,10 @@
+{
+  "model": "gpt-6-luna",
+  "effort": "low",
+  "reps": 3,
+  "scenarios": "consult_v3.jsonl",
+  "n_scenarios": 24,
+  "prompt_hash": "cc9999e4",
+  "git_commit": "e7da390",
+  "started": "2026-10-15T18:23:26"
+}

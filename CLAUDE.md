@@ -59,4 +59,5 @@ server/  Cloud Run(Python, FastAPI) LLM 중계. 비밀값은 server/.env(git 제
 - [x] Cloud Run 배포: 프로젝트 `comoney`, 서울, https://conmoney-812487409574.asia-northeast3.run.app, 키는 Secret Manager(자세한 건 server/README.md). gcloud 계정은 morugureum@gmail.com(기본 프로젝트는 그대로 두고 `--project comoney`로 실행). `app/config/dev.json`에 이 주소가 들어 있음
 - [x] 교통비 월 예약형(정기 지출의 한 종류): "후불" 결제를 모두 연결, 남은 예약분만 F. 정기 지출 화면에서 [예약]
 - [x] 먼저 알려주기(F7): 규칙 3개·하루 1회·조용한 시간, WorkManager 1시간 주기 아침 검사, 로컬 알림, 설정 화면. 결제 직후 검사는 F2 저장 시점에 연결 필요
+- [x] 다음 달 구매는 그 달 예산(없으면 이어 씀)으로 판단, 2·3개월 할부 대안, 금액대 구간 판단(simulate_range), 예정 지출(DB v5, 홈 메뉴 > 예정 지출, 상담에서 [등록] 제안). 평가셋 v3(E13)
 - [ ] 알림 파서(F2) + 결제 직후 F7 검사 연결, 확인 알림(F3), 상담 평가셋 50개

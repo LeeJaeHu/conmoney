@@ -94,6 +94,19 @@ class RecurringMatches extends Table {
   TextColumn get decidedOn => text()(); // yyyy-MM-dd
 }
 
+/// 한 번만 나갈 예정인 지출(축의금 등). 스키마 v5
+@DataClassName('PlannedExpenseRow')
+class PlannedExpenses extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text()();
+  IntColumn get amount => integer()();
+  TextColumn get date => text()(); // yyyy-MM-dd, 낼 날짜
+  TextColumn get doneOn => text().nullable()(); // [냈어요]를 누른 날
+  IntColumn get transactionId => integer().nullable()(); // 그때 만든 MANUAL 거래
+  TextColumn get source => text().withDefault(const Constant('USER'))(); // USER / AGENT
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
 @DataClassName('BudgetRow')
 class Budgets extends Table {
   TextColumn get month => text()(); // yyyy-MM
@@ -186,6 +199,7 @@ const defaultCategories = [
     Settings,
     NotificationLogs,
     MetricEvents,
+    PlannedExpenses,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -194,7 +208,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'conmoney', native: const DriftNativeOptions(shareAcrossIsolates: true)));
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -211,6 +225,7 @@ class AppDatabase extends _$AppDatabase {
       if (from < 2) await m.createTable(notificationLogs);
       if (from < 3) await m.addColumn(recurringItems, recurringItems.isEnvelope);
       if (from < 4) await m.createTable(metricEvents);
+      if (from < 5) await m.createTable(plannedExpenses);
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');

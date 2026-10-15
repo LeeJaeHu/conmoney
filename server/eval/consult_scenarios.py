@@ -3,7 +3,9 @@
 정답 판단은 앱 계산 엔진과 같은 공식으로 미리 계산한다(Spec 3.8):
   이번 달 반영액 = 일시불은 금액, 할부는 1회차(100원 단위 내림, 나머지는 1회차)
   예상 월말 지출 E = 확정 지출 S + 예정 정기 지출 F + 평소 남은 기간 소비 P + 이번 달 반영액
-  초과액 = E − 예산 B → ≤ 0 ok / ≤ B×10% conditional / 그 외 postpone. 구매일이 다음 달 이후면 next_month
+  초과액 = E − 예산 B → ≤ 0 ok / ≤ B×10% conditional / 그 외 postpone.
+  구매일이 다음 달 이후면 그 달 기준(10/15): E = 이월 할부 + 정기·예정 지출 전체 + 평소 한 달 소비 + 1회차,
+  B = 그 달 예산(없으면 직전 달 예산을 이어 씀)
 
     .venv/Scripts/python -X utf8 -m eval.consult_scenarios
 """
@@ -22,15 +24,68 @@ def first_installment(amount: int, months: int) -> int:
     return amount - rest * (months - 1)
 
 
-def verdict(state: dict, amount: int, months: int = 1, date: str | None = None) -> str:
-    if date and date[:7] > TODAY[:7]:
-        return "next_month"
-    b = state["budget"]
-    fixed = sum(f["amount"] for f in state["fixed"])
-    over = state["spent"] + fixed + state["pattern"] + first_installment(amount, months) - b
+def split(amount: int, months: int) -> list[int]:
+    if months <= 1:
+        return [amount]
+    rest = amount // months // 100 * 100
+    return [amount - rest * (months - 1)] + [rest] * (months - 1)
+
+
+def judge(over: int, b: int) -> str:
     if over <= 0:
         return "ok"
     return "conditional" if over <= b // 10 else "postpone"
+
+
+def month_over(state: dict, part: int, future: bool) -> tuple[int, int]:
+    """(그 달에 part를 더했을 때 예상 초과액, 그 달 예산). future면 다음 달 이후 예상(평가에서는 다음 달 이후가 모두 같다고 둔다)."""
+    if not future:
+        b = state["budget"]
+        return state["spent"] + sum(f["amount"] for f in state["fixed"]) + state["pattern"] + part - b, b
+    nx = next_month(state)
+    b = nx["budget"] or state["budget"]
+    return nx["known"] + nx["fixed"] + nx["usual"] + part - b, b
+
+
+def next_month(state: dict) -> dict:
+    """다음 달 이후 예상. budget이 None이면 아직 없음(이번 달 예산을 이어 씀)."""
+    nx = state.get("next") or {}
+    return {"budget": nx.get("budget"), "known": nx.get("known", 0),
+            "fixed": nx.get("fixed", sum(f["amount"] for f in state["fixed"] if f.get("due_date"))),
+            "usual": nx.get("usual", state["spent"] + state["pattern"])}
+
+
+def is_future(date: str | None) -> bool:
+    return bool(date) and date[:7] > TODAY[:7]
+
+
+def verdict(state: dict, amount: int, months: int = 1, date: str | None = None) -> str:
+    over, b = month_over(state, split(amount, months)[0], is_future(date))
+    return judge(over, b)
+
+
+def thresholds(state: dict, date: str | None = None) -> tuple[int, int, int]:
+    """(ok 최대 금액, conditional 최대 금액, 예산). 1,000원 단위 내림, 해당 금액이 없으면 -1(앱 BudgetEngine.thresholds와 같음)."""
+    over0, b = month_over(state, 0, is_future(date))
+
+    def floor(v: int) -> int:
+        return -1 if v < 0 else v // 1000 * 1000
+    return floor(-over0), floor(b // 10 - over0), b
+
+
+def installment_options(state: dict, amount: int, date: str | None = None) -> list[dict]:
+    """일시불이 ok가 아니면 2·3개월 할부안. 첫 달은 구매 달, 이후는 다음 달 이후 예상."""
+    if verdict(state, amount, 1, date) == "ok":
+        return []
+    out = []
+    for n in (2, 3):
+        rows = []
+        for k, part in enumerate(split(amount, n)):
+            over, b = month_over(state, part, is_future(date) or k > 0)
+            rows.append({"k": k, "amount": part, "verdict": judge(over, b), "over": over})
+        order = ["ok", "conditional", "postpone"]
+        out.append({"months": n, "worst": max((x["verdict"] for x in rows), key=order.index), "per_month": rows})
+    return out
 
 
 def slack(state: dict) -> int:

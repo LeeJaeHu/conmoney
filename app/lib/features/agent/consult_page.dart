@@ -11,6 +11,8 @@ import '../../core/budget_plan.dart';
 import '../../core/models.dart';
 import '../../data/agent_client.dart';
 import '../../data/metrics_repository.dart';
+import '../../ui/format.dart';
+import '../planned/planned_page.dart';
 import '../spending/spending_providers.dart';
 
 final agentClientProvider = Provider<AgentClient>((ref) => AgentClient());
@@ -20,9 +22,11 @@ Future<AgentToolbox> buildToolbox(WidgetRef ref) async {
   final repo = ref.read(repositoryProvider);
   final spending = ref.read(spendingRepositoryProvider);
   final now = ref.read(clockProvider)();
+  final budgets = await repo.budgets();
   return AgentToolbox(
     engine: BudgetEngine(await repo.loadLedger()),
-    budget: budgetFor(await repo.budgets(), YearMonth.of(now)),
+    budget: budgetFor(budgets, YearMonth.of(now)),
+    budgets: budgets,
     items: await spending.items(),
     now: now,
   );
@@ -30,16 +34,25 @@ Future<AgentToolbox> buildToolbox(WidgetRef ref) async {
 
 const _toolLabels = {
   'get_budget_status': '이번 달 예산 확인',
-  'get_upcoming_fixed': '다가오는 정기 지출 확인',
+  'get_upcoming_fixed': '다가오는 정기·예정 지출 확인',
   'get_spending_pattern': '평소 소비 패턴 확인',
   'simulate_purchase': '샀을 때 계산',
+  'simulate_range': '금액대별로 계산',
   'get_category_summary': '카테고리별 지출 확인',
+  'add_planned_expense': '예정 지출 정리',
 };
 
 class _Msg {
-  _Msg.user(this.text) : fromUser = true, verdict = null, verified = true;
-  _Msg.assistant(this.text, {this.verdict, this.verified = true}) : fromUser = false;
+  _Msg.user(this.text) : fromUser = true, verdict = null, verified = true, plan = null;
+  _Msg.assistant(this.text, {this.verdict, this.verified = true}) : fromUser = false, plan = null;
+  _Msg.plan(({String name, int amount, DateTime date}) this.plan)
+    : fromUser = false,
+      text = '',
+      verdict = null,
+      verified = true;
 
+  /// 상담이 제안한 예정 지출. 사용자가 [등록]을 눌러야 저장된다.
+  final ({String name, int amount, DateTime date})? plan;
   final bool fromUser;
   final String text;
   final String? verdict;
@@ -94,9 +107,10 @@ class _ConsultPageState extends ConsumerState<ConsultPage> {
         krw += reply.krw;
         _items.addAll(reply.items);
         if (reply.status == 'final') {
-          setState(
-            () => _messages.add(_Msg.assistant(reply.text ?? '', verdict: reply.verdict, verified: reply.verified)),
-          );
+          setState(() {
+            _messages.add(_Msg.assistant(reply.text ?? '', verdict: reply.verdict, verified: reply.verified));
+            _messages.addAll(toolbox.proposedPlans.map(_Msg.plan));
+          });
           await metrics.consult(
             rounds: round,
             krw: krw,
@@ -171,7 +185,8 @@ class _ConsultPageState extends ConsumerState<ConsultPage> {
                     ],
                   ),
                 ],
-                for (final m in _messages) _Bubble(m),
+                for (final m in _messages)
+                  if (m.plan != null) _PlanProposal(m.plan!) else _Bubble(m),
                 if (_busy)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -230,7 +245,6 @@ class _Bubble extends StatelessWidget {
       'ok' => '괜찮아요',
       'conditional' => '조건부',
       'postpone' => '미루는 걸 추천',
-      'next_month' => '다음 달 기준',
       _ => null,
     };
     return Align(
@@ -259,6 +273,44 @@ class _Bubble extends StatelessWidget {
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// 상담이 제안한 예정 지출 카드. [등록]을 눌러야 저장되고 그 달 예산에 반영된다.
+class _PlanProposal extends ConsumerStatefulWidget {
+  const _PlanProposal(this.plan);
+
+  final ({String name, int amount, DateTime date}) plan;
+
+  @override
+  ConsumerState<_PlanProposal> createState() => _PlanProposalState();
+}
+
+class _PlanProposalState extends ConsumerState<_PlanProposal> {
+  bool _saved = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = widget.plan;
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.event_note),
+        title: Text('${p.name} ${won(p.amount, exact: true)}'),
+        subtitle: Text('${p.date.month}/${p.date.day} 예정 · 등록하면 ${p.date.month}월 예산에서 미리 빼요'),
+        trailing: _saved
+            ? const Text('등록됨')
+            : FilledButton.tonal(
+                onPressed: () async {
+                  await ref
+                      .read(plannedRepositoryProvider)
+                      .add(name: p.name, amount: p.amount, date: p.date, source: 'AGENT');
+                  ref.invalidate(homeProvider);
+                  if (mounted) setState(() => _saved = true);
+                },
+                child: const Text('등록'),
+              ),
       ),
     );
   }
