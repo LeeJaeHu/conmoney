@@ -1,0 +1,9 @@
+run,config,prompt,n,verdict_acc,numbers_ok,first_pass_ok,tool_ok,consistency,fallback_rate,krw_mean,latency_p50,latency_p90
+gpt-6-luna / none · v1,gpt-6-luna / none,v1,100,0.94,0.99,0.98,0.98,0.96,0.01,0.43,5.96,9.0
+gpt-6-luna / low · v1,gpt-6-luna / low,v1,100,0.96,1.0,1.0,1.0,0.96,0.0,0.41,3.61,4.87
+gpt-6.1-sol / low · v1,gpt-6.1-sol / low,v1,100,0.97,1.0,0.99,1.0,0.98,0.0,7.53,5.81,7.02
+gpt-6.1-sol / medium · v1,gpt-6.1-sol / medium,v1,100,0.99,1.0,1.0,1.0,0.98,0.0,7.52,5.48,7.09
+gpt-6-luna / none · v2 (오늘 날짜 추가),gpt-6-luna / none,v2 (오늘 날짜 추가),100,0.95,0.99,0.99,0.96,0.98,0.01,0.44,6.23,14.19
+gpt-6-luna / low · v2 (오늘 날짜 추가),gpt-6-luna / low,v2 (오늘 날짜 추가),100,1.0,1.0,1.0,1.0,1.0,0.0,0.4,3.81,4.54
+gpt-6.1-sol / low · v2 (오늘 날짜 추가),gpt-6.1-sol / low,v2 (오늘 날짜 추가),100,1.0,1.0,1.0,1.0,1.0,0.0,7.52,6.05,7.36
+gpt-6.1-sol / medium · v2 (오늘 날짜 추가),gpt-6.1-sol / medium,v2 (오늘 날짜 추가),100,1.0,1.0,1.0,1.0,1.0,0.0,8.21,7.22,8.85

@@ -35,7 +35,7 @@ def load() -> Settings:
         jev_api_key=e("JEV_API_KEY", ""),
         jev_base_url=e("JEV_BASE_URL", "https://api.typesafe.ai").rstrip("/"),
         jev_model=e("JEV_MODEL", "jev-latest"),
-        jev_min_confidence=float(e("JEV_MIN_CONFIDENCE", "0.8")),
+        jev_min_confidence=float(e("JEV_MIN_CONFIDENCE", "0.95")),
         monthly_budget_krw=int(e("MONTHLY_BUDGET_KRW", "10000")),
         usd_krw=float(e("USD_KRW", "1400")),
         debug=e("DEBUG", "0") == "1",

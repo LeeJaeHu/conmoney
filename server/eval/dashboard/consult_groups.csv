@@ -1,0 +1,73 @@
+run,config,prompt,group,verdict_acc
+gpt-6-luna / none · v1,gpt-6-luna / none,v1,ask_amount,0.75
+gpt-6-luna / none · v1,gpt-6-luna / none,v1,boundary,1.0
+gpt-6-luna / none · v1,gpt-6-luna / none,v1,fixed_soon,1.0
+gpt-6-luna / none · v1,gpt-6-luna / none,v1,installment,1.0
+gpt-6-luna / none · v1,gpt-6-luna / none,v1,next_month,0.333
+gpt-6-luna / none · v1,gpt-6-luna / none,v1,over,1.0
+gpt-6-luna / none · v1,gpt-6-luna / none,v1,phrasing,1.0
+gpt-6-luna / none · v1,gpt-6-luna / none,v1,roomy,1.0
+gpt-6-luna / none · v1,gpt-6-luna / none,v1,tight,1.0
+gpt-6-luna / low · v1,gpt-6-luna / low,v1,ask_amount,1.0
+gpt-6-luna / low · v1,gpt-6-luna / low,v1,boundary,1.0
+gpt-6-luna / low · v1,gpt-6-luna / low,v1,fixed_soon,1.0
+gpt-6-luna / low · v1,gpt-6-luna / low,v1,installment,1.0
+gpt-6-luna / low · v1,gpt-6-luna / low,v1,next_month,0.333
+gpt-6-luna / low · v1,gpt-6-luna / low,v1,over,1.0
+gpt-6-luna / low · v1,gpt-6-luna / low,v1,phrasing,1.0
+gpt-6-luna / low · v1,gpt-6-luna / low,v1,roomy,1.0
+gpt-6-luna / low · v1,gpt-6-luna / low,v1,tight,1.0
+gpt-6.1-sol / low · v1,gpt-6.1-sol / low,v1,ask_amount,1.0
+gpt-6.1-sol / low · v1,gpt-6.1-sol / low,v1,boundary,1.0
+gpt-6.1-sol / low · v1,gpt-6.1-sol / low,v1,fixed_soon,1.0
+gpt-6.1-sol / low · v1,gpt-6.1-sol / low,v1,installment,1.0
+gpt-6.1-sol / low · v1,gpt-6.1-sol / low,v1,next_month,0.5
+gpt-6.1-sol / low · v1,gpt-6.1-sol / low,v1,over,1.0
+gpt-6.1-sol / low · v1,gpt-6.1-sol / low,v1,phrasing,1.0
+gpt-6.1-sol / low · v1,gpt-6.1-sol / low,v1,roomy,1.0
+gpt-6.1-sol / low · v1,gpt-6.1-sol / low,v1,tight,1.0
+gpt-6.1-sol / medium · v1,gpt-6.1-sol / medium,v1,ask_amount,1.0
+gpt-6.1-sol / medium · v1,gpt-6.1-sol / medium,v1,boundary,1.0
+gpt-6.1-sol / medium · v1,gpt-6.1-sol / medium,v1,fixed_soon,1.0
+gpt-6.1-sol / medium · v1,gpt-6.1-sol / medium,v1,installment,1.0
+gpt-6.1-sol / medium · v1,gpt-6.1-sol / medium,v1,next_month,0.833
+gpt-6.1-sol / medium · v1,gpt-6.1-sol / medium,v1,over,1.0
+gpt-6.1-sol / medium · v1,gpt-6.1-sol / medium,v1,phrasing,1.0
+gpt-6.1-sol / medium · v1,gpt-6.1-sol / medium,v1,roomy,1.0
+gpt-6.1-sol / medium · v1,gpt-6.1-sol / medium,v1,tight,1.0
+gpt-6-luna / none · v2 (오늘 날짜 추가),gpt-6-luna / none,v2 (오늘 날짜 추가),ask_amount,0.5
+gpt-6-luna / none · v2 (오늘 날짜 추가),gpt-6-luna / none,v2 (오늘 날짜 추가),boundary,0.95
+gpt-6-luna / none · v2 (오늘 날짜 추가),gpt-6-luna / none,v2 (오늘 날짜 추가),fixed_soon,1.0
+gpt-6-luna / none · v2 (오늘 날짜 추가),gpt-6-luna / none,v2 (오늘 날짜 추가),installment,1.0
+gpt-6-luna / none · v2 (오늘 날짜 추가),gpt-6-luna / none,v2 (오늘 날짜 추가),next_month,1.0
+gpt-6-luna / none · v2 (오늘 날짜 추가),gpt-6-luna / none,v2 (오늘 날짜 추가),over,1.0
+gpt-6-luna / none · v2 (오늘 날짜 추가),gpt-6-luna / none,v2 (오늘 날짜 추가),phrasing,1.0
+gpt-6-luna / none · v2 (오늘 날짜 추가),gpt-6-luna / none,v2 (오늘 날짜 추가),roomy,1.0
+gpt-6-luna / none · v2 (오늘 날짜 추가),gpt-6-luna / none,v2 (오늘 날짜 추가),tight,1.0
+gpt-6-luna / low · v2 (오늘 날짜 추가),gpt-6-luna / low,v2 (오늘 날짜 추가),ask_amount,1.0
+gpt-6-luna / low · v2 (오늘 날짜 추가),gpt-6-luna / low,v2 (오늘 날짜 추가),boundary,1.0
+gpt-6-luna / low · v2 (오늘 날짜 추가),gpt-6-luna / low,v2 (오늘 날짜 추가),fixed_soon,1.0
+gpt-6-luna / low · v2 (오늘 날짜 추가),gpt-6-luna / low,v2 (오늘 날짜 추가),installment,1.0
+gpt-6-luna / low · v2 (오늘 날짜 추가),gpt-6-luna / low,v2 (오늘 날짜 추가),next_month,1.0
+gpt-6-luna / low · v2 (오늘 날짜 추가),gpt-6-luna / low,v2 (오늘 날짜 추가),over,1.0
+gpt-6-luna / low · v2 (오늘 날짜 추가),gpt-6-luna / low,v2 (오늘 날짜 추가),phrasing,1.0
+gpt-6-luna / low · v2 (오늘 날짜 추가),gpt-6-luna / low,v2 (오늘 날짜 추가),roomy,1.0
+gpt-6-luna / low · v2 (오늘 날짜 추가),gpt-6-luna / low,v2 (오늘 날짜 추가),tight,1.0
+gpt-6.1-sol / low · v2 (오늘 날짜 추가),gpt-6.1-sol / low,v2 (오늘 날짜 추가),ask_amount,1.0
+gpt-6.1-sol / low · v2 (오늘 날짜 추가),gpt-6.1-sol / low,v2 (오늘 날짜 추가),boundary,1.0
+gpt-6.1-sol / low · v2 (오늘 날짜 추가),gpt-6.1-sol / low,v2 (오늘 날짜 추가),fixed_soon,1.0
+gpt-6.1-sol / low · v2 (오늘 날짜 추가),gpt-6.1-sol / low,v2 (오늘 날짜 추가),installment,1.0
+gpt-6.1-sol / low · v2 (오늘 날짜 추가),gpt-6.1-sol / low,v2 (오늘 날짜 추가),next_month,1.0
+gpt-6.1-sol / low · v2 (오늘 날짜 추가),gpt-6.1-sol / low,v2 (오늘 날짜 추가),over,1.0
+gpt-6.1-sol / low · v2 (오늘 날짜 추가),gpt-6.1-sol / low,v2 (오늘 날짜 추가),phrasing,1.0
+gpt-6.1-sol / low · v2 (오늘 날짜 추가),gpt-6.1-sol / low,v2 (오늘 날짜 추가),roomy,1.0
+gpt-6.1-sol / low · v2 (오늘 날짜 추가),gpt-6.1-sol / low,v2 (오늘 날짜 추가),tight,1.0
+gpt-6.1-sol / medium · v2 (오늘 날짜 추가),gpt-6.1-sol / medium,v2 (오늘 날짜 추가),ask_amount,1.0
+gpt-6.1-sol / medium · v2 (오늘 날짜 추가),gpt-6.1-sol / medium,v2 (오늘 날짜 추가),boundary,1.0
+gpt-6.1-sol / medium · v2 (오늘 날짜 추가),gpt-6.1-sol / medium,v2 (오늘 날짜 추가),fixed_soon,1.0
+gpt-6.1-sol / medium · v2 (오늘 날짜 추가),gpt-6.1-sol / medium,v2 (오늘 날짜 추가),installment,1.0
+gpt-6.1-sol / medium · v2 (오늘 날짜 추가),gpt-6.1-sol / medium,v2 (오늘 날짜 추가),next_month,1.0
+gpt-6.1-sol / medium · v2 (오늘 날짜 추가),gpt-6.1-sol / medium,v2 (오늘 날짜 추가),over,1.0
+gpt-6.1-sol / medium · v2 (오늘 날짜 추가),gpt-6.1-sol / medium,v2 (오늘 날짜 추가),phrasing,1.0
+gpt-6.1-sol / medium · v2 (오늘 날짜 추가),gpt-6.1-sol / medium,v2 (오늘 날짜 추가),roomy,1.0
+gpt-6.1-sol / medium · v2 (오늘 날짜 추가),gpt-6.1-sol / medium,v2 (오늘 날짜 추가),tight,1.0
