@@ -29,3 +29,14 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/fonts/Pretendard-LICENSE.txt
+  # Pretendard v1.3.9 (SIL Open Font License 1.1, assets/fonts/Pretendard-LICENSE.txt). 10/16 디자인
+  fonts:
+    - family: Pretendard
+      fonts:
+        - asset: assets/fonts/Pretendard-Regular.otf
+        - asset: assets/fonts/Pretendard-SemiBold.otf
+          weight: 600
+        - asset: assets/fonts/Pretendard-Bold.otf
+          weight: 700

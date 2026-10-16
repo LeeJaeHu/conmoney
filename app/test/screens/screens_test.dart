@@ -14,22 +14,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Future<void> loadFonts() async {
-  final f = FontLoader('Malgun')
-    ..addFont(Future.value(ByteData.sublistView(File('C:/Windows/Fonts/malgun.ttf').readAsBytesSync())))
-    ..addFont(Future.value(ByteData.sublistView(File('C:/Windows/Fonts/malgunbd.ttf').readAsBytesSync())));
+  ByteData bytes(String path) => ByteData.sublistView(File(path).readAsBytesSync());
+  final f = FontLoader(appFont);
+  for (final w in ['Regular', 'SemiBold', 'Bold']) {
+    f.addFont(Future.value(bytes('assets/fonts/Pretendard-$w.otf')));
+  }
   await f.load();
-  final icons = FontLoader('MaterialIcons')
-    ..addFont(Future.value(ByteData.sublistView(File('C:/flutter/bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf').readAsBytesSync())));
-  await icons.load();
+  await (FontLoader('MaterialIcons')
+        ..addFont(Future.value(bytes('${Platform.environment['FLUTTER_ROOT'] ?? 'C:/flutter'}/bin/cache/artifacts/material_fonts/materialicons-regular.otf'))))
+      .load();
 }
 
-ThemeData themed(Brightness b) => buildTheme(b, fontFamily: 'Malgun');
+ThemeData themed(Brightness b) => buildTheme(b, fontFamily: appFont);
 
 /// 화면 캡처(10/16): 가짜 데이터로 홈·지출 분석을 360dp 폰 크기로 그려 docs/design/에 PNG로 남긴다.
-/// 평소 테스트에서는 건너뛴다. 캡처할 때(Windows, 맑은 고딕 필요):
+/// 글꼴은 앱과 같은 Pretendard(assets/fonts). 평소 테스트에서는 건너뛴다. 캡처할 때:
 ///   SCREENSHOTS=1 flutter test test/screens --update-goldens
 void main() {
-  final skip = Platform.environment['SCREENSHOTS'] != '1' || !File('C:/Windows/Fonts/malgun.ttf').existsSync();
+  final skip = Platform.environment['SCREENSHOTS'] != '1';
   for (final b in Brightness.values) {
     for (final page in ['home', 'analysis']) {
       testWidgets('$page $b', skip: skip, (tester) async {

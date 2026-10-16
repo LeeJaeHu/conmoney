@@ -97,3 +97,7 @@ docs/    PRD, Spec, 실험 기록
 ```
 
 실행 방법은 [server/README.md](server/README.md), [app/README.md](app/README.md).
+
+## 사용한 글꼴
+
+- [Pretendard](https://github.com/orioncactus/pretendard) v1.3.9 © Kil Hyung-jin, SIL Open Font License 1.1 — `app/assets/fonts/Pretendard-LICENSE.txt`

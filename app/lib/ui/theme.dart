@@ -20,6 +20,9 @@ class AppColors {
   static Color track(Brightness b) => b == Brightness.dark ? const Color(0xFF26313D) : const Color(0xFFE6F1FB);
 }
 
+/// 앱 글꼴(Pretendard, `assets/fonts`, SIL OFL 1.1).
+const appFont = 'Pretendard';
+
 /// 금액처럼 자릿수가 세로로 맞아야 하는 숫자.
 const tabular = [FontFeature.tabularFigures()];
 
