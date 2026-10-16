@@ -5,6 +5,7 @@ import '../../app_providers.dart';
 import '../../core/proactive.dart';
 import '../../services/local_notifier.dart';
 import '../../services/proactive_service.dart';
+import '../../ui/insets.dart';
 
 /// 먼저 알려주기 설정(Spec F7): 켜기/끄기, 조용한 시간, 지금 검사.
 class NotificationSettingsPage extends ConsumerStatefulWidget {
@@ -71,7 +72,7 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
     return Scaffold(
       appBar: AppBar(title: const Text('먼저 알려주기')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: pagePadding(context),
         children: [
           SwitchListTile(
             contentPadding: EdgeInsets.zero,

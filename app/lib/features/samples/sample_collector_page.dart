@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../../core/masking.dart';
 import '../../platform/notification_channel.dart';
+import '../../ui/insets.dart';
 
 /// 1단계: 결제 알림 샘플 수집 화면(Spec 9장 10/14).
 /// 받은 원문을 보여주고, 식별 정보를 가린 JSON을 복사해 PC로 옮길 수 있게 한다.
@@ -89,7 +90,7 @@ class _SampleCollectorPageState extends State<SampleCollectorPage> with WidgetsB
       body: RefreshIndicator(
         onRefresh: _refresh,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: pagePadding(context),
           children: [
             if (_granted == false)
               Card(

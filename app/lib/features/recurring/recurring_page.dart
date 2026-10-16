@@ -7,6 +7,7 @@ import '../../core/recurring.dart';
 import '../../data/database.dart';
 import '../../data/recurring_repository.dart';
 import '../../ui/format.dart';
+import '../../ui/insets.dart';
 
 final recurringRepositoryProvider = Provider((ref) => RecurringRepository(ref.watch(databaseProvider)));
 
@@ -61,7 +62,7 @@ class RecurringPage extends ConsumerWidget {
           final (items, suggestions, envelopes) = d;
           final theme = Theme.of(context);
           return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+            padding: pagePadding(context, bottom: 96),
             children: [
               Text('등록된 정기 지출 ${items.length}개', style: theme.textTheme.titleMedium),
               Text('아직 안 나간 금액은 이번 달 예산에서 미리 빼요.', style: theme.textTheme.bodySmall),

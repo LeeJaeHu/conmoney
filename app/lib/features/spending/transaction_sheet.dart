@@ -11,6 +11,7 @@ Future<bool?> showTransactionSheet(BuildContext context, int txnId) => showModal
   context: context,
   isScrollControlled: true,
   showDragHandle: true,
+  useSafeArea: true,
   builder: (_) => TransactionSheet(txnId: txnId),
 );
 

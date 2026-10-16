@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app_providers.dart';
 import '../../core/budget_engine.dart';
 import '../../ui/format.dart';
+import '../../ui/insets.dart';
 import '../agent/consult_page.dart';
 import '../budget/budget_settings_page.dart';
 import '../dev/import_page.dart';
@@ -14,6 +15,7 @@ import '../settings/metrics_page.dart';
 import '../settings/notification_settings_page.dart';
 import '../spending/category_page.dart';
 import '../spending/spending_providers.dart';
+import 'spend_calendar.dart';
 
 /// 홈 화면(Spec F4): 오늘 쓸 수 있는 금액(크게) + 이번 달 남은 예산(작게). 총 사용액은 보여주지 않는다.
 class HomePage extends ConsumerWidget {
@@ -65,7 +67,7 @@ class HomePage extends ConsumerWidget {
             children: [Padding(padding: const EdgeInsets.all(24), child: Text('불러오지 못했어요: $e'))],
           ),
           data: (data) => ListView(
-            padding: const EdgeInsets.all(16),
+            padding: pagePadding(context),
             children: [
               if (data.status case final st?)
                 _TodayCard(status: st, data: data)
@@ -81,6 +83,13 @@ class HomePage extends ConsumerWidget {
                   ),
                 ),
               _UpcomingCard(data: data, onOpen: () => open(const RecurringPage())),
+              const SizedBox(height: 12),
+              SpendCalendar(
+                upcomingDays: {
+                  for (final (item, due, _) in data.upcoming)
+                    if (!item.isEnvelope && due.month == data.month.month) due.day,
+                },
+              ),
               const SizedBox(height: 12),
               OutlinedButton.icon(
                 onPressed: () => open(const CategoryPage()),

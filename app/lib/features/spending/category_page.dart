@@ -5,6 +5,7 @@ import '../../app_providers.dart';
 import '../../core/category_summary.dart';
 import '../../core/models.dart';
 import '../../ui/format.dart';
+import '../../ui/insets.dart';
 import 'spending_providers.dart';
 import 'transaction_sheet.dart';
 
@@ -64,7 +65,7 @@ class _CategoryPageState extends ConsumerState<CategoryPage> {
           final summary = summarize(all, from, to, includeUnusual: _includeUnusual);
           final trend = monthlyTrend(all, now, includeUnusual: _includeUnusual);
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: pagePadding(context),
             children: [
               Wrap(
                 spacing: 8,
@@ -306,6 +307,7 @@ class _CategoryDetailPage extends ConsumerWidget {
           final list = summarize(all, from, to, includeUnusual: includeUnusual).itemsOf(categoryId);
           final sum = list.fold(0, (s, i) => s + i.amount);
           return ListView(
+            padding: EdgeInsets.only(bottom: MediaQuery.viewPaddingOf(context).bottom + 16),
             children: [
               ListTile(
                 title: Text('${_md(from)} ~ ${_md(to)} · ${list.length}건'),

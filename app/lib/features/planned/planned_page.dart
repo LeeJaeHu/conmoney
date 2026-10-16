@@ -6,6 +6,7 @@ import '../../app_providers.dart';
 import '../../data/database.dart';
 import '../../data/planned_repository.dart';
 import '../../ui/format.dart';
+import '../../ui/insets.dart';
 
 final plannedRepositoryProvider = Provider((ref) => PlannedRepository(ref.watch(databaseProvider)));
 
@@ -43,7 +44,7 @@ class PlannedPage extends ConsumerWidget {
         data: (rows) {
           final theme = Theme.of(context);
           return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+            padding: pagePadding(context, bottom: 96),
             children: [
               Text('축의금처럼 한 번 나갈 돈을 적어 두면 그 달 예산에서 미리 빼요.', style: theme.textTheme.bodySmall),
               const SizedBox(height: 8),

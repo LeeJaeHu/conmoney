@@ -8,6 +8,7 @@ import '../../core/budget_plan.dart';
 import '../../core/models.dart';
 import '../../data/database.dart';
 import '../../ui/format.dart';
+import '../../ui/insets.dart';
 
 enum _Mode { fixed, step }
 
@@ -124,7 +125,7 @@ class _BudgetSettingsPageState extends ConsumerState<BudgetSettingsPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('예산 설정')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: pagePadding(context),
         children: [
           SegmentedButton<_Mode>(
             segments: const [

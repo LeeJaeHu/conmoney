@@ -83,6 +83,16 @@ CategorySummary summarize(List<SpendItem> all, DateTime from, DateTime to, {bool
   return CategorySummary(total, categories, items);
 }
 
+/// 홈 달력용: [month]의 날짜별 지출 합계(0번이 1일). 취소는 음수로 빠지고, 할부 2회차부터는 그 달 1일에 잡힌다(Spec F8).
+List<int> dailyTotals(List<SpendItem> all, YearMonth month, {bool includeUnusual = true}) {
+  final out = List.filled(month.days, 0);
+  for (final i in all) {
+    if (!month.contains(i.date) || (!includeUnusual && i.isUnusual)) continue;
+    out[i.date.day - 1] += i.amount;
+  }
+  return out;
+}
+
 /// 최근 [months]개월(이번 달 포함) 카테고리별 월 합계. 상위 [top]개만 따로 두고 나머지는 '그 외'로 묶는다.
 class MonthlyTrend {
   const MonthlyTrend(this.months, this.series, this.monthTotals);

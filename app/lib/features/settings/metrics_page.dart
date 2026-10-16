@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app_providers.dart';
 import '../../data/metrics_repository.dart';
+import '../../ui/insets.dart';
 
 final _summaryProvider = FutureProvider.autoDispose<MetricsSummary>(
   (ref) => MetricsRepository(ref.watch(databaseProvider)).summary(),
@@ -38,7 +39,7 @@ class MetricsPage extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('불러오지 못했어요: $e')),
         data: (s) => ListView(
-          padding: const EdgeInsets.all(16),
+          padding: pagePadding(context),
           children: [
             if (s.since != null)
               Text('${s.since!.month}/${s.since!.day}부터 기록', style: Theme.of(context).textTheme.bodySmall),

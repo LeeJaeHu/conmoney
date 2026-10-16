@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app_providers.dart';
 import '../../data/csv_import.dart';
+import '../../ui/insets.dart';
 
 /// 개발자용 과거 기록 가져오기(Spec 3.7). PC에서 tools/import_statements.py로 만든 CSV를 읽는다.
 class ImportPage extends ConsumerStatefulWidget {
@@ -48,7 +49,7 @@ class _ImportPageState extends ConsumerState<ImportPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('과거 기록 가져오기')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: pagePadding(context),
         children: [
           Text(
             'PC에서 tools/import_statements.py로 만든 CSV(예: transactions_v3.csv)를 폰에 옮긴 뒤 골라 주세요. '
