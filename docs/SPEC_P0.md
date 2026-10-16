@@ -462,10 +462,23 @@ class ParsedPayment {
 | `simulate_purchase` | `amount: int, date?: "yyyy-MM-dd", installment_months?: int` | `{remaining_after, today_available_after, projected_month_end, projected_over, verdict, rule}` |
 | `get_category_summary` | `period: "this_month" \| "last_month" \| "last_3_months", include_unusual?: bool` | `[{category, total, ratio}]` |
 | `suggest_category` | `merchant: string` | `{category, source}` |
+| `simulate_range` (10/15) | `min, max: int, date?` | `{segments: [{up_to, verdict}]}` — 금액대 질문을 판단별 구간으로 |
+| `add_planned_expense` (10/15) | `name, amount, date?` | `{status: "needs_user_confirmation"}` — 저장은 사용자가 [등록] |
+| `plan_recovery` (10/16) | 없음 | `{status: on_track \| recoverable \| not_recoverable_this_month, projected_over_if_usual, daily_cut_needed?, daily_spend_target?, over_even_if_zero_spend?, cut_candidates: [{category, usual_rest, half_saves}]}` |
+| `compare_spending` (10/16) | `window: "this_month" \| "last_month"` | `{total, usual_total, total_diff, categories: [{category, amount, usual, diff}]}` |
+
+**일상 대화형 상담**(10/16): 구매 질문이 아닌 "예산 넘었는데 어캄", "어디서 많이 썼어?", 잡담에도 답한다.
+- `plan_recovery` 계산: `over = S + F + P − B`(평소대로 쓰면 월말 초과), `target = P − over`(남은 기간 변동 지출 한도).
+  `over ≤ 0` → on_track. `target ≥ 0` → recoverable: `daily_cut_needed = ceil(over ÷ N)`(100원 단위 올림), `daily_spend_target = floor(target ÷ N)`(100원 단위 내림).
+  `target < 0` → not_recoverable: 하루 감축액은 **주지 않는다**(평소 하루 소비보다 커서 실현 불가, 평가 v4) → `over_even_if_zero_spend = −target`
+- 줄일 곳 후보: 지난 완료 달(최대 3개)의 같은 남은 기간 카테고리별 소비 중앙값 상위 3개. 통신·공과금·구독·연회비·교통·의료·교육은 뺀다. `half_saves` = 그 절반(100원 내림)
+- `compare_spending`: 이번 달 1일~오늘 vs 지난 달들 같은 기간(카테고리별 중앙값), 지난달 전체 vs 그 전 3개월. 특이 지출 제외
+- 집계만 서버로 간다. 가맹점 단위 조회는 하지 않는다(가맹점 이름을 LLM에 보내야 하므로 별도 결정 필요, PRD 12장)
+- 잡담·감정에는 툴 없이 1~2문장, 금액 없이
 
 - 툴 결과의 금액은 정수로 보내고, 표시용 문자열(`"150,000원"`)도 함께 넣어 LLM이 그대로 인용하게 한다.
 
-**응답 형식** (시스템 프롬프트로 강제)
+**응답 형식** (시스템 프롬프트로 강제, 구매 질문. 상황 상담은 `[지금]`·`[이렇게 하면]` 2~3줄)
 ```
 [판단] 괜찮아요 | 조건부 | 미루는 걸 추천
 [근거] 남은 예산, 남은 일수, 예정 고정비, 평소 남은 기간 소비 — 툴 숫자만

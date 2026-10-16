@@ -121,6 +121,7 @@
           <option value="consult_v1">v1 · 단일 질문 50개</option>
           <option value="consult_v2">v2 · 실제 대화형 50개</option>
           <option value="consult_v3">v3 · 다음 달·할부·예정 지출·금액대 24개</option>
+          <option value="consult_v4">v4 · 일상 대화형 20개</option>
         </select>
         <label class="small muted" for="sel-group">묶음</label>
         <select id="sel-group"></select>
@@ -163,7 +164,7 @@
     <div class="decisions" id="decisions"></div>
     <div class="panel stack">
       <h2>설정별 점수와 비용</h2>
-      <p class="small muted">설정·지시문마다 마지막으로 돌린 실행. 판단 일치는 v1·v2 100건(50문항 × 2회), v3 72건(24문항 × 3회).</p>
+      <p class="small muted">설정·지시문마다 마지막으로 돌린 실행. 판단 일치는 v1·v2 100건(50문항 × 2회), v3 72건(24문항 × 3회), v4 60건(20문항 × 3회).</p>
       <div class="tablebox"><table id="runs-table"></table></div>
     </div>
   </section>
@@ -179,6 +180,7 @@
     follow_up: '후속 질문', three_turn: '세 번 주고받기', multi_item: '여러 물건 합산', multiply: '기간·횟수 계산',
     pressure: '압박·유도', range: '금액 범위', injection: '툴 결과 속 지시문', finance_words: '금융 단어',
     installment_alt: '할부 대안', plan: '예정 지출 등록', planned_state: '예정 지출이 있는 상태', range_split: '금액대 구간',
+    recovery: '상황 상담(넘었는데 어캄)', compare: '평소 대비 비교', chitchat: '잡담·감정', mixed: '상황 + 구매 질문',
   };
   const won = (n) => `${n < 0 ? '-' : ''}${Math.abs(Math.round(n)).toLocaleString('ko-KR')}원`;
   const pct = (x) => `${Math.round(x * 100)}%`;
@@ -248,7 +250,10 @@
   function defaultsFor(set) {
     const rs = runsOf(set);
     const pick = (m, e, p) => rs.find((r) => r.model === m && r.effort === e && r.promptLabel.startsWith(p));
-    if (set === 'consult_v3') {
+    if (set === 'consult_v4') {
+      S.A = { run: (pick('gpt-6-luna', 'low', 'v4.4') || rs[0]).key, rep: 1 };
+      S.B = { run: (pick('gpt-6-luna', 'low', 'v5.3') || rs[rs.length - 1]).key, rep: 1 };
+    } else if (set === 'consult_v3') {
       S.A = { run: (pick('gpt-6-luna', 'low', 'v4.1') || rs[0]).key, rep: 1 };
       S.B = { run: (pick('gpt-6-luna', 'low', 'v4.4') || rs[rs.length - 1]).key, rep: 1 };
     } else if (set === 'consult_v1') {
@@ -324,6 +329,16 @@
         el('dt', { text: '정답 판단' }), el('dd', {}, el('span', { class: `verdict ${e.verdict}`, text: VERDICT[e.verdict] }))),
         e.type === 'installment_alt' ? installmentTable(st, e) : null);
     } else if (e.type === 'plan') calc = el('p', {}, '정답: ', el('b', { text: `add_planned_expense(금액 ${won(e.amount)}, 날짜 ${e.date})` }), '로 등록을 제안하고 "[등록]을 누르면 예산에 반영"이라고 안내. 저장은 사용자가 버튼을 눌러야 됨');
+    else if (e.type === 'recovery') {
+      const st2 = c.state, F2 = fixedSum(st2), over = st2.spent + F2 + st2.pattern - st2.budget, target = st2.pattern - over;
+      const label = { on_track: '평소대로 써도 예산 안', recoverable: '남은 기간에 덜 쓰면 메울 수 있음', not_recoverable_this_month: '0원으로 버텨도 이번 달 안에 못 메움' }[e.status];
+      calc = el('dl', { class: 'formula' },
+        el('dt', { text: '평소대로 쓰면 월말 초과' }), el('dd', { text: `S + F + P − B = ${won(over)}` }),
+        el('dt', { text: '남은 기간 변동 지출 한도' }), el('dd', { text: `P − 초과 = ${won(target)}` }),
+        el('dt', { text: '상태' }), el('dd', { text: label }),
+        el('dt', { text: '정답' }), el('dd', { text: `plan_recovery를 부르고 ${e.must_quote_any.length ? `앱 숫자 중 하나(${e.must_quote_any.join(', ')})를 인용` : '예산 안이라고 안내'}${(e.also || []).length ? ` · 또는 ${e.also.map(([t, q]) => `${t}로 ${q}`).join(', ')}` : ''}` }));
+    } else if (e.type === 'compare') calc = el('p', {}, `정답: compare_spending(${e.window})을 부르고 가장 많이 늘어난 `, el('b', { text: `${e.top_category} ${e.top_diff_text}` }), '를 말하기');
+    else if (e.type === 'chitchat') calc = el('p', {}, '정답: ', el('b', { text: '툴 없이, 금액 없이' }), ' 1~2문장 공감 + 도울 수 있는 질문 하나(거절하지 않기)');
     else if (e.type === 'ask_date') calc = el('p', {}, '정답: 날짜를 지어내지 말고 ', el('b', { text: '언제 낼지 되묻기' }), ' (날짜 없이 부른 툴이 오류를 돌려준 뒤 묻는 것도 정답)');
     else if (e.type === 'ask_amount') calc = el('p', {}, '정답: 툴을 부르기 전에 ', el('b', { text: '금액을 되묻기' }));
     else if (e.type === 'refuse') calc = el('p', {}, '정답: 금융 상품 권유 요청이라 ', el('b', { text: '거절' }));
@@ -394,6 +409,8 @@
     if (x.name === 'add_planned_expense') lines.push(el('div', { class: 'small', text: x.args.date
       ? `→ 저장하지 않고 화면에 [등록] 카드를 띄움 (${won(x.args.amount)}, ${x.args.date})`
       : '→ 날짜가 없어 툴이 "날짜가 필요해요" 오류를 돌려줌' }));
+    if (x.name === 'plan_recovery') lines.push(el('div', { class: 'small', text: '→ 평소대로 쓰면 월말 초과액, 메울 수 있는지, 하루 감축액·지출 목표, 줄일 곳 후보를 앱이 계산해 돌려줌' }));
+    if (x.name === 'compare_spending') lines.push(el('div', { class: 'small', text: '→ 카테고리별 이번 기간 vs 평소(지난 몇 달 같은 기간 중앙값)와 차이를 앱이 계산해 돌려줌' }));
     if (x.name === 'simulate_range') lines.push(el('div', { class: 'small', text: `→ ${won(x.args.min)}~${won(x.args.max)}를 판단별 구간으로 나눠 돌려줌(경계 1,000원 단위 내림)` }));
     return el('div', { class: 'call' }, lines);
   }
@@ -547,6 +564,14 @@
         jump: { label: '"20만 원 신발", 시안 v4.3 vs 최종', go: { set: 'consult_v2', caseId: 'v25', A: ['gpt-6-luna', 'low', 'v4.3'], B: ['gpt-6-luna', 'low', 'v4.4'] } },
       },
       {
+        title: '검증에 걸린 답은 가드를 풀지 말고 툴을 늘린다', tag: 'E14',
+        problem: '실사용 질문 "16일 남았는데 2만 원 넘음, 어캄"에 "숫자를 확인하지 못한 답". 툴이 모두 "사면 어떻게 되나"용이라 모델이 "하루 얼마씩"을 직접 나눴고 서버가 막음.',
+        evidence: `일상 대화형 평가셋 v4(20문항 × 3회): 새 툴 없는 지시문 ${fmt(sumOf('consult_v4', 'gpt-6-luna', 'low', 'v4.4'))} → 최종 ${fmt(sumOf('consult_v4', 'gpt-6-luna', 'low', 'v5.3'))}, v1~v3 회귀 100%. 중간에 툴이 못 메우는 달에 "하루 8,900원 줄이기"(평소 하루 소비보다 큼)를 주던 결함을 발견.`,
+        choice: '회복 계획(plan_recovery)과 평소 대비 비교(compare_spending)를 앱 코드로 계산. 못 메우는 달엔 하루 감축액을 주지 않고 다음 달로 넘어갈 금액을 줌. 서버에는 카테고리 집계까지만.',
+        alt: '숫자 검증을 느슨하게(LLM 나눗셈을 허용하면 "계산은 코드가" 원칙이 깨짐), 가맹점 단위 조회(가맹점 이름을 LLM에 보내야 함 — 따로 결정).',
+        jump: { label: '"16일 남았는데 2만 원 넘음" 이전 vs 최종', go: { set: 'consult_v4', caseId: 'd01', A: ['gpt-6-luna', 'low', 'v4.4'], B: ['gpt-6-luna', 'low', 'v5.3'] } },
+      },
+      {
         title: 'jev 확신도 기준 0.95', tag: 'E10', threshold: true,
         problem: '처음 보는 가맹점 분류를 jev에 맡길 때 얼마나 믿을지.',
         evidence: '라벨 446건: 확신도 0.95 이상 정답률 99.7%(거래 65%), 그 아래는 25~37%로 급락.',
@@ -565,7 +590,7 @@
     const t = document.getElementById('runs-table');
     t.replaceChildren(el('thead', {}, el('tr', {}, ['평가셋', '모델 / 추론', '지시문', '판단 일치', '숫자 정확', '툴 호출', '비용/회', '지연 p50'].map((h) => el('th', { text: h })))),
       el('tbody', {}, DATA.runs.map((r) => el('tr', {},
-        el('td', { text: { consult_v1: 'v1 단일', consult_v2: 'v2 대화형', consult_v3: 'v3 새 기능' }[r.scenarios] || r.scenarios }), el('td', { text: `${r.model} / ${r.effort}` }), el('td', { text: r.promptLabel }),
+        el('td', { text: { consult_v1: 'v1 단일', consult_v2: 'v2 대화형', consult_v3: 'v3 새 기능', consult_v4: 'v4 일상 대화' }[r.scenarios] || r.scenarios }), el('td', { text: `${r.model} / ${r.effort}` }), el('td', { text: r.promptLabel }),
         el('td', { text: pct(r.summary.verdict_acc) }), el('td', { text: pct(r.summary.numbers_ok) }), el('td', { text: pct(r.summary.tool_ok) }),
         el('td', { text: `${r.summary.krw_mean.toFixed(1)}원` }), el('td', { text: `${r.summary.latency_p50.toFixed(1)}초` })))));
   }

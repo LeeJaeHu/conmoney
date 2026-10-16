@@ -68,8 +68,123 @@ class AgentToolbox {
       (args['amount'] as num?)?.toInt() ?? 0,
       DateTime.tryParse(args['date'] as String? ?? ''),
     ),
+    'plan_recovery' => planRecovery(),
+    'compare_spending' => compareSpending(args['window'] as String? ?? 'this_month'),
     _ => {'error': 'unknown tool $name'},
   };
+
+  /// 줄이기 어려운 카테고리(회복 계획의 "줄일 곳" 후보에서 뺀다).
+  static const _hardToCut = {'통신', '공과금', '구독', '연회비', '교통', '의료', '교육'};
+
+  /// 카테고리별 [fromDay]~[toDay] 지출(특이 지출 제외)의 최근 완료 달(최대 3개) 중앙값. 그 달에 없던 카테고리는 0으로 센다.
+  Map<String, int> _usualByCategory(int fromDay, int toDay) {
+    final m = YearMonth.of(now);
+    final first = engine.ledger.firstRecordDate;
+    final months = [
+      for (var k = 1; k <= 3; k++)
+        if (first == null || !m.plus(-k).firstDay.isBefore(dateOnly(first))) m.plus(-k),
+    ];
+    if (months.isEmpty) return {};
+    final perMonth = [for (final pm in months) _byCategory(pm, fromDay, toDay)];
+    final names = {for (final x in perMonth) ...x.keys};
+    return {
+      for (final n in names) n: _median([for (final x in perMonth) x[n] ?? 0]),
+    };
+  }
+
+  Map<String, int> _byCategory(YearMonth m, int fromDay, int toDay) {
+    final out = <String, int>{};
+    final to = toDay > m.days ? m.days : toDay;
+    for (final i in items) {
+      if (i.isUnusual || !m.contains(i.date) || i.date.day < fromDay || i.date.day > to) continue;
+      final n = i.categoryName ?? unconfirmedCategoryName;
+      out[n] = (out[n] ?? 0) + i.amount;
+    }
+    return out;
+  }
+
+  static int _median(List<int> xs) {
+    final s = [...xs]..sort();
+    final mid = s.length ~/ 2;
+    return s.length.isOdd ? s[mid] : (s[mid - 1] + s[mid]) ~/ 2;
+  }
+
+  /// 이미 넘었거나 넘을 것 같을 때: 하루 얼마를 줄여야 하는지, 어디서 줄일 수 있는지(10/16, 일상 대화형 상담).
+  Map<String, Object?> planRecovery() {
+    final b = budget;
+    if (b == null) return _noBudget();
+    final st = engine.status(now, b);
+    final p = engine.pattern(now).amount;
+    final over = st.spent + st.upcomingFixed + p - b; // 평소대로 쓰면 월말 초과액
+    final days = st.daysLeft;
+    final target = p - over; // 남은 기간에 쓸 수 있는 변동 지출
+    final d = dateOnly(now).day;
+    final m = YearMonth.of(now);
+    final usualRest = _usualByCategory(d, m.days);
+    final cuttable = usualRest.entries.where((e) => !_hardToCut.contains(e.key) && e.value > 0).toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    int up100(int v) => v <= 0 ? 0 : (v + 99) ~/ 100 * 100;
+    int down100(int v) => v <= 0 ? 0 : v ~/ 100 * 100;
+    return {
+      ..._money('budget', b),
+      ..._money('spent', st.spent),
+      ..._money('upcoming_fixed', st.upcomingFixed),
+      'days_left': days,
+      ..._money('month_over_now', st.monthOver),
+      ..._money('usual_rest_of_month', p),
+      ..._money('projected_over_if_usual', over),
+      'status': over <= 0 ? 'on_track' : (target >= 0 ? 'recoverable' : 'not_recoverable_this_month'),
+      if (over > 0) ..._money('total_cut_needed', over),
+      // 못 메우는 달에는 하루 감축액이 평소 하루 소비보다 커서 실현할 수 없는 조언이 된다(평가 v4) → 넣지 않는다
+      if (over > 0 && target >= 0) ..._money('daily_cut_needed', up100((over + days - 1) ~/ days)),
+      if (over > 0 && target >= 0) ..._money('daily_spend_target', down100(target ~/ days)),
+      if (over > 0 && target < 0) ..._money('over_even_if_zero_spend', -target),
+      'cut_candidates': [
+        for (final e in cuttable.take(3))
+          {'category': e.key, ..._money('usual_rest', e.value), ..._money('half_saves', down100(e.value ~/ 2))},
+      ],
+      'note': '평소대로 쓰면 월말에 얼마나 넘는지 기준. cut_candidates는 지난 몇 달의 같은 남은 기간 카테고리 소비 중앙값(특이 지출 제외, 고정성 지출 제외). 계산된 값만 인용',
+    };
+  }
+
+  /// 카테고리별 평소 대비. this_month = 이번 달 1일~오늘 vs 지난 달들의 같은 기간, last_month = 지난 달 전체 vs 그 전 달들.
+  Map<String, Object?> compareSpending(String window) {
+    final m = YearMonth.of(now);
+    final Map<String, int> cur;
+    final Map<String, int> usual;
+    if (window == 'last_month') {
+      final lm = m.plus(-1);
+      cur = _byCategory(lm, 1, lm.days);
+      final first = engine.ledger.firstRecordDate;
+      final months = [
+        for (var k = 2; k <= 4; k++)
+          if (first == null || !m.plus(-k).firstDay.isBefore(dateOnly(first))) m.plus(-k),
+      ];
+      final per = [for (final pm in months) _byCategory(pm, 1, pm.days)];
+      final names = {for (final x in per) ...x.keys};
+      usual = {for (final n in names) n: per.isEmpty ? 0 : _median([for (final x in per) x[n] ?? 0])};
+    } else {
+      final d = dateOnly(now).day;
+      cur = _byCategory(m, 1, d);
+      usual = _usualByCategory(1, d);
+    }
+    final names = {...cur.keys, ...usual.keys};
+    final rows = [
+      for (final n in names) (n, cur[n] ?? 0, usual[n] ?? 0),
+    ]..sort((a, b) => (b.$2 - b.$3).compareTo(a.$2 - a.$3));
+    final curTotal = cur.values.fold(0, (s, v) => s + v), usualTotal = usual.values.fold(0, (s, v) => s + v);
+    return {
+      'window': window,
+      ..._money('total', curTotal),
+      ..._money('usual_total', usualTotal),
+      ..._money('total_diff', curTotal - usualTotal),
+      'categories': [
+        for (final (n, c, u) in rows)
+          {'category': n, ..._money('amount', c), ..._money('usual', u), ..._money('diff', c - u)},
+      ],
+      'note': '특이 지출 제외. usual은 지난 몇 달 같은 기간의 카테고리별 중앙값. diff가 양수면 평소보다 많이 씀',
+    };
+  }
 
   Map<String, Object?> _noBudget() => {'error': '이번 달 예산이 설정되지 않았어요. 예산 설정에서 먼저 정해 주세요.'};
 

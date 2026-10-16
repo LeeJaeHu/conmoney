@@ -76,6 +76,21 @@ v1이 포화(luna/low·sol 100%)되어 실제 대화에서 틀리기 쉬운 상�
 .venv/Scripts/python -X utf8 -m eval.run_consult --model gpt-6-luna --effort low --scenarios consult_v3 --reps 3
 ```
 
+### 평가셋 v4 (`scenarios/consult_v4.jsonl`, `consult_scenarios_v4.py`, 10/16)
+
+일상 대화형 20개 × 3회. 정답은 앱 `planRecovery`·`compareSpending`과 같은 식(`tool_stub.recovery`·`compare`)으로 계산.
+
+| 묶음 | 개수 | 정답 |
+|---|---|---|
+| recovery | 9 | plan_recovery를 부르고 상태에 맞는 앱 숫자(하루 감축액·지출 목표·월말 초과액 등)를 하나 이상 인용. 질문에 따라 다른 툴로 맞게 답한 경우도 인정(예: "하루에 얼마씩 쓰면 돼?" → 오늘 쓸 수 있는 금액) |
+| compare | 5 | compare_spending(맞는 window) + 가장 많이 늘어난 카테고리와 그 차이 금액 |
+| chitchat | 4 | 툴 없이, 금액 없이, 거절하지 않고 200자 이하 |
+| mixed | 2 | 상황 이야기 + 구매 질문 → 구매 판단 |
+
+```bash
+.venv/Scripts/python -X utf8 -m eval.run_consult --model gpt-6-luna --effort low --scenarios consult_v4 --reps 3
+```
+
 ## 2. 카테고리 분류 (`run_category.py`)
 
 - **정답**: 사용자가 검수한 라벨 446건(가맹점 109개, 카테고리 15개). 실제 가맹점 이름이라 **건별 결과는 `data/eval/`(git 제외)**, git에는 `runs/<날짜>_category/summary.json`(집계)만.

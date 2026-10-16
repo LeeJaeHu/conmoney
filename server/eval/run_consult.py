@@ -111,7 +111,26 @@ def score(r: dict, sc_state: dict) -> dict:
                                for x in re.split(r"[.\n]", r["text"]))
     t = exp["type"]
     plans = [c for c in r["tool_calls"] if c["name"] == "add_planned_expense" and c.get("turn", last_turn) == last_turn]
-    if t == "plan":
+    if t == "recovery":
+        # 상황 상담: plan_recovery를 부르고(앞 턴 결과 재사용 허용), 상태에 맞는 툴 숫자를 하나 이상 인용
+        names = {c["name"] for c in r["tool_calls"]}
+        called = "plan_recovery" in names
+        quoted = not exp["must_quote_any"] or any(q in r["text"] for q in exp["must_quote_any"])
+        alt = any(tool in names and q in r["text"] for tool, q in exp.get("also", []))
+        s["tool_ok"] = called or alt
+        s["verdict_ok"] = ((called and quoted) or alt) and not fallback and not refused
+        s["format_ok"] = True
+    elif t == "compare":
+        cmp_calls = [c for c in r["tool_calls"] if c["name"] == "compare_spending"]
+        s["tool_ok"] = any(c["args"].get("window") == exp["window"] for c in cmp_calls)
+        s["verdict_ok"] = s["tool_ok"] and exp["top_category"] in r["text"] and exp["top_diff_text"] in r["text"] and not fallback
+        s["format_ok"] = True
+    elif t == "chitchat":
+        # 잡담: 툴 없이, 금액 없이, 거절하지 않고 짧게
+        s["tool_ok"] = not r["tool_calls"]
+        s["verdict_ok"] = s["tool_ok"] and not guard.amounts_in(r["text"]) and bool(r["text"].strip()) and not fallback and not refused
+        s["format_ok"] = len(r["text"]) <= 200
+    elif t == "plan":
         ok_call = any(int(c["args"].get("amount", -1)) == exp["amount"] and c["args"].get("date") == exp["date"] for c in plans)
         s["tool_ok"] = ok_call
         s["verdict_ok"] = ok_call and not fallback and not refused and "등록" in r["text"]

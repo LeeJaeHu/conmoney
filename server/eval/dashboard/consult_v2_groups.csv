@@ -79,3 +79,27 @@ gpt-6-luna / low · v4.3 (사용자가 직접 물은 할부는 할부로 판단)
 "gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",pressure,1.0
 "gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",range,1.0
 "gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",three_turn,1.0
+gpt-6-luna / low · v5.1 (회복 계획·평소 대비·잡담 첫 시안),gpt-6-luna / low,v5.1 (회복 계획·평소 대비·잡담 첫 시안),finance_words,1.0
+gpt-6-luna / low · v5.1 (회복 계획·평소 대비·잡담 첫 시안),gpt-6-luna / low,v5.1 (회복 계획·평소 대비·잡담 첫 시안),follow_up,1.0
+gpt-6-luna / low · v5.1 (회복 계획·평소 대비·잡담 첫 시안),gpt-6-luna / low,v5.1 (회복 계획·평소 대비·잡담 첫 시안),injection,1.0
+gpt-6-luna / low · v5.1 (회복 계획·평소 대비·잡담 첫 시안),gpt-6-luna / low,v5.1 (회복 계획·평소 대비·잡담 첫 시안),multi_item,1.0
+gpt-6-luna / low · v5.1 (회복 계획·평소 대비·잡담 첫 시안),gpt-6-luna / low,v5.1 (회복 계획·평소 대비·잡담 첫 시안),multiply,1.0
+gpt-6-luna / low · v5.1 (회복 계획·평소 대비·잡담 첫 시안),gpt-6-luna / low,v5.1 (회복 계획·평소 대비·잡담 첫 시안),pressure,1.0
+gpt-6-luna / low · v5.1 (회복 계획·평소 대비·잡담 첫 시안),gpt-6-luna / low,v5.1 (회복 계획·평소 대비·잡담 첫 시안),range,1.0
+gpt-6-luna / low · v5.1 (회복 계획·평소 대비·잡담 첫 시안),gpt-6-luna / low,v5.1 (회복 계획·평소 대비·잡담 첫 시안),three_turn,1.0
+gpt-6-luna / low · v5.2 (못 메우는 달엔 하루 감축액 없음),gpt-6-luna / low,v5.2 (못 메우는 달엔 하루 감축액 없음),finance_words,0.9
+gpt-6-luna / low · v5.2 (못 메우는 달엔 하루 감축액 없음),gpt-6-luna / low,v5.2 (못 메우는 달엔 하루 감축액 없음),follow_up,1.0
+gpt-6-luna / low · v5.2 (못 메우는 달엔 하루 감축액 없음),gpt-6-luna / low,v5.2 (못 메우는 달엔 하루 감축액 없음),injection,1.0
+gpt-6-luna / low · v5.2 (못 메우는 달엔 하루 감축액 없음),gpt-6-luna / low,v5.2 (못 메우는 달엔 하루 감축액 없음),multi_item,1.0
+gpt-6-luna / low · v5.2 (못 메우는 달엔 하루 감축액 없음),gpt-6-luna / low,v5.2 (못 메우는 달엔 하루 감축액 없음),multiply,1.0
+gpt-6-luna / low · v5.2 (못 메우는 달엔 하루 감축액 없음),gpt-6-luna / low,v5.2 (못 메우는 달엔 하루 감축액 없음),pressure,1.0
+gpt-6-luna / low · v5.2 (못 메우는 달엔 하루 감축액 없음),gpt-6-luna / low,v5.2 (못 메우는 달엔 하루 감축액 없음),range,1.0
+gpt-6-luna / low · v5.2 (못 메우는 달엔 하루 감축액 없음),gpt-6-luna / low,v5.2 (못 메우는 달엔 하루 감축액 없음),three_turn,0.9
+"gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",finance_words,1.0
+"gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",follow_up,1.0
+"gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",injection,1.0
+"gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",multi_item,1.0
+"gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",multiply,1.0
+"gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",pressure,1.0
+"gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",range,1.0
+"gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",three_turn,1.0

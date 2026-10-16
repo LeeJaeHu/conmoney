@@ -22,6 +22,10 @@ PROMPT_LABEL = {
     "d4b8e199": "v4.2 (날짜 지어내기 금지)",
     "e83d04c8": "v4.3 (사용자가 직접 물은 할부는 할부로 판단)",
     "cc9999e4": "v4.4 (금액이 하나면 범위 아님, 최종)",
+    # 10/16 일상 대화형(E14)
+    "2e7b3a21": "v5.1 (회복 계획·평소 대비·잡담 첫 시안)",
+    "c1a4fbb8": "v5.2 (못 메우는 달엔 하루 감축액 없음)",
+    "bbfd2aed": "v5.3 (내부 용어 금지, 최종)",
 }
 CONFIG_ORDER = ["gpt-6-luna / none", "gpt-6-luna / low", "gpt-6.1-sol / low", "gpt-6.1-sol / medium"]
 
@@ -100,6 +104,7 @@ EXPERIMENTS = [
     ("E11", "10/15", "상담", "오늘 날짜를 지시문에 추가", "'다음 달' 33~83% → 100%, luna/low = sol"),
     ("E12", "10/15", "상담", "평가셋 v2: 범위 밖 판단을 jev로, 합계는 코드가", "과잉 거절 해소, luna/low v2 98% → 100%"),
     ("E13", "10/15", "상담", "사용 피드백: 다음 달 판단·할부 대안·예정 지출·금액대 구간 + 평가셋 v3", "v3 90.3% → 100%(5회 반복), v1·v2 회귀 100%"),
+    ("E14", "10/16", "상담", "일상 대화형: 회복 계획·평소 대비 비교 툴, 평가셋 v4", "v4 25% → 96.7%, v1~v3 회귀 100%"),
 ]
 
 
@@ -107,5 +112,6 @@ if __name__ == "__main__":
     consult()
     consult("consult_v2", "consult_v2")
     consult("consult_v3", "consult_v3")
+    consult("consult_v4", "consult_v4")
     category()
     write("experiments.csv", [{"id": a, "date": b, "area": c, "change": d, "result": e} for a, b, c, d, e in EXPERIMENTS])

@@ -10,6 +10,45 @@ def _money(key: str, v: int) -> dict:
     return {key: v, f"{key}_text": won(v)}
 
 
+def recovery(st: dict) -> dict:
+    """앱 AgentToolbox.planRecovery와 같은 식."""
+    fixed = sum(f["amount"] for f in st["fixed"])
+    b, p, days = st["budget"], st["pattern"], st["days_left"]
+    over = st["spent"] + fixed + p - b
+    target = p - over
+    up100 = lambda v: 0 if v <= 0 else (v + 99) // 100 * 100
+    down100 = lambda v: 0 if v <= 0 else v // 100 * 100
+    rest = st.get("rest_by_cat") or {"식비": p * 45 // 100, "쇼핑": p * 25 // 100, "카페·간식": p * 10 // 100}
+    cands = sorted(((k, v) for k, v in rest.items() if v > 0), key=lambda kv: -kv[1])[:3]
+    out = {
+        **_money("budget", b), **_money("spent", st["spent"]), **_money("upcoming_fixed", fixed), "days_left": days,
+        **_money("month_over_now", max(0, -(b - st["spent"] - fixed))), **_money("usual_rest_of_month", p),
+        **_money("projected_over_if_usual", over),
+        "status": "on_track" if over <= 0 else ("recoverable" if target >= 0 else "not_recoverable_this_month"),
+    }
+    if over > 0:
+        out.update(_money("total_cut_needed", over))
+        if target >= 0:
+            out.update(**_money("daily_cut_needed", up100((over + days - 1) // days)), **_money("daily_spend_target", down100(target // days)))
+        else:
+            out.update(_money("over_even_if_zero_spend", -target))
+    out["cut_candidates"] = [{"category": k, **_money("usual_rest", v), **_money("half_saves", down100(v // 2))} for k, v in cands]
+    out["note"] = "평소대로 쓰면 월말에 얼마나 넘는지 기준. cut_candidates는 지난 몇 달의 같은 남은 기간 카테고리 소비 중앙값(특이 지출 제외, 고정성 지출 제외). 계산된 값만 인용"
+    return out
+
+
+def compare(st: dict, window: str) -> dict:
+    """앱 AgentToolbox.compareSpending과 같은 형식. 시나리오의 compare 값(없으면 지출에서 만든 기본값)."""
+    sp = st["spent"]
+    rows = (st.get("compare") or {}).get(window) or [["식비", sp * 40 // 100, sp * 38 // 100], ["쇼핑", sp * 25 // 100, sp * 27 // 100],
+                                                     ["카페·간식", sp * 8 // 100, sp * 8 // 100]]
+    rows = sorted(rows, key=lambda r: -(r[1] - r[2]))
+    cur, usual = sum(r[1] for r in rows), sum(r[2] for r in rows)
+    return {"window": window, **_money("total", cur), **_money("usual_total", usual), **_money("total_diff", cur - usual),
+            "categories": [{"category": n, **_money("amount", c), **_money("usual", u), **_money("diff", c - u)} for n, c, u in rows],
+            "note": "특이 지출 제외. usual은 지난 몇 달 같은 기간의 카테고리별 중앙값. diff가 양수면 평소보다 많이 씀"}
+
+
 def run(name: str, args: dict, scenario: dict) -> dict:
     st = scenario["state"]
     fixed = sum(f["amount"] for f in st["fixed"])
@@ -99,6 +138,10 @@ def run(name: str, args: dict, scenario: dict) -> dict:
             return {"error": "예정 지출은 금액과 날짜(yyyy-MM-dd)가 필요해요. 사용자에게 물어보세요."}
         return {"status": "needs_user_confirmation", "name": args.get("name", "예정 지출"), **_money("amount", amount), "date": date,
                 "note": "아직 등록 안 됨. 사용자가 화면의 [등록] 버튼을 눌러야 예산에 반영된다. 등록 전 계산에는 포함되지 않았다"}
+    if name == "plan_recovery":
+        return recovery(st)
+    if name == "compare_spending":
+        return compare(st, args.get("window") or "this_month")
     if name == "get_category_summary":
         return {"period": args.get("period", "this_month"), **_money("total", st["spent"]),
                 "categories": st.get("categories") or [{"category": "식비", **_money("total", st["spent"] * 45 // 100), "count": 20},

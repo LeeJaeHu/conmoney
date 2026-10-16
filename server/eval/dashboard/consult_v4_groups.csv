@@ -1,0 +1,17 @@
+run,config,prompt,group,verdict_acc
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",chitchat,0.75
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",compare,0.0
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",mixed,1.0
+"gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",recovery,0.0
+gpt-6-luna / low · v5.1 (회복 계획·평소 대비·잡담 첫 시안),gpt-6-luna / low,v5.1 (회복 계획·평소 대비·잡담 첫 시안),chitchat,1.0
+gpt-6-luna / low · v5.1 (회복 계획·평소 대비·잡담 첫 시안),gpt-6-luna / low,v5.1 (회복 계획·평소 대비·잡담 첫 시안),compare,1.0
+gpt-6-luna / low · v5.1 (회복 계획·평소 대비·잡담 첫 시안),gpt-6-luna / low,v5.1 (회복 계획·평소 대비·잡담 첫 시안),mixed,1.0
+gpt-6-luna / low · v5.1 (회복 계획·평소 대비·잡담 첫 시안),gpt-6-luna / low,v5.1 (회복 계획·평소 대비·잡담 첫 시안),recovery,0.815
+gpt-6-luna / low · v5.2 (못 메우는 달엔 하루 감축액 없음),gpt-6-luna / low,v5.2 (못 메우는 달엔 하루 감축액 없음),chitchat,0.917
+gpt-6-luna / low · v5.2 (못 메우는 달엔 하루 감축액 없음),gpt-6-luna / low,v5.2 (못 메우는 달엔 하루 감축액 없음),compare,1.0
+gpt-6-luna / low · v5.2 (못 메우는 달엔 하루 감축액 없음),gpt-6-luna / low,v5.2 (못 메우는 달엔 하루 감축액 없음),mixed,1.0
+gpt-6-luna / low · v5.2 (못 메우는 달엔 하루 감축액 없음),gpt-6-luna / low,v5.2 (못 메우는 달엔 하루 감축액 없음),recovery,0.889
+"gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",chitchat,0.833
+"gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",compare,1.0
+"gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",mixed,1.0
+"gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",recovery,1.0

@@ -19,3 +19,18 @@ gpt-6-luna / low · v4.3 (사용자가 직접 물은 할부는 할부로 판단)
 "gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",plan,1.0
 "gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",planned_state,1.0
 "gpt-6-luna / low · v4.4 (금액이 하나면 범위 아님, 최종)",gpt-6-luna / low,"v4.4 (금액이 하나면 범위 아님, 최종)",range_split,1.0
+gpt-6-luna / low · v5.1 (회복 계획·평소 대비·잡담 첫 시안),gpt-6-luna / low,v5.1 (회복 계획·평소 대비·잡담 첫 시안),installment_alt,1.0
+gpt-6-luna / low · v5.1 (회복 계획·평소 대비·잡담 첫 시안),gpt-6-luna / low,v5.1 (회복 계획·평소 대비·잡담 첫 시안),next_month,1.0
+gpt-6-luna / low · v5.1 (회복 계획·평소 대비·잡담 첫 시안),gpt-6-luna / low,v5.1 (회복 계획·평소 대비·잡담 첫 시안),plan,1.0
+gpt-6-luna / low · v5.1 (회복 계획·평소 대비·잡담 첫 시안),gpt-6-luna / low,v5.1 (회복 계획·평소 대비·잡담 첫 시안),planned_state,1.0
+gpt-6-luna / low · v5.1 (회복 계획·평소 대비·잡담 첫 시안),gpt-6-luna / low,v5.1 (회복 계획·평소 대비·잡담 첫 시안),range_split,1.0
+gpt-6-luna / low · v5.2 (못 메우는 달엔 하루 감축액 없음),gpt-6-luna / low,v5.2 (못 메우는 달엔 하루 감축액 없음),installment_alt,1.0
+gpt-6-luna / low · v5.2 (못 메우는 달엔 하루 감축액 없음),gpt-6-luna / low,v5.2 (못 메우는 달엔 하루 감축액 없음),next_month,1.0
+gpt-6-luna / low · v5.2 (못 메우는 달엔 하루 감축액 없음),gpt-6-luna / low,v5.2 (못 메우는 달엔 하루 감축액 없음),plan,1.0
+gpt-6-luna / low · v5.2 (못 메우는 달엔 하루 감축액 없음),gpt-6-luna / low,v5.2 (못 메우는 달엔 하루 감축액 없음),planned_state,1.0
+gpt-6-luna / low · v5.2 (못 메우는 달엔 하루 감축액 없음),gpt-6-luna / low,v5.2 (못 메우는 달엔 하루 감축액 없음),range_split,1.0
+"gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",installment_alt,1.0
+"gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",next_month,1.0
+"gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",plan,1.0
+"gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",planned_state,1.0
+"gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",range_split,1.0
