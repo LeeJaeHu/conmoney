@@ -97,13 +97,17 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
             contentPadding: EdgeInsets.zero,
             title: const Text('조용한 시간'),
             subtitle: Text('${_quiet.startHour}시 ~ ${_quiet.endHour}시에는 보내지 않아요'),
-            trailing: Wrap(
-              spacing: 8,
-              children: [
-                OutlinedButton(onPressed: () => _pickHour(true), child: Text('${_quiet.startHour}시부터')),
-                OutlinedButton(onPressed: () => _pickHour(false), child: Text('${_quiet.endHour}시까지')),
-              ],
-            ),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(onPressed: () => _pickHour(true), child: Text('${_quiet.startHour}시부터')),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton(onPressed: () => _pickHour(false), child: Text('${_quiet.endHour}시까지')),
+              ),
+            ],
           ),
           const Divider(height: 32),
           FilledButton.tonal(onPressed: _checkNow, child: const Text('지금 검사해 보기')),

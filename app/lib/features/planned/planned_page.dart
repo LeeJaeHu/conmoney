@@ -47,6 +47,10 @@ class PlannedPage extends ConsumerWidget {
             padding: pagePadding(context, bottom: 96),
             children: [
               Text('축의금처럼 한 번 나갈 돈을 적어 두면 그 달 예산에서 미리 빼요.', style: theme.textTheme.bodySmall),
+              Text(
+                '실제로 돈을 냈으면 [냈어요]를 눌러 주세요. 오늘 쓴 돈으로 기록되고 예정에서 빠져요.',
+                style: theme.textTheme.bodySmall,
+              ),
               const SizedBox(height: 8),
               if (rows.isEmpty) const Card(child: ListTile(title: Text('아직 없어요. [추가]로 적어 두세요'))),
               for (final r in rows)
@@ -60,7 +64,29 @@ class PlannedPage extends ConsumerWidget {
                     ),
                     trailing: r.doneOn == null
                         ? FilledButton.tonal(
-                            onPressed: () => run(() => repo.markPaid(r.id, now)),
+                            onPressed: () async {
+                              final ok = await showDialog<bool>(
+                                context: context,
+                                builder: (c) => AlertDialog(
+                                  title: const Text('지출로 기록할까요?'),
+                                  content: Text(
+                                    '${r.name} ${won(r.amount, exact: true)}을(를) 오늘 쓴 돈으로 기록할까요?\n'
+                                    '예정 지출에서는 빠지고 지출 내역에 들어가요.',
+                                  ),
+                                  actions: [
+                                    TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('취소')),
+                                    FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('기록')),
+                                  ],
+                                ),
+                              );
+                              if (ok != true) return;
+                              await run(() => repo.markPaid(r.id, now));
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('${r.name}을(를) 지출로 기록했어요')),
+                                );
+                              }
+                            },
                             child: const Text('냈어요'),
                           )
                         : null,
@@ -131,7 +157,9 @@ class _PlanDialogState extends State<_PlanDialog> {
     final valid = _name.text.trim().isNotEmpty && amount > 0;
     return AlertDialog(
       title: Text(widget.initial == null ? '예정 지출 추가' : '예정 지출 수정'),
-      content: Column(
+      // 키보드가 올라오면 높이가 모자라 넘침 표시가 뜨므로 스크롤되게 한다(10/17)
+      content: SingleChildScrollView(
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
@@ -163,6 +191,7 @@ class _PlanDialogState extends State<_PlanDialog> {
             },
           ),
         ],
+        ),
       ),
       actions: [
         if (widget.initial != null)

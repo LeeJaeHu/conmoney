@@ -107,20 +107,28 @@ class RecurringPage extends ConsumerWidget {
                 const SizedBox(height: 24),
                 Text('매달 미리 떼어 둘까요?', style: theme.textTheme.titleMedium),
                 Card(
-                  child: ListTile(
-                    title: Text('${e.name} 약 ${won(e.amount, exact: true)}'),
-                    subtitle: Text(
-                      '타는 날 하루 ${won(e.perDay, exact: true)} × 이번 달 평일 ${e.weekdays}일. '
-                      '탈 때마다 알림이 없어도 예산에서 미리 빼 두고, 실제 결제가 들어오면 그만큼 줄어요.',
-                    ),
-                    isThreeLine: true,
-                    trailing: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        FilledButton.tonal(onPressed: () => run(() => repo.addEnvelope(e)), child: const Text('예약')),
-                        TextButton(onPressed: () => run(() => repo.dismiss(e.name)), child: const Text('아니요')),
-                      ],
-                    ),
+                  child: Column(
+                    children: [
+                      ListTile(
+                        title: Text('${e.name} 약 ${won(e.amount, exact: true)}'),
+                        subtitle: Text(
+                          '타는 날 하루 ${won(e.perDay, exact: true)} × 이번 달 평일 ${e.weekdays}일. '
+                          '탈 때마다 알림이 없어도 예산에서 미리 빼 두고, 실제 결제가 들어오면 그만큼 줄어요.',
+                        ),
+                      ),
+                      // 버튼 두 개를 trailing에 세로로 쌓으면 타일 높이를 넘어서 아래 줄로 뺀다(10/17)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(onPressed: () => run(() => repo.dismiss(e.name)), child: const Text('아니요')),
+                            const SizedBox(width: 8),
+                            FilledButton.tonal(onPressed: () => run(() => repo.addEnvelope(e)), child: const Text('예약')),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],

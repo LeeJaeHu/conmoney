@@ -63,16 +63,18 @@ ThemeData buildTheme(Brightness brightness, {String? fontFamily}) {
       margin: const EdgeInsets.symmetric(vertical: 5),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius)),
     ),
+    // 최소 너비를 무한(Size.fromHeight)으로 두면 ListTile trailing·Row·Wrap 안의 버튼이 레이아웃을 깨뜨려
+    // 화면이 통째로 빈다(10/17 예정 지출·먼저 알려주기·정기 지출). 꽉 찬 너비는 ListView·SizedBox가 정한다.
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        minimumSize: const Size.fromHeight(52),
+        minimumSize: const Size(64, 52),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         textStyle: text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        minimumSize: const Size.fromHeight(48),
+        minimumSize: const Size(64, 48),
         backgroundColor: scheme.surface,
         side: BorderSide.none,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),

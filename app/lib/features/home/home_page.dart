@@ -264,7 +264,10 @@ class _NoBudgetCard extends StatelessWidget {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 12),
-            FilledButton(onPressed: onSetup, child: Text(next == null ? '예산 정하기' : '예산 설정 보기')),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(onPressed: onSetup, child: Text(next == null ? '예산 정하기' : '예산 설정 보기')),
+            ),
           ],
         ),
       ),

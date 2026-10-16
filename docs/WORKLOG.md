@@ -8,6 +8,25 @@
 
 ---
 
+## 10/17 (금)
+
+**사용자 결정**
+- 폰 실사용 중 발견한 오류 수정: 예정 지출 입력 창 넘침 표시, [냈어요] 무반응·의미 불분명, 홈 "다가오는 지출"·먼저 알려주기 화면이 빈 화면
+
+**만든 것**
+- 테마 버튼 최소 크기 `Size.fromHeight`(최소 너비 무한) → `Size(64, 높이)` — `app/lib/ui/theme.dart`. 꽉 찬 너비가 필요한 홈 예산 버튼만 `SizedBox`로 감쌈
+- 예정 지출: [냈어요] 설명 문구, 누르면 확인 창("지출로 기록할까요?") → 기록 후 안내, 입력 창 스크롤 — `features/planned/planned_page.dart`
+- 먼저 알려주기: 조용한 시간 버튼을 ListTile trailing에서 아래 줄로 — `features/settings/notification_settings_page.dart`
+- 정기 지출: 월 예약 제안의 [예약]·[아니요]를 trailing 세로 쌓기에서 아래 줄로 — `features/recurring/recurring_page.dart`
+- 빌드: `kotlin.incremental=false`(프로젝트 D:, pub 캐시 C:로 드라이브가 달라 Kotlin 증분 캐시가 닫히지 않던 빌드 실패) — `app/android/gradle.properties`
+
+**검증과 개선**
+- 원인: 10/16 디자인 B2 테마의 무한 최소 너비 버튼이 ListTile trailing·Row 안에서 레이아웃 오류 → 릴리스 빌드에서 화면 전체가 빔. 기존 위젯 테스트는 테마 없이 그려서 못 잡음
+- 회귀 테스트 `app/test/features/themed_pages_test.dart`(앱 테마 적용): 고치기 전 테마에서 렌더링 오류로 실패, 고친 뒤 통과
+
+**다음**
+- 다른 화면도 앱 테마를 입힌 위젯 테스트로 확인(상담·카테고리·샘플 수집)
+
 ## 10/16 (목)
 
 **사용자 결정**
