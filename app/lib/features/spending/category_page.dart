@@ -102,45 +102,42 @@ class _CategoryPageState extends ConsumerState<CategoryPage> {
                 title: const Text('특이 지출 포함'),
               ),
               const SizedBox(height: 4),
-              // 이번 달 흐름(10/16): 이번 달이고 예산이 있을 때만
-              if (_period == _Period.thisMonth && base?.budget != null) ...[
-                Text('이번 달 흐름', style: theme.textTheme.titleMedium),
-                const SizedBox(height: 6),
-                PaceChart(pace: monthPace(all, base!.engine, now, base.budget!)),
-                const SizedBox(height: 24),
-                Text('카테고리', style: theme.textTheme.titleMedium),
-                const SizedBox(height: 4),
-              ],
-              if (summary.categories.isEmpty)
-                const Padding(padding: EdgeInsets.symmetric(vertical: 24), child: Text('이 기간에는 지출이 없어요')),
-              for (final c in summary.categories)
-                _CategoryBar(
-                  total: c,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => _CategoryDetailPage(
-                        title: c.name,
-                        categoryId: c.categoryId,
-                        from: from,
-                        to: to,
-                        includeUnusual: _includeUnusual,
+              // 이번 달 흐름(10/16): 이번 달이고 예산이 있을 때만. 묶음마다 흰 카드(디자인 B2)
+              if (_period == _Period.thisMonth && base?.budget != null)
+                _Section(title: '이번 달 흐름', child: PaceChart(pace: monthPace(all, base!.engine, now, base.budget!))),
+              _Section(
+                title: '카테고리',
+                child: Column(
+                  children: [
+                    if (summary.categories.isEmpty)
+                      const Padding(padding: EdgeInsets.symmetric(vertical: 24), child: Text('이 기간에는 지출이 없어요')),
+                    for (final c in summary.categories)
+                      _CategoryBar(
+                        total: c,
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => _CategoryDetailPage(
+                              title: c.name,
+                              categoryId: c.categoryId,
+                              from: from,
+                              to: to,
+                              includeUnusual: _includeUnusual,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                  ],
+                ),
+              ),
+              if (showCompare)
+                _Section(
+                  title: compareLast ? '지난달, 평소와 비교' : '이번 달, 평소와 비교',
+                  child: CompareChart(
+                    comparison: compareCategories(all, now, base.firstRecord, lastMonth: compareLast),
+                    periodLabel: compareLast ? '지난달' : '이번 달 오늘까지',
                   ),
                 ),
-              if (showCompare) ...[
-                const SizedBox(height: 28),
-                Text(compareLast ? '지난달, 평소와 비교' : '이번 달, 평소와 비교', style: theme.textTheme.titleMedium),
-                const SizedBox(height: 6),
-                CompareChart(
-                  comparison: compareCategories(all, now, base.firstRecord, lastMonth: compareLast),
-                  periodLabel: compareLast ? '지난달' : '이번 달 오늘까지',
-                ),
-              ],
-              const SizedBox(height: 28),
-              Text('최근 6개월', style: theme.textTheme.titleMedium),
-              const SizedBox(height: 8),
-              _TrendChart(trend: trend),
+              _Section(title: '최근 6개월', child: _TrendChart(trend: trend)),
             ],
           );
         },
@@ -150,6 +147,25 @@ class _CategoryPageState extends ConsumerState<CategoryPage> {
 }
 
 String _md(DateTime d) => '${d.month}/${d.day}';
+
+/// 분석 화면의 한 묶음: 제목 + 내용을 흰 카드에.
+class _Section extends StatelessWidget {
+  const _Section({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [Text(title, style: Theme.of(context).textTheme.titleMedium), const SizedBox(height: 10), child],
+      ),
+    ),
+  );
+}
 
 class _CategoryBar extends StatelessWidget {
   const _CategoryBar({required this.total, required this.onTap});

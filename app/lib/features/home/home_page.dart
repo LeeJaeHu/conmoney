@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app_providers.dart';
 import '../../core/budget_engine.dart';
+import '../../core/models.dart';
 import '../../ui/format.dart';
 import '../../ui/insets.dart';
+import '../../ui/theme.dart';
 import '../agent/consult_page.dart';
 import '../budget/budget_settings_page.dart';
 import '../dev/import_page.dart';
@@ -74,7 +76,13 @@ class HomePage extends ConsumerWidget {
                 _TodayCard(status: st, data: data)
               else
                 _NoBudgetCard(data: data, onSetup: () => open(const BudgetSettingsPage())),
-              const SizedBox(height: 12),
+              const SizedBox(height: 5),
+              SpendCalendar(
+                upcomingDays: {
+                  for (final (item, due, _) in data.upcoming)
+                    if (!item.isEnvelope && due.month == data.month.month) due.day,
+                },
+              ),
               if (data.unconfirmed > 0)
                 Card(
                   child: ListTile(
@@ -86,26 +94,24 @@ class HomePage extends ConsumerWidget {
                   ),
                 ),
               _UpcomingCard(data: data, onOpen: () => open(const RecurringPage())),
-              const SizedBox(height: 12),
-              SpendCalendar(
-                upcomingDays: {
-                  for (final (item, due, _) in data.upcoming)
-                    if (!item.isEnvelope && due.month == data.month.month) due.day,
-                },
-              ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 5),
               OutlinedButton.icon(
                 onPressed: () => open(const CategoryPage()),
-                icon: const Icon(Icons.pie_chart_outline),
+                icon: const Icon(Icons.insights_outlined),
                 label: const Text('지출 분석 보기'),
               ),
-              const SizedBox(height: 8),
-              FilledButton.icon(
-                onPressed: () => open(const ConsultPage()),
-                icon: const Icon(Icons.chat_bubble_outline),
-                label: const Text('살까 말까 물어보기'),
-              ),
             ],
+          ),
+        ),
+      ),
+      // 상담은 어디까지 내려도 보이게 화면 아래 고정(10/16 디자인)
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          child: FilledButton.icon(
+            onPressed: () => open(const ConsultPage()),
+            icon: const Icon(Icons.chat_bubble_outline),
+            label: const Text('살까 말까 물어보기'),
           ),
         ),
       ),
@@ -123,20 +129,20 @@ class _TodayCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     // 초과는 빨간색 대신 주황 계열(스트레스 최소화 원칙)
-    final overColor = theme.brightness == Brightness.dark ? Colors.orange.shade300 : Colors.orange.shade800;
+    final overColor = AppColors.warm(theme.brightness);
     final secondary = theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant);
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('오늘 쓸 수 있는 금액', style: theme.textTheme.titleSmall),
-            const SizedBox(height: 4),
+            Text('오늘 쓸 수 있는 금액', style: secondary),
+            const SizedBox(height: 2),
             Text(
               won(status.availableShown),
-              style: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+              style: theme.textTheme.displaySmall?.copyWith(color: theme.colorScheme.onSurface),
             ),
             if (status.todayOver > 0) ...[
               const SizedBox(height: 4),
@@ -146,7 +152,9 @@ class _TodayCard extends StatelessWidget {
                 style: theme.textTheme.bodyMedium?.copyWith(color: overColor),
               ),
             ],
-            const Divider(height: 28),
+            const SizedBox(height: 14),
+            BudgetGauge(status: status, month: data.month),
+            const SizedBox(height: 14),
             if (status.monthOver > 0) ...[
               Text(
                 '이번 달 예산을 ${won(status.monthOver)} 넘었어요',
@@ -167,6 +175,66 @@ class _TodayCard extends StatelessWidget {
                 '${data.month.month}월 목표 ${manWon(status.budget)} · ${step.index}/${step.total}단계 (최종 ${manWon(step.targetAmount)})',
                 style: secondary,
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 예산 게이지(10/16 디자인 B2): 이번 달 예산을 쓴 비율(막대)과 달이 지난 비율(세로선)을 겹쳐 보여준다.
+/// 막대가 선보다 길면 날짜보다 빨리 쓰는 중. 판단 색은 쓰지 않고, 예산을 넘었을 때만 주황.
+class BudgetGauge extends StatelessWidget {
+  const BudgetGauge({super.key, required this.status, required this.month});
+
+  final BudgetStatus status;
+  final YearMonth month;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final b = theme.brightness;
+    final used = status.budget > 0 ? status.spent / status.budget : 0.0;
+    final day = month.days - status.daysLeft + 1;
+    final elapsed = day / month.days;
+    final over = used > 1;
+    final fill = over ? AppColors.warm(b) : (b == Brightness.dark ? AppColors.blueDark : AppColors.blueLight);
+    final label = theme.textTheme.labelMedium?.copyWith(fontFeatures: tabular);
+    return Semantics(
+      label: '이번 달 예산의 ${(used * 100).round()}%를 썼고, 달은 ${(elapsed * 100).round()}% 지났어요',
+      child: ExcludeSemantics(
+        child: Column(
+          children: [
+            SizedBox(
+              height: 10,
+              child: LayoutBuilder(
+                builder: (context, c) => Stack(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(color: AppColors.track(b), borderRadius: BorderRadius.circular(5)),
+                    ),
+                    Container(
+                      width: c.maxWidth * used.clamp(0.0, 1.0),
+                      decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(5)),
+                    ),
+                    Positioned(
+                      left: (c.maxWidth * elapsed - 1).clamp(0.0, c.maxWidth - 2),
+                      top: 0,
+                      bottom: 0,
+                      child: Container(width: 2, color: theme.colorScheme.onSurface),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Text('예산 ${(used * 100).round()}% 씀', style: label?.copyWith(color: fill)),
+                const Spacer(),
+                Text('$day일째 · 달의 ${(elapsed * 100).round()}%', style: label?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+              ],
+            ),
           ],
         ),
       ),

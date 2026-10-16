@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../core/analysis.dart';
 import '../../ui/format.dart';
+import '../../ui/theme.dart';
 
 /// 초과·평소보다 많음은 빨강 대신 주황(스트레스 최소화 원칙, 홈과 같은 색).
-Color _warm(ThemeData t) => t.brightness == Brightness.dark ? Colors.orange.shade300 : Colors.orange.shade800;
+Color _warm(ThemeData t) => AppColors.warm(t.brightness);
 
 /// 이번 달 흐름(10/16): 누적 지출(실선), 평소대로 쓰면 월말까지(점선), 지난 달들 같은 날 누적(회색), 예산(가로 점선).
 class PaceChart extends StatelessWidget {

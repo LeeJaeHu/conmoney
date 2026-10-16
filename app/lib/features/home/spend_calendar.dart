@@ -169,7 +169,7 @@ class _Grid extends StatelessWidget {
                       style: small?.copyWith(fontSize: 10, fontFeatures: const [FontFeature.tabularFigures()]),
                     )
                   else if (marked.contains(day))
-                    Icon(Icons.circle, size: 5, color: scheme.tertiary)
+                    Icon(Icons.circle, size: 5, color: scheme.primary)
                   else
                     const SizedBox(height: 12),
                 ],
@@ -201,7 +201,7 @@ class _Grid extends StatelessWidget {
             padding: const EdgeInsets.only(top: 6, left: 8),
             child: Row(
               children: [
-                Icon(Icons.circle, size: 5, color: scheme.tertiary),
+                Icon(Icons.circle, size: 5, color: scheme.primary),
                 const SizedBox(width: 6),
                 Text('정기·예정 지출이 남은 날', style: small?.copyWith(color: scheme.onSurfaceVariant)),
               ],

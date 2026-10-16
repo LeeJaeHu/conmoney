@@ -73,4 +73,5 @@ server/  Cloud Run(Python, FastAPI) LLM 중계. 비밀값은 server/.env(git 제
 - [x] 일상 대화형 상담: 회복 계획(plan_recovery)·평소 대비(compare_spending)·잡담, 평가셋 v4(E14)
 - [x] 홈 지출 달력(날짜별 쓴 금액, 탭 → 그날 내역), 스크롤 화면 아래 여백(내비게이션 바)
 - [x] 지출 분석 화면: 이번 달 흐름(누적 vs 예산·평소), 평소와 비교 그래프(`core/analysis.dart`)
+- [x] 디자인 B2(테마 `ui/theme.dart`, 홈 예산 게이지, 상담 버튼 아래 고정). 화면 캡처: `app`에서 `SCREENSHOTS=1 flutter test test/screens --update-goldens` → `docs/design/`
 - [ ] 알림 파서(F2) + 결제 직후 F7 검사 연결, 확인 알림(F3), 상담 평가셋 50개
