@@ -50,7 +50,7 @@ class HomePage extends ConsumerWidget {
               PopupMenuItem(value: 'budget', child: Text('예산 설정')),
               PopupMenuItem(value: 'recurring', child: Text('정기 지출')),
               PopupMenuItem(value: 'planned', child: Text('예정 지출(축의금 등)')),
-              PopupMenuItem(value: 'category', child: Text('카테고리별 지출')),
+              PopupMenuItem(value: 'category', child: Text('지출 분석')),
               PopupMenuItem(value: 'alerts', child: Text('먼저 알려주기')),
               PopupMenuItem(value: 'metrics', child: Text('사용 기록')),
               PopupMenuItem(value: 'import', child: Text('과거 기록 가져오기')),
@@ -94,7 +94,7 @@ class HomePage extends ConsumerWidget {
               OutlinedButton.icon(
                 onPressed: () => open(const CategoryPage()),
                 icon: const Icon(Icons.pie_chart_outline),
-                label: const Text('카테고리별 지출 보기'),
+                label: const Text('지출 분석 보기'),
               ),
               const SizedBox(height: 8),
               FilledButton.icon(

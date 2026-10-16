@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app_providers.dart';
+import '../../core/analysis.dart';
 import '../../core/category_summary.dart';
 import '../../core/models.dart';
 import '../../ui/format.dart';
 import '../../ui/insets.dart';
+import 'analysis_charts.dart';
 import 'spending_providers.dart';
 import 'transaction_sheet.dart';
 
@@ -53,11 +55,14 @@ class _CategoryPageState extends ConsumerState<CategoryPage> {
   Widget build(BuildContext context) {
     final now = ref.watch(clockProvider)();
     final items = ref.watch(spendItemsProvider);
+    final base = ref.watch(analysisBaseProvider).value;
     final theme = Theme.of(context);
     final (from, to) = _range(now);
+    final compareLast = _period == _Period.lastMonth;
+    final showCompare = base != null && (_period == _Period.thisMonth || compareLast);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('카테고리별 지출')),
+      appBar: AppBar(title: const Text('지출 분석')),
       body: items.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('불러오지 못했어요: $e')),
@@ -97,6 +102,15 @@ class _CategoryPageState extends ConsumerState<CategoryPage> {
                 title: const Text('특이 지출 포함'),
               ),
               const SizedBox(height: 4),
+              // 이번 달 흐름(10/16): 이번 달이고 예산이 있을 때만
+              if (_period == _Period.thisMonth && base?.budget != null) ...[
+                Text('이번 달 흐름', style: theme.textTheme.titleMedium),
+                const SizedBox(height: 6),
+                PaceChart(pace: monthPace(all, base!.engine, now, base.budget!)),
+                const SizedBox(height: 24),
+                Text('카테고리', style: theme.textTheme.titleMedium),
+                const SizedBox(height: 4),
+              ],
               if (summary.categories.isEmpty)
                 const Padding(padding: EdgeInsets.symmetric(vertical: 24), child: Text('이 기간에는 지출이 없어요')),
               for (final c in summary.categories)
@@ -114,6 +128,15 @@ class _CategoryPageState extends ConsumerState<CategoryPage> {
                     ),
                   ),
                 ),
+              if (showCompare) ...[
+                const SizedBox(height: 28),
+                Text(compareLast ? '지난달, 평소와 비교' : '이번 달, 평소와 비교', style: theme.textTheme.titleMedium),
+                const SizedBox(height: 6),
+                CompareChart(
+                  comparison: compareCategories(all, now, base.firstRecord, lastMonth: compareLast),
+                  periodLabel: compareLast ? '지난달' : '이번 달 오늘까지',
+                ),
+              ],
               const SizedBox(height: 28),
               Text('최근 6개월', style: theme.textTheme.titleMedium),
               const SizedBox(height: 8),
