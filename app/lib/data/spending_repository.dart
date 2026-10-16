@@ -72,6 +72,9 @@ class SpendingRepository {
           isUnusual: Value(isUnusual),
           memo: Value(memo == null || memo.trim().isEmpty ? null : memo.trim()),
           confirmed: const Value(true),
+          // 확인했으면 "다시 봐야 함" 표시도 지운다(안 지우면 홈의 확인 안 한 결제 수에 계속 남음)
+          needsReview: const Value(false),
+          reviewReason: const Value(null),
         ),
       );
       await MetricsRepository(db).categoryReview(

@@ -3,6 +3,8 @@ import 'package:conmoney/core/models.dart';
 import 'package:conmoney/data/database.dart';
 import 'package:conmoney/data/ledger_repository.dart';
 import 'package:conmoney/data/planned_repository.dart';
+import 'package:conmoney/data/spending_repository.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -44,5 +46,23 @@ void main() {
 
     await planned.delete(id);
     expect(await db.select(db.transactions).get(), isEmpty);
+  });
+
+  test('확인 안 한 결제(10/16): 카테고리를 정할 수 없는 [냈어요] 지출이 목록에 뜨고, 확인 시트에서 저장하면 빠진다', () async {
+    final now = DateTime(2026, 10, 13, 9);
+    final id = await planned.add(name: '동아리 회비', amount: 30000, date: DateTime(2026, 10, 13));
+    await planned.markPaid(id, now);
+    expect(await ledger.unconfirmedCount(), 1);
+    final row = (await ledger.unconfirmed()).single;
+    expect(row.merchantNorm, '동아리 회비');
+
+    // 다시 봐야 함 표시가 붙은 결제도 저장하면 같이 풀린다
+    await (db.update(db.transactions)..where((t) => t.id.equals(row.id))).write(
+      const TransactionsCompanion(needsReview: Value(true), reviewReason: Value('금액이 평소와 다름')),
+    );
+    final etc = await (db.select(db.categories)..where((c) => c.name.equals('기타'))).getSingle();
+    await SpendingRepository(db).saveReview(row.id, categoryId: etc.id, isUnusual: true, memo: null);
+    expect(await ledger.unconfirmedCount(), 0);
+    expect(await ledger.unconfirmed(), isEmpty);
   });
 }

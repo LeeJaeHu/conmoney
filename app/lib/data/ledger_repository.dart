@@ -136,6 +136,13 @@ class LedgerRepository {
     ];
   }
 
+  /// 확인 안 한 결제(최근 순). 홈 "확인 안 한 결제 N건"을 누르면 보여준다(10/16).
+  Future<List<TransactionRow>> unconfirmed() =>
+      (db.select(db.transactions)
+            ..where((t) => t.confirmed.equals(false) | t.needsReview.equals(true))
+            ..orderBy([(t) => OrderingTerm.desc(t.localDate), (t) => OrderingTerm.desc(t.id)]))
+          .get();
+
   Future<int> unconfirmedCount() async {
     final c = db.transactions.id.count();
     final q = db.selectOnly(db.transactions)

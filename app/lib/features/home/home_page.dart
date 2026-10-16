@@ -14,6 +14,7 @@ import '../samples/sample_collector_page.dart';
 import '../settings/metrics_page.dart';
 import '../settings/notification_settings_page.dart';
 import '../spending/category_page.dart';
+import '../spending/review_page.dart';
 import '../spending/spending_providers.dart';
 import 'spend_calendar.dart';
 
@@ -79,7 +80,9 @@ class HomePage extends ConsumerWidget {
                   child: ListTile(
                     leading: const Icon(Icons.pending_actions_outlined),
                     title: Text('확인 안 한 결제 ${data.unconfirmed}건'),
+                    subtitle: const Text('카테고리를 정해 주세요'),
                     trailing: const Icon(Icons.chevron_right),
+                    onTap: () => open(const ReviewPage()),
                   ),
                 ),
               _UpcomingCard(data: data, onOpen: () => open(const RecurringPage())),
