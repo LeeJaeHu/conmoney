@@ -58,7 +58,7 @@ server/  Cloud Run(Python, FastAPI) LLM 중계. 비밀값은 server/.env(git 제
 - [x] PRD·Spec, 카드 내역 가져오기(tools/), 실데이터 분석
 - [x] BudgetEngine(`app/lib/core/`) + 테스트 C1~C18 (`app/test/core/`)
 - [x] 알림 리스너 + 샘플 수집 화면 — **집 노트북에서 빌드·설치 후 알림 접근 허용 필요**
-- [ ] 현대카드 앱 패키지명 확인(샘플 수집 화면의 "알림을 보낸 앱" 목록) → `SourceFilter` 수정
+- [x] 현대카드 앱 패키지명 확인: `com.hyundaicard.appcard`(10/18 샘플, `SourceFilter` 그대로)
 - [x] DB(drift, `app/lib/data/`) + CSV 가져오기(설정 메뉴 > 과거 기록 가져오기). 실데이터 월 합계가 부록 A와 일치(테스트)
 - [x] 홈 화면(오늘 금액 + 남은 예산 + 초과액 + 단계 표시), 예산 설정(고정/단계적, 만 원 단위 입력)
 - [x] 정기 지출(F5): 자동 탐지(실데이터 13개), 등록 시 지난 결제까지 연결, [아니요]·[이번 달 없음], 직접 추가·수정. 홈 메뉴 > 정기 지출
@@ -74,5 +74,5 @@ server/  Cloud Run(Python, FastAPI) LLM 중계. 비밀값은 server/.env(git 제
 - [x] 홈 지출 달력(날짜별 쓴 금액, 탭 → 그날 내역), 스크롤 화면 아래 여백(내비게이션 바)
 - [x] 지출 분석 화면: 이번 달 흐름(누적 vs 예산·평소), 평소와 비교 그래프(`core/analysis.dart`)
 - [x] 디자인 B2(테마 `ui/theme.dart`, 글꼴 Pretendard `assets/fonts`(OFL), 홈 예산 게이지, 상담 버튼 아래 고정). 화면 캡처: `app`에서 `SCREENSHOTS=1 flutter test test/screens --update-goldens` → `docs/design/`
-- [x] 알림 → 거래(F2): 롯데카드 알림톡 파서(`core/payment_parser.dart`), 저장·중복·취소·할부·카테고리 추천(`data/notification_ingest.dart`), DB v6 `notification_results`. 홈을 열 때·돌아올 때·새로고침 때 동기화 + 결제 직후 F7 검사(`services/notification_sync.dart`)
-- [ ] 현대카드·토스 파서(샘플 필요), 롯데 취소·할부·해외 실제 형식 확인, 앱이 꺼져 있을 때 반영, 확인 알림(F3), 상담 평가셋 50개
+- [x] 알림 → 거래(F2): 롯데카드 알림톡·현대카드 앱 파서(`core/payment_parser.dart`), 저장·중복·취소·할부·카테고리 추천(`data/notification_ingest.dart`), DB v6 `notification_results`. 홈을 열 때·돌아올 때·새로고침 때 동기화 + 결제 직후 F7 검사(`services/notification_sync.dart`)
+- [ ] 토스 파서(샘플 필요), 롯데·현대 취소·할부·해외 실제 형식 확인, 앱이 꺼져 있을 때 반영, 확인 알림(F3), 상담 평가셋 50개

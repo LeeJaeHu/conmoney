@@ -1,5 +1,5 @@
 // 결제 알림 파서(Spec F2). 출처별 규칙은 실제 알림 샘플을 보고 만든다(Spec F2 "샘플 → 정규식 → 회귀 테스트").
-// 지금은 롯데카드 카카오 알림톡만 샘플이 있다(10/17). 현대카드 앱·토스는 샘플이 생기면 추가한다.
+// 샘플: 롯데카드 카카오 알림톡(10/17), 현대카드 앱(10/18). 토스는 샘플이 생기면 추가한다.
 
 /// 알림을 보낸 곳. [key]는 cards.source와 같은 값(csv_import.dart cardInfo).
 enum PaymentSource {
@@ -82,8 +82,56 @@ ParseOutcome parsePaymentNotification({
   required DateTime postedAt,
 }) => switch (source) {
   PaymentSource.lotteKakao => _parseLotte(body, postedAt),
-  _ => const Unsupported(),
+  PaymentSource.hyundaiApp => _parseHyundai(body, postedAt),
+  PaymentSource.tossApp => const Unsupported(),
 };
+
+List<String> _lines(String body) => [
+  for (final l in body.split('\n'))
+    if (l.trim().isNotEmpty) l.trim(),
+];
+
+/// "승인 없는 안내"는 무시하고, 승인·취소와 금액이 있는데 못 읽으면 실패로 남긴다.
+ParseOutcome _unreadable(String body, String reason) =>
+    RegExp('승인|취소').hasMatch(body) && RegExp(r'[\d,]+\s*원').hasMatch(body) ? ParseFailed(reason) : const NotPayment();
+
+/// 현대카드 앱(10/18 샘플). 긴 본문(big_text)에만 가맹점이 있다:
+/// ```
+/// 홍길동 님, 현대 ZERO 승인 20,900원 일시불, 10/18 4:04
+/// ㈜우아한형제들
+/// 누적142,396원
+/// ```
+/// 취소·해외·할부는 아직 샘플이 없어 공통 키워드로 추정한다 `[확인 필요]`.
+ParseOutcome _parseHyundai(String body, DateTime postedAt) {
+  final lines = _lines(body);
+  final head = RegExp(
+    r'(승인취소|취소|승인)\s*(?:(' + _currencies + r')\s*)?([\d,]+(?:\.\d+)?)\s*(원|' + _currencies + r')?',
+  );
+  final idx = lines.indexWhere(head.hasMatch);
+  if (idx < 0) return _unreadable(body, '승인 줄을 찾지 못함');
+  final merchant = lines.skip(idx + 1).where((l) => !l.startsWith('누적')).firstOrNull;
+  // 짧은 본문(text)만 있으면 가맹점이 없다
+  if (merchant == null) return const ParseFailed('가맹점 줄이 없음');
+
+  final m = head.firstMatch(lines[idx])!;
+  final currency = m[2] ?? (m[4] == '원' || m[4] == null ? null : m[4]);
+  final number = m[3]!.replaceAll(',', '');
+  final amount = currency != null ? 0 : int.tryParse(number);
+  if (amount == null) return ParseFailed('금액을 읽지 못함: ${m[3]}');
+  final months = RegExp(r'(\d+)\s*개월').firstMatch(lines[idx]);
+  return Parsed(
+    ParsedPayment(
+      source: PaymentSource.hyundaiApp,
+      amount: amount,
+      merchant: merchant,
+      approvedAt: _dateTime(lines[idx], postedAt) ?? postedAt,
+      isCancel: m[1] != '승인',
+      installmentMonths: months == null ? 1 : int.parse(months[1]!),
+      isForeign: currency != null || lines[idx].contains('해외'),
+      foreignAmount: currency != null ? '$currency $number' : null,
+    ),
+  );
+}
 
 const _currencies = 'USD|EUR|JPY|CNY|GBP|HKD|SGD|AUD|CAD|CHF|TWD|THB|VND|PHP';
 
@@ -97,20 +145,14 @@ const _currencies = 'USD|EUR|JPY|CNY|GBP|HKD|SGD|AUD|CAD|CHF|TWD|THB|VND|PHP';
 /// ```
 /// 취소·해외·할부는 아직 샘플이 없어 공통 키워드(Spec F2)로 추정한다 `[확인 필요]`.
 ParseOutcome _parseLotte(String body, DateTime postedAt) {
-  final lines = [
-    for (final l in body.split('\n'))
-      if (l.trim().isNotEmpty) l.trim(),
-  ];
+  final lines = _lines(body);
   // "11,800원 승인", "11,800원 승인취소", "USD 12.99 승인", "12.99USD 승인"
   final amountLine = RegExp(
     r'^(?:(' + _currencies + r')\s*)?([\d,]+(?:\.\d+)?)\s*(원|' + _currencies + r')?\s*(승인취소|취소|승인)',
   );
   final idx = lines.indexWhere(amountLine.hasMatch);
-  if (idx < 0) {
-    // 결제 예정·명세서 안내 같은 알림톡은 "승인"이 없다
-    final looksLikePayment = RegExp('승인|취소').hasMatch(body) && RegExp(r'[\d,]+\s*원').hasMatch(body);
-    return looksLikePayment ? const ParseFailed('금액 줄을 찾지 못함') : const NotPayment();
-  }
+  // 결제 예정·명세서 안내 같은 알림톡은 "승인"이 없다
+  if (idx < 0) return _unreadable(body, '금액 줄을 찾지 못함');
   if (idx == 0) return const ParseFailed('가맹점 줄이 없음');
 
   final m = amountLine.firstMatch(lines[idx])!;

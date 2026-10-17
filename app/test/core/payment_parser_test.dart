@@ -58,7 +58,39 @@ void main() {
     expect(lotte('9,300원 승인\n일시불, 10/17 12:34'), isA<ParseFailed>()); // 가맹점 줄 없음
   });
 
-  test('현대·토스는 샘플이 생길 때까지 보류', () {
+  // 10/18 실제 현대카드 앱 알림 형식(\r 포함)에 이름·금액·가맹점만 바꾼 샘플
+  const hyundaiApproval = '홍길동 님, 현대 ZERO 승인 15,400원 일시불, 10/18 4:04 \r\n㈜우아한형제들 \r\n누적123,456원';
+  ParseOutcome hyundai(String body) => parsePaymentNotification(
+    source: PaymentSource.hyundaiApp,
+    title: '현대카드',
+    body: body,
+    postedAt: DateTime(2026, 10, 18, 4, 5),
+  );
+
+  test('현대 승인: 첫 줄의 금액·일시불·시각(한 자리 시), 다음 줄 가맹점', () {
+    final p = parsed(hyundai(hyundaiApproval));
+    expect(p.merchant, '㈜우아한형제들');
+    expect(p.amount, 15400);
+    expect(p.isCancel, isFalse);
+    expect(p.installmentMonths, 1);
+    expect(p.approvedAt, DateTime(2026, 10, 18, 4, 4));
+    expect(normMerchant(p.merchant), '배달의민족');
+    expect(builtinCategory(normMerchant(p.merchant), p.amount), '식비');
+  });
+
+  test('현대 할부·취소 [가정: 샘플 없음]', () {
+    expect(parsed(hyundai(hyundaiApproval.replaceFirst('일시불', '3개월'))).installmentMonths, 3);
+    final cancel = parsed(hyundai(hyundaiApproval.replaceFirst('승인', '승인취소')));
+    expect(cancel.isCancel, isTrue);
+    expect(cancel.amount, 15400);
+  });
+
+  test('현대: 짧은 본문만 있어 가맹점이 없으면 실패로 남김, 안내 알림은 무시', () {
+    expect(hyundai('홍길동 님, 현대 ZERO 승인 15,400원 일시불, 10/18 4:04 \r'), isA<ParseFailed>());
+    expect(hyundai('이번 달 혜택을 확인하세요'), isA<NotPayment>());
+  });
+
+  test('토스는 샘플이 생길 때까지 보류', () {
     final o = parsePaymentNotification(
       source: PaymentSource.tossApp,
       title: '토스',

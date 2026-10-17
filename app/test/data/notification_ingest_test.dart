@@ -126,6 +126,19 @@ void main() {
     expect(t.needsReview, isTrue);
   });
 
+  test('현대카드 알림 → 거래, 내역 파일의 (주)우아한형제들과는 같은 가맹점으로 본다', () async {
+    const body = '홍길동 님, 현대 ZERO 승인 15,400원 일시불, 10/18 4:04 \r\n㈜우아한형제들 \r\n누적123,456원';
+    final r = await ingestor.ingest([
+      raw(1, body, package: 'com.hyundaicard.appcard', title: '현대카드', at: DateTime(2026, 10, 18, 4, 5)),
+    ]);
+    expect(r.saved, 1);
+    final t = (await txns()).single;
+    expect(t.merchantNorm, '배달의민족');
+    expect(t.localDate, '2026-10-18');
+    final cats = {for (final c in await db.select(db.categories).get()) c.id: c.name};
+    expect(cats[t.suggestedCategoryId], '식비');
+  });
+
   test('파서가 없는 출처(토스)는 보류했다가 다음에 다시 본다', () async {
     final r = await ingestor.ingest([raw(1, '9,300원 결제', package: 'viva.republica.toss', title: '토스')]);
     expect(r.unsupported, 1);

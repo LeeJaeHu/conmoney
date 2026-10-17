@@ -287,7 +287,7 @@ class ParsedPayment {
 }
 ```
 - 규칙은 출처별 정규식 목록으로 두고, **실제 알림 샘플을 모은 뒤 작성한다**(열린 질문 4). 샘플 → 정규식 → 평가셋 회귀 테스트 순서.
-- **구현 (10/17)**: 롯데카드 알림톡만 샘플이 있어 파서를 만들었다(`app/lib/core/payment_parser.dart`). 형식은 `가맹점 / N원 승인 / 이름 카드명(번호) / 일시불, MM/dd HH:mm / 누적금액`. 원문은 네이티브 `raw_notifications.db`에 두고, 처리 결과(`SAVED/DUP/CANCEL/IGNORED/PARSE_FAIL/UNSUPPORTED`)는 앱 DB `notification_results`(v6)에 남긴다. 파서가 없는 출처는 `UNSUPPORTED`로 두었다가 동기화 때마다 다시 본다. 동기화 시점은 홈을 열 때·앱으로 돌아올 때·당겨서 새로고침 `[가정]`(앱이 꺼져 있는 동안은 반영 안 됨)
+- **구현 (10/17)**: 롯데카드 알림톡만 샘플이 있어 파서를 만들었다(`app/lib/core/payment_parser.dart`). 형식은 `가맹점 / N원 승인 / 이름 카드명(번호) / 일시불, MM/dd HH:mm / 누적금액`. 10/18 현대카드 앱 추가: `이름 님, 현대 ZERO 승인 N원 일시불, MM/dd H:mm / 가맹점 / 누적N원`(가맹점은 big_text에만 있음). 원문은 네이티브 `raw_notifications.db`에 두고, 처리 결과(`SAVED/DUP/CANCEL/IGNORED/PARSE_FAIL/UNSUPPORTED`)는 앱 DB `notification_results`(v6)에 남긴다. 파서가 없는 출처는 `UNSUPPORTED`로 두었다가 동기화 때마다 다시 본다. 동기화 시점은 홈을 열 때·앱으로 돌아올 때·당겨서 새로고침 `[가정]`(앱이 꺼져 있는 동안은 반영 안 됨)
 - 공통 키워드 `[확인 필요]`: 승인/취소(`승인`, `취소`, `승인취소`), 할부(`(\d+)개월`, `일시불`), 해외(`해외`, 통화 코드 `USD|EUR|JPY|...`), 금액(`([\d,]+)원`)
 - `isPaymentLike = false`(광고, 명세서 안내 등)는 `IGNORED`로 원문만 남긴다.
 - `isPaymentLike = true`인데 parse 실패 → `PARSE_FAIL`로 needs_review 거래 생성(amount=0, 원문 보존). **조용히 버리지 않는다.**
