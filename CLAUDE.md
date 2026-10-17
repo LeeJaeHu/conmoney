@@ -74,4 +74,5 @@ server/  Cloud Run(Python, FastAPI) LLM 중계. 비밀값은 server/.env(git 제
 - [x] 홈 지출 달력(날짜별 쓴 금액, 탭 → 그날 내역), 스크롤 화면 아래 여백(내비게이션 바)
 - [x] 지출 분석 화면: 이번 달 흐름(누적 vs 예산·평소), 평소와 비교 그래프(`core/analysis.dart`)
 - [x] 디자인 B2(테마 `ui/theme.dart`, 글꼴 Pretendard `assets/fonts`(OFL), 홈 예산 게이지, 상담 버튼 아래 고정). 화면 캡처: `app`에서 `SCREENSHOTS=1 flutter test test/screens --update-goldens` → `docs/design/`
-- [ ] 알림 파서(F2) + 결제 직후 F7 검사 연결, 확인 알림(F3), 상담 평가셋 50개
+- [x] 알림 → 거래(F2): 롯데카드 알림톡 파서(`core/payment_parser.dart`), 저장·중복·취소·할부·카테고리 추천(`data/notification_ingest.dart`), DB v6 `notification_results`. 홈을 열 때·돌아올 때·새로고침 때 동기화 + 결제 직후 F7 검사(`services/notification_sync.dart`)
+- [ ] 현대카드·토스 파서(샘플 필요), 롯데 취소·할부·해외 실제 형식 확인, 앱이 꺼져 있을 때 반영, 확인 알림(F3), 상담 평가셋 50개

@@ -1,0 +1,146 @@
+// 결제 알림 파서(Spec F2). 출처별 규칙은 실제 알림 샘플을 보고 만든다(Spec F2 "샘플 → 정규식 → 회귀 테스트").
+// 지금은 롯데카드 카카오 알림톡만 샘플이 있다(10/17). 현대카드 앱·토스는 샘플이 생기면 추가한다.
+
+/// 알림을 보낸 곳. [key]는 cards.source와 같은 값(csv_import.dart cardInfo).
+enum PaymentSource {
+  lotteKakao('KAKAO_LOTTE', '롯데카드 LOCA LIKIT Eat'),
+  hyundaiApp('HYUNDAI_APP', '현대카드 ZERO'),
+  tossApp('TOSS_APP', '토스뱅크카드');
+
+  const PaymentSource(this.key, this.product);
+
+  final String key;
+  final String product;
+
+  /// 리스너가 받은 패키지·제목으로 출처를 정한다(Kotlin SourceFilter와 같은 기준).
+  static PaymentSource? of(String package, String? title) => switch (package) {
+    'com.kakao.talk' when title?.contains('롯데카드') ?? false => lotteKakao,
+    'com.hyundaicard.appcard' => hyundaiApp,
+    'viva.republica.toss' => tossApp,
+    _ => null,
+  };
+}
+
+class ParsedPayment {
+  const ParsedPayment({
+    required this.source,
+    required this.amount,
+    required this.merchant,
+    required this.approvedAt,
+    this.isCancel = false,
+    this.installmentMonths = 1,
+    this.isForeign = false,
+    this.foreignAmount,
+  });
+
+  final PaymentSource source;
+
+  /// 원화 금액(양수). 해외 결제에 원화가 없으면 0이고 [foreignAmount]에 "USD 12.99".
+  final int amount;
+  final String merchant;
+
+  /// 본문 시각이 있으면 그것, 없으면 알림 게시 시각.
+  final DateTime approvedAt;
+  final bool isCancel;
+  final int installmentMonths;
+  final bool isForeign;
+  final String? foreignAmount;
+}
+
+sealed class ParseOutcome {
+  const ParseOutcome();
+}
+
+/// 결제 알림으로 해석함.
+class Parsed extends ParseOutcome {
+  const Parsed(this.payment);
+
+  final ParsedPayment payment;
+}
+
+/// 결제 같은데 해석하지 못함 → 확인 필요 거래로 남긴다(조용히 버리지 않음).
+class ParseFailed extends ParseOutcome {
+  const ParseFailed(this.reason);
+
+  final String reason;
+}
+
+/// 광고·안내 등 결제가 아님.
+class NotPayment extends ParseOutcome {
+  const NotPayment();
+}
+
+/// 이 출처의 파서가 아직 없음(샘플 필요). 원문은 남겨 두고 파서가 생기면 다시 처리한다.
+class Unsupported extends ParseOutcome {
+  const Unsupported();
+}
+
+ParseOutcome parsePaymentNotification({
+  required PaymentSource source,
+  required String? title,
+  required String body,
+  required DateTime postedAt,
+}) => switch (source) {
+  PaymentSource.lotteKakao => _parseLotte(body, postedAt),
+  _ => const Unsupported(),
+};
+
+const _currencies = 'USD|EUR|JPY|CNY|GBP|HKD|SGD|AUD|CAD|CHF|TWD|THB|VND|PHP';
+
+/// 롯데카드 알림톡(10/17 샘플):
+/// ```
+/// 버거킹 건대입구역점
+/// 11,800원 승인
+/// 이*후 LOCA LIKIT Eat(5*1*)
+/// 일시불, 10/17 11:57
+/// 누적금액 470,844원
+/// ```
+/// 취소·해외·할부는 아직 샘플이 없어 공통 키워드(Spec F2)로 추정한다 `[확인 필요]`.
+ParseOutcome _parseLotte(String body, DateTime postedAt) {
+  final lines = [
+    for (final l in body.split('\n'))
+      if (l.trim().isNotEmpty) l.trim(),
+  ];
+  // "11,800원 승인", "11,800원 승인취소", "USD 12.99 승인", "12.99USD 승인"
+  final amountLine = RegExp(
+    r'^(?:(' + _currencies + r')\s*)?([\d,]+(?:\.\d+)?)\s*(원|' + _currencies + r')?\s*(승인취소|취소|승인)',
+  );
+  final idx = lines.indexWhere(amountLine.hasMatch);
+  if (idx < 0) {
+    // 결제 예정·명세서 안내 같은 알림톡은 "승인"이 없다
+    final looksLikePayment = RegExp('승인|취소').hasMatch(body) && RegExp(r'[\d,]+\s*원').hasMatch(body);
+    return looksLikePayment ? const ParseFailed('금액 줄을 찾지 못함') : const NotPayment();
+  }
+  if (idx == 0) return const ParseFailed('가맹점 줄이 없음');
+
+  final m = amountLine.firstMatch(lines[idx])!;
+  final currency = m[1] ?? (m[3] == '원' || m[3] == null ? null : m[3]);
+  final number = m[2]!.replaceAll(',', '');
+  final isForeign = currency != null;
+  final amount = isForeign ? 0 : int.tryParse(number);
+  if (amount == null) return ParseFailed('금액을 읽지 못함: ${m[2]}');
+
+  final rest = lines.skip(idx + 1).join('\n');
+  final months = RegExp(r'(\d+)\s*개월').firstMatch(rest);
+  return Parsed(
+    ParsedPayment(
+      source: PaymentSource.lotteKakao,
+      amount: amount,
+      merchant: lines[idx - 1],
+      approvedAt: _dateTime(rest, postedAt) ?? postedAt,
+      isCancel: m[4] != '승인',
+      installmentMonths: months == null ? 1 : int.parse(months[1]!),
+      isForeign: isForeign || RegExp('해외').hasMatch(body),
+      foreignAmount: isForeign ? '$currency $number' : null,
+    ),
+  );
+}
+
+/// "10/17 11:57" → 연도는 게시 시각에서. 1월에 12월 날짜가 오면 전년(Spec F2).
+DateTime? _dateTime(String text, DateTime postedAt) {
+  final m = RegExp(r'(\d{1,2})/(\d{1,2})\s+(\d{1,2}):(\d{2})').firstMatch(text);
+  if (m == null) return null;
+  final month = int.parse(m[1]!);
+  final year = postedAt.month == 1 && month == 12 ? postedAt.year - 1 : postedAt.year;
+  return DateTime(year, month, int.parse(m[2]!), int.parse(m[3]!), int.parse(m[4]!));
+}

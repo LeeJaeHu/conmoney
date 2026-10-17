@@ -6104,6 +6104,323 @@ class PlannedExpensesCompanion extends UpdateCompanion<PlannedExpenseRow> {
   }
 }
 
+class $NotificationResultsTable extends NotificationResults
+    with TableInfo<$NotificationResultsTable, NotificationResultRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $NotificationResultsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _rawIdMeta = const VerificationMeta('rawId');
+  @override
+  late final GeneratedColumn<int> rawId = GeneratedColumn<int>(
+    'raw_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _resultMeta = const VerificationMeta('result');
+  @override
+  late final GeneratedColumn<String> result = GeneratedColumn<String>(
+    'result',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _transactionIdMeta = const VerificationMeta(
+    'transactionId',
+  );
+  @override
+  late final GeneratedColumn<int> transactionId = GeneratedColumn<int>(
+    'transaction_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _processedAtMeta = const VerificationMeta(
+    'processedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> processedAt = GeneratedColumn<DateTime>(
+    'processed_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    rawId,
+    result,
+    transactionId,
+    processedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'notification_results';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<NotificationResultRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('raw_id')) {
+      context.handle(
+        _rawIdMeta,
+        rawId.isAcceptableOrUnknown(data['raw_id']!, _rawIdMeta),
+      );
+    }
+    if (data.containsKey('result')) {
+      context.handle(
+        _resultMeta,
+        result.isAcceptableOrUnknown(data['result']!, _resultMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_resultMeta);
+    }
+    if (data.containsKey('transaction_id')) {
+      context.handle(
+        _transactionIdMeta,
+        transactionId.isAcceptableOrUnknown(
+          data['transaction_id']!,
+          _transactionIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('processed_at')) {
+      context.handle(
+        _processedAtMeta,
+        processedAt.isAcceptableOrUnknown(
+          data['processed_at']!,
+          _processedAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_processedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {rawId};
+  @override
+  NotificationResultRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return NotificationResultRow(
+      rawId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}raw_id'],
+      )!,
+      result: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}result'],
+      )!,
+      transactionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}transaction_id'],
+      ),
+      processedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}processed_at'],
+      )!,
+    );
+  }
+
+  @override
+  $NotificationResultsTable createAlias(String alias) {
+    return $NotificationResultsTable(attachedDatabase, alias);
+  }
+}
+
+class NotificationResultRow extends DataClass
+    implements Insertable<NotificationResultRow> {
+  final int rawId;
+  final String result;
+  final int? transactionId;
+  final DateTime processedAt;
+  const NotificationResultRow({
+    required this.rawId,
+    required this.result,
+    this.transactionId,
+    required this.processedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['raw_id'] = Variable<int>(rawId);
+    map['result'] = Variable<String>(result);
+    if (!nullToAbsent || transactionId != null) {
+      map['transaction_id'] = Variable<int>(transactionId);
+    }
+    map['processed_at'] = Variable<DateTime>(processedAt);
+    return map;
+  }
+
+  NotificationResultsCompanion toCompanion(bool nullToAbsent) {
+    return NotificationResultsCompanion(
+      rawId: Value(rawId),
+      result: Value(result),
+      transactionId: transactionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(transactionId),
+      processedAt: Value(processedAt),
+    );
+  }
+
+  factory NotificationResultRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return NotificationResultRow(
+      rawId: serializer.fromJson<int>(json['rawId']),
+      result: serializer.fromJson<String>(json['result']),
+      transactionId: serializer.fromJson<int?>(json['transactionId']),
+      processedAt: serializer.fromJson<DateTime>(json['processedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'rawId': serializer.toJson<int>(rawId),
+      'result': serializer.toJson<String>(result),
+      'transactionId': serializer.toJson<int?>(transactionId),
+      'processedAt': serializer.toJson<DateTime>(processedAt),
+    };
+  }
+
+  NotificationResultRow copyWith({
+    int? rawId,
+    String? result,
+    Value<int?> transactionId = const Value.absent(),
+    DateTime? processedAt,
+  }) => NotificationResultRow(
+    rawId: rawId ?? this.rawId,
+    result: result ?? this.result,
+    transactionId: transactionId.present
+        ? transactionId.value
+        : this.transactionId,
+    processedAt: processedAt ?? this.processedAt,
+  );
+  NotificationResultRow copyWithCompanion(NotificationResultsCompanion data) {
+    return NotificationResultRow(
+      rawId: data.rawId.present ? data.rawId.value : this.rawId,
+      result: data.result.present ? data.result.value : this.result,
+      transactionId: data.transactionId.present
+          ? data.transactionId.value
+          : this.transactionId,
+      processedAt: data.processedAt.present
+          ? data.processedAt.value
+          : this.processedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NotificationResultRow(')
+          ..write('rawId: $rawId, ')
+          ..write('result: $result, ')
+          ..write('transactionId: $transactionId, ')
+          ..write('processedAt: $processedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(rawId, result, transactionId, processedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is NotificationResultRow &&
+          other.rawId == this.rawId &&
+          other.result == this.result &&
+          other.transactionId == this.transactionId &&
+          other.processedAt == this.processedAt);
+}
+
+class NotificationResultsCompanion
+    extends UpdateCompanion<NotificationResultRow> {
+  final Value<int> rawId;
+  final Value<String> result;
+  final Value<int?> transactionId;
+  final Value<DateTime> processedAt;
+  const NotificationResultsCompanion({
+    this.rawId = const Value.absent(),
+    this.result = const Value.absent(),
+    this.transactionId = const Value.absent(),
+    this.processedAt = const Value.absent(),
+  });
+  NotificationResultsCompanion.insert({
+    this.rawId = const Value.absent(),
+    required String result,
+    this.transactionId = const Value.absent(),
+    required DateTime processedAt,
+  }) : result = Value(result),
+       processedAt = Value(processedAt);
+  static Insertable<NotificationResultRow> custom({
+    Expression<int>? rawId,
+    Expression<String>? result,
+    Expression<int>? transactionId,
+    Expression<DateTime>? processedAt,
+  }) {
+    return RawValuesInsertable({
+      if (rawId != null) 'raw_id': rawId,
+      if (result != null) 'result': result,
+      if (transactionId != null) 'transaction_id': transactionId,
+      if (processedAt != null) 'processed_at': processedAt,
+    });
+  }
+
+  NotificationResultsCompanion copyWith({
+    Value<int>? rawId,
+    Value<String>? result,
+    Value<int?>? transactionId,
+    Value<DateTime>? processedAt,
+  }) {
+    return NotificationResultsCompanion(
+      rawId: rawId ?? this.rawId,
+      result: result ?? this.result,
+      transactionId: transactionId ?? this.transactionId,
+      processedAt: processedAt ?? this.processedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (rawId.present) {
+      map['raw_id'] = Variable<int>(rawId.value);
+    }
+    if (result.present) {
+      map['result'] = Variable<String>(result.value);
+    }
+    if (transactionId.present) {
+      map['transaction_id'] = Variable<int>(transactionId.value);
+    }
+    if (processedAt.present) {
+      map['processed_at'] = Variable<DateTime>(processedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NotificationResultsCompanion(')
+          ..write('rawId: $rawId, ')
+          ..write('result: $result, ')
+          ..write('transactionId: $transactionId, ')
+          ..write('processedAt: $processedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -6127,6 +6444,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $PlannedExpensesTable plannedExpenses = $PlannedExpensesTable(
     this,
   );
+  late final $NotificationResultsTable notificationResults =
+      $NotificationResultsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6145,6 +6464,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     notificationLogs,
     metricEvents,
     plannedExpenses,
+    notificationResults,
   ];
 }
 
@@ -10624,6 +10944,212 @@ typedef $$PlannedExpensesTableProcessedTableManager =
       PlannedExpenseRow,
       PrefetchHooks Function()
     >;
+typedef $$NotificationResultsTableCreateCompanionBuilder =
+    NotificationResultsCompanion Function({
+      Value<int> rawId,
+      required String result,
+      Value<int?> transactionId,
+      required DateTime processedAt,
+    });
+typedef $$NotificationResultsTableUpdateCompanionBuilder =
+    NotificationResultsCompanion Function({
+      Value<int> rawId,
+      Value<String> result,
+      Value<int?> transactionId,
+      Value<DateTime> processedAt,
+    });
+
+class $$NotificationResultsTableFilterComposer
+    extends Composer<_$AppDatabase, $NotificationResultsTable> {
+  $$NotificationResultsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get rawId => $composableBuilder(
+    column: $table.rawId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get result => $composableBuilder(
+    column: $table.result,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get transactionId => $composableBuilder(
+    column: $table.transactionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get processedAt => $composableBuilder(
+    column: $table.processedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$NotificationResultsTableOrderingComposer
+    extends Composer<_$AppDatabase, $NotificationResultsTable> {
+  $$NotificationResultsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get rawId => $composableBuilder(
+    column: $table.rawId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get result => $composableBuilder(
+    column: $table.result,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get transactionId => $composableBuilder(
+    column: $table.transactionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get processedAt => $composableBuilder(
+    column: $table.processedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$NotificationResultsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $NotificationResultsTable> {
+  $$NotificationResultsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get rawId =>
+      $composableBuilder(column: $table.rawId, builder: (column) => column);
+
+  GeneratedColumn<String> get result =>
+      $composableBuilder(column: $table.result, builder: (column) => column);
+
+  GeneratedColumn<int> get transactionId => $composableBuilder(
+    column: $table.transactionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get processedAt => $composableBuilder(
+    column: $table.processedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$NotificationResultsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $NotificationResultsTable,
+          NotificationResultRow,
+          $$NotificationResultsTableFilterComposer,
+          $$NotificationResultsTableOrderingComposer,
+          $$NotificationResultsTableAnnotationComposer,
+          $$NotificationResultsTableCreateCompanionBuilder,
+          $$NotificationResultsTableUpdateCompanionBuilder,
+          (
+            NotificationResultRow,
+            BaseReferences<
+              _$AppDatabase,
+              $NotificationResultsTable,
+              NotificationResultRow
+            >,
+          ),
+          NotificationResultRow,
+          PrefetchHooks Function()
+        > {
+  $$NotificationResultsTableTableManager(
+    _$AppDatabase db,
+    $NotificationResultsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$NotificationResultsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$NotificationResultsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$NotificationResultsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> rawId = const Value.absent(),
+                Value<String> result = const Value.absent(),
+                Value<int?> transactionId = const Value.absent(),
+                Value<DateTime> processedAt = const Value.absent(),
+              }) => NotificationResultsCompanion(
+                rawId: rawId,
+                result: result,
+                transactionId: transactionId,
+                processedAt: processedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> rawId = const Value.absent(),
+                required String result,
+                Value<int?> transactionId = const Value.absent(),
+                required DateTime processedAt,
+              }) => NotificationResultsCompanion.insert(
+                rawId: rawId,
+                result: result,
+                transactionId: transactionId,
+                processedAt: processedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$NotificationResultsTable, NotificationResultRow>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $NotificationResultsTable,
+                    NotificationResultRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$NotificationResultsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $NotificationResultsTable,
+      NotificationResultRow,
+      $$NotificationResultsTableFilterComposer,
+      $$NotificationResultsTableOrderingComposer,
+      $$NotificationResultsTableAnnotationComposer,
+      $$NotificationResultsTableCreateCompanionBuilder,
+      $$NotificationResultsTableUpdateCompanionBuilder,
+      (
+        NotificationResultRow,
+        BaseReferences<
+          _$AppDatabase,
+          $NotificationResultsTable,
+          NotificationResultRow
+        >,
+      ),
+      NotificationResultRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -10654,4 +11180,6 @@ class $AppDatabaseManager {
       $$MetricEventsTableTableManager(_db, _db.metricEvents);
   $$PlannedExpensesTableTableManager get plannedExpenses =>
       $$PlannedExpensesTableTableManager(_db, _db.plannedExpenses);
+  $$NotificationResultsTableTableManager get notificationResults =>
+      $$NotificationResultsTableTableManager(_db, _db.notificationResults);
 }

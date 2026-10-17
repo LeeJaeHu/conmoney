@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app_providers.dart';
+import '../../services/notification_sync.dart';
 import '../../core/budget_engine.dart';
 import '../../core/models.dart';
 import '../../ui/format.dart';
@@ -21,11 +24,54 @@ import '../spending/spending_providers.dart';
 import 'spend_calendar.dart';
 
 /// 홈 화면(Spec F4): 오늘 쓸 수 있는 금액(크게) + 이번 달 남은 예산(작게). 총 사용액은 보여주지 않는다.
-class HomePage extends ConsumerWidget {
+/// 열릴 때·앱으로 돌아올 때·당겨서 새로고침할 때 결제 알림을 거래로 옮긴다(F2).
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends ConsumerState<HomePage> with WidgetsBindingObserver {
+  bool _syncing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _sync();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _sync();
+  }
+
+  Future<void> _sync() async {
+    // 알림 리스너는 Android에만 있다(테스트·PC에서는 건너뜀)
+    if (!Platform.isAndroid || _syncing) return;
+    _syncing = true;
+    try {
+      final r = await syncPaymentNotifications(ref.read(databaseProvider), clock: ref.read(clockProvider));
+      if (r.changed && mounted) {
+        ref.invalidate(homeProvider);
+        ref.invalidate(spendItemsProvider);
+      }
+    } catch (e) {
+      debugPrint('결제 알림 동기화 실패: $e');
+    } finally {
+      _syncing = false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final home = ref.watch(homeProvider);
 
     Future<void> open(Widget page) async {
@@ -63,7 +109,11 @@ class HomePage extends ConsumerWidget {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => ref.refresh(homeProvider.future),
+        onRefresh: () async {
+          await _sync();
+          ref.invalidate(spendItemsProvider);
+          return ref.refresh(homeProvider.future);
+        },
         child: home.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => ListView(

@@ -166,6 +166,19 @@ class MetricEvents extends Table {
   TextColumn get data => text()(); // JSON
 }
 
+/// 결제 알림 원문(Kotlin raw_notifications.db) 1건을 처리한 결과(Spec F2 처리 순서 3~4). 스키마 v6
+/// 원문은 네이티브 DB에 그대로 두고 여기는 결과만 남긴다. UNSUPPORTED(아직 파서가 없는 출처)는 다음 동기화 때 다시 본다.
+@DataClassName('NotificationResultRow')
+class NotificationResults extends Table {
+  IntColumn get rawId => integer()();
+  TextColumn get result => text()(); // SAVED / DUP / CANCEL / IGNORED / PARSE_FAIL / UNSUPPORTED
+  IntColumn get transactionId => integer().nullable()();
+  DateTimeColumn get processedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {rawId};
+}
+
 /// 기본 카테고리(PRD F3, 10/13 검수 반영).
 const defaultCategories = [
   '식비',
@@ -200,6 +213,7 @@ const defaultCategories = [
     NotificationLogs,
     MetricEvents,
     PlannedExpenses,
+    NotificationResults,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -208,7 +222,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'conmoney', native: const DriftNativeOptions(shareAcrossIsolates: true)));
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -226,6 +240,7 @@ class AppDatabase extends _$AppDatabase {
       if (from < 3) await m.addColumn(recurringItems, recurringItems.isEnvelope);
       if (from < 4) await m.createTable(metricEvents);
       if (from < 5) await m.createTable(plannedExpenses);
+      if (from < 6) await m.createTable(notificationResults);
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
