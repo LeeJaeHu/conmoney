@@ -134,12 +134,21 @@ gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low
 gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),phrasing,1.0
 gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),roomy,1.0
 gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),tight,1.0
-"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",ask_amount,1.0
-"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",boundary,1.0
-"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",fixed_soon,1.0
-"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",installment,1.0
-"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",next_month,1.0
-"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",over,1.0
-"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",phrasing,1.0
-"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",roomy,1.0
-"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",tight,1.0
+gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분),gpt-6-luna / low,v6.2 (이번 달 상황과 여러 달 분석 구분),ask_amount,1.0
+gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분),gpt-6-luna / low,v6.2 (이번 달 상황과 여러 달 분석 구분),boundary,1.0
+gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분),gpt-6-luna / low,v6.2 (이번 달 상황과 여러 달 분석 구분),fixed_soon,1.0
+gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분),gpt-6-luna / low,v6.2 (이번 달 상황과 여러 달 분석 구분),installment,1.0
+gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분),gpt-6-luna / low,v6.2 (이번 달 상황과 여러 달 분석 구분),next_month,1.0
+gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분),gpt-6-luna / low,v6.2 (이번 달 상황과 여러 달 분석 구분),over,1.0
+gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분),gpt-6-luna / low,v6.2 (이번 달 상황과 여러 달 분석 구분),phrasing,1.0
+gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분),gpt-6-luna / low,v6.2 (이번 달 상황과 여러 달 분석 구분),roomy,1.0
+gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분),gpt-6-luna / low,v6.2 (이번 달 상황과 여러 달 분석 구분),tight,1.0
+"gpt-6-luna / low · v6.3 (가맹점 이름, 잡담은 숫자 없이, 최종)",gpt-6-luna / low,"v6.3 (가맹점 이름, 잡담은 숫자 없이, 최종)",ask_amount,0.875
+"gpt-6-luna / low · v6.3 (가맹점 이름, 잡담은 숫자 없이, 최종)",gpt-6-luna / low,"v6.3 (가맹점 이름, 잡담은 숫자 없이, 최종)",boundary,1.0
+"gpt-6-luna / low · v6.3 (가맹점 이름, 잡담은 숫자 없이, 최종)",gpt-6-luna / low,"v6.3 (가맹점 이름, 잡담은 숫자 없이, 최종)",fixed_soon,1.0
+"gpt-6-luna / low · v6.3 (가맹점 이름, 잡담은 숫자 없이, 최종)",gpt-6-luna / low,"v6.3 (가맹점 이름, 잡담은 숫자 없이, 최종)",installment,1.0
+"gpt-6-luna / low · v6.3 (가맹점 이름, 잡담은 숫자 없이, 최종)",gpt-6-luna / low,"v6.3 (가맹점 이름, 잡담은 숫자 없이, 최종)",next_month,1.0
+"gpt-6-luna / low · v6.3 (가맹점 이름, 잡담은 숫자 없이, 최종)",gpt-6-luna / low,"v6.3 (가맹점 이름, 잡담은 숫자 없이, 최종)",over,1.0
+"gpt-6-luna / low · v6.3 (가맹점 이름, 잡담은 숫자 없이, 최종)",gpt-6-luna / low,"v6.3 (가맹점 이름, 잡담은 숫자 없이, 최종)",phrasing,1.0
+"gpt-6-luna / low · v6.3 (가맹점 이름, 잡담은 숫자 없이, 최종)",gpt-6-luna / low,"v6.3 (가맹점 이름, 잡담은 숫자 없이, 최종)",roomy,1.0
+"gpt-6-luna / low · v6.3 (가맹점 이름, 잡담은 숫자 없이, 최종)",gpt-6-luna / low,"v6.3 (가맹점 이름, 잡담은 숫자 없이, 최종)",tight,1.0

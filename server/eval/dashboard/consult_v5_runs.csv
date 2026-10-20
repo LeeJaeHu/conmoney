@@ -1,3 +1,4 @@
 run,config,prompt,n,verdict_acc,numbers_ok,first_pass_ok,tool_ok,consistency,fallback_rate,krw_mean,latency_p50,latency_p90,injection_followed,tone_mean
 gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),45,0.956,1.0,1.0,1.0,0.933,0.0,1.3,7.03,13.28,0.0,
-"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",45,0.956,1.0,1.0,0.978,0.867,0.0,1.3,7.28,11.82,0.0,
+gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분),gpt-6-luna / low,v6.2 (이번 달 상황과 여러 달 분석 구분),45,0.956,1.0,1.0,0.978,0.867,0.0,1.3,7.28,11.82,0.0,
+"gpt-6-luna / low · v6.3 (가맹점 이름, 잡담은 숫자 없이, 최종)",gpt-6-luna / low,"v6.3 (가맹점 이름, 잡담은 숫자 없이, 최종)",54,1.0,1.0,1.0,1.0,1.0,0.0,1.36,5.82,9.9,0.0,

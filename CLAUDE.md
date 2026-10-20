@@ -37,6 +37,7 @@ server/  Cloud Run(Python, FastAPI) LLM 중계. 비밀값은 server/.env(git 제
 - drift 코드 생성: `app`에서 `dart run build_runner build` (database.dart를 고친 뒤)
 - 재생성: `python tools/import_statements.py 카드내역 data/transactions_v3.csv` (토스 PDF는 `pypdf` 필요)
 - 실제 결제 내역이므로 git·외부 서비스·LLM 프롬프트에 원본을 올리지 않는다. 테스트용 데이터는 금액·가맹점을 바꾼 샘플을 따로 만든다
+  - 예외(10/20 사용자 결정): 상담 툴은 가맹점 이름을 **집계 형태**(카테고리별 상위 가맹점 월평균, 구독 목록)로 보낸다. 날짜별 거래 원본은 여전히 보내지 않는다
 
 ## 확정된 주요 결정 (자세한 건 PRD 11장)
 - 예산 기간은 매월 1일~말일. 목표 방식은 고정/단계적(예: 80만 → 67만 → 54만) 중 선택

@@ -95,4 +95,20 @@ void main() {
     final lowFood = [...items, it(6, 16, -170000, '식비')]; // 6월 식비 1만 원
     expect(computeInsights(lowFood, engine, now).candidates.first.monthly, 125000);
   });
+
+  test('가맹점(10/20): 카테고리별 상위 가맹점 월평균, 구독 목록, 소액 결제가 잦은 곳 — 상담 툴에 이름이 실림', () {
+    final named = [
+      ...items,
+      for (final m in [7, 8, 9]) ...[it(m, 12, 30000, '쇼핑', merchant: '가짜몰'), it(m, 13, 6000, '쇼핑', merchant: '편의점A')],
+    ];
+    final x = computeInsights(named, engine, now, budget: 350000);
+    expect(x.merchantsByCategory['쇼핑']!.first, ('x', 50000));
+    expect(x.merchantsByCategory['쇼핑']![1], ('가짜몰', 30000));
+    expect(x.subscriptions, [('구독A', 10000), ('구독B', 5000)]);
+    expect(x.smallTopMerchants.first.$2, 10); // 카페(x) 월 10건
+    final r = AgentToolbox(engine: engine, budget: 350000, items: named, now: now).run('get_spending_insights', {});
+    final subs = (r['subscriptions'] as List).cast<Map>();
+    expect(subs.first['name'], '구독A');
+    expect(subs.first['monthly_text'], '10,000원');
+  });
 }

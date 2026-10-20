@@ -65,6 +65,9 @@ class SpendingInsights {
     required this.timedCount,
     required this.fixedMonthly,
     required this.candidates,
+    this.merchantsByCategory = const {},
+    this.subscriptions = const [],
+    this.smallTopMerchants = const [],
   });
 
   /// 최근 완료 달(최대 6개, 오래된 순)과 그 달 지출(특이 지출 제외).
@@ -97,6 +100,15 @@ class SpendingInsights {
 
   /// 아낄 수 있는 곳(월 절약액 큰 순, 최대 4개).
   final List<SavingCandidate> candidates;
+
+  /// 카테고리별 많이 쓴 가맹점 상위 3곳(이름, 최근 3개월 월평균). 10/20 사용자 결정으로 상담에 가맹점 이름을 보낸다.
+  final Map<String, List<(String, int)>> merchantsByCategory;
+
+  /// 지난달 구독(이름, 금액) 큰 순.
+  final List<(String, int)> subscriptions;
+
+  /// 소액 결제가 잦은 가맹점(이름, 월평균 건수) 상위 3곳.
+  final List<(String, int)> smallTopMerchants;
 
   /// 평소 한 달 − 예산(양수면 예산보다 많이 씀).
   int? get gapToBudget => budget == null ? null : usualMonth - budget!;
@@ -229,6 +241,34 @@ SpendingInsights computeInsights(List<SpendItem> items, BudgetEngine engine, Dat
   }
   candidates.sort((a, b) => b.monthly.compareTo(a.monthly));
 
+  // 가맹점: 최근 3개월 기준, 특이 지출 제외
+  final n3 = last3.isEmpty ? 1 : last3.length;
+  final inLast3 = [for (final i in variable) if (last3.any((m) => m.contains(i.date))) i];
+  List<(String, int)> top(Iterable<SpendItem> xs, int Function(Iterable<SpendItem>) value) {
+    final by = <String, List<SpendItem>>{};
+    for (final i in xs) {
+      by.putIfAbsent(i.merchant, () => []).add(i);
+    }
+    final list = [for (final e in by.entries) (e.key, value(e.value) ~/ n3)]..sort((a, b) => b.$2.compareTo(a.$2));
+    return list.where((e) => e.$2 > 0).take(3).toList();
+  }
+
+  final merchantsByCategory = {
+    for (final c in cats.take(6))
+      c.name: top(inLast3.where((i) => (i.categoryName ?? unconfirmedCategoryName) == c.name), (xs) => xs.fold(0, (s, i) => s + i.amount)),
+  };
+  final subTotals = <String, int>{};
+  if (last3.isNotEmpty) {
+    for (final i in items) {
+      if (last3.last.contains(i.date) && i.categoryName == '구독') subTotals[i.merchant] = (subTotals[i.merchant] ?? 0) + i.amount;
+    }
+  }
+  final subscriptions = [for (final e in subTotals.entries) (e.key, e.value)]..sort((a, b) => b.$2.compareTo(a.$2));
+  final smallTop = top(
+    inLast3.where((i) => i.amount > 0 && i.amount < smallPurchaseLimit && !hardToCutCategories.contains(i.categoryName)),
+    (xs) => xs.length,
+  );
+
   return SpendingInsights(
     months: months,
     usualMonth: usualMonth,
@@ -243,6 +283,9 @@ SpendingInsights computeInsights(List<SpendItem> items, BudgetEngine engine, Dat
     timedCount: timed.length,
     fixedMonthly: fixed,
     candidates: candidates.take(4).toList(),
+    merchantsByCategory: merchantsByCategory,
+    subscriptions: subscriptions,
+    smallTopMerchants: smallTop,
   );
 }
 
