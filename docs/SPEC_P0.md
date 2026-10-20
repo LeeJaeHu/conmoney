@@ -471,6 +471,12 @@ class ParsedPayment {
 | `plan_recovery` (10/16) | 없음 | `{status: on_track \| recoverable \| not_recoverable_this_month, projected_over_if_usual, daily_cut_needed?, daily_spend_target?, over_even_if_zero_spend?, cut_candidates: [{category, usual_rest, half_saves}]}` |
 | `compare_spending` (10/16) | `window: "this_month" \| "last_month"` | `{total, usual_total, total_diff, categories: [{category, amount, usual, diff}]}` |
 
+**AI 소비 분석**(10/20): `get_spending_insights`(입력 없음) — 계산은 `app/lib/core/insights.dart`.
+- 평소 한 달 = 최근 완료 3개월 지출(특이 지출 제외)의 중앙값. 앞쪽 달 지출이 나머지 중앙값의 1/3 미만이면 기록이 덜 들어온 달로 뺀다. 추세 = 최근 3개월 평균 − 그 전 2~3개월 평균
+- 아낄 곳 후보(월 절약액, 100원 내림, 큰 순 최대 4개): ① 카테고리: 평소 − (최근 완료 달 중 **실제로 쓴 달**의 최저), 평소의 절반 상한, 5천 원 이상, 줄이기 어려운 카테고리(통신·공과금·구독·연회비·교통·의료·교육) 제외 ② 소액 결제(1만 원 미만, 위 카테고리·①에 잡힌 카테고리 제외) 합의 절반 ③ 구독 2개 이상이면 평균 한 개 금액
+- 심야 비율은 시각을 아는 결제 10건 이상일 때만(내역 파일에 시각이 없는 카드가 있음)
+- 응답 형식: [특징] 2~3 · [아낄 수 있는 곳] 후보 순서대로 · [앞으로] 1~2. 지출 분석 화면 "아낄 수 있는 곳" 카드가 같은 결과를 바로 보여주고 [AI에게 분석·상담 받기]로 이어진다
+
 **일상 대화형 상담**(10/16): 구매 질문이 아닌 "예산 넘었는데 어캄", "어디서 많이 썼어?", 잡담에도 답한다.
 - `plan_recovery` 계산: `over = S + F + P − B`(평소대로 쓰면 월말 초과), `target = P − over`(남은 기간 변동 지출 한도).
   `over ≤ 0` → on_track. `target ≥ 0` → recoverable: `daily_cut_needed = ceil(over ÷ N)`(100원 단위 올림), `daily_spend_target = floor(target ÷ N)`(100원 단위 내림).

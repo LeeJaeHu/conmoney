@@ -1,0 +1,9 @@
+run,config,prompt,group,verdict_acc
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),follow,0.778
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),no_data,1.0
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),plan_ahead,1.0
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),report,1.0
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",follow,0.889
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",no_data,1.0
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",plan_ahead,0.833
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",report,1.0

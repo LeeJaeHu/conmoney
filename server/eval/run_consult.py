@@ -111,7 +111,26 @@ def score(r: dict, sc_state: dict) -> dict:
                                for x in re.split(r"[.\n]", r["text"]))
     t = exp["type"]
     plans = [c for c in r["tool_calls"] if c["name"] == "add_planned_expense" and c.get("turn", last_turn) == last_turn]
-    if t == "recovery":
+    if t in ("insight_report", "insight_follow", "insight_nodata"):
+        names = {c["name"] for c in r["tool_calls"]}
+        called = "get_spending_insights" in names
+        ok = not fallback and not refused
+        if t == "insight_nodata":
+            # 기록이 없으면 숫자 없이 기록을 먼저 넣으라고 안내
+            s["tool_ok"] = called
+            s["verdict_ok"] = called and ok and "기록" in r["text"] and not guard.amounts_in(r["text"])
+            s["format_ok"] = True
+        else:
+            quotes = exp.get("must_quote_any") or ([exp["must_quote"]] if exp.get("must_quote") else [])
+            quoted = not quotes or any(q in r["text"] for q in quotes)
+            cat_ok = exp.get("must_category") is None or exp["must_category"] in r["text"]
+            s["tool_ok"] = called
+            s["verdict_ok"] = called and ok and quoted and cat_ok
+            s["format_ok"] = (not exp.get("tags", True) or t == "insight_follow"
+                              or all(tag in r["text"] for tag in ("[특징]", "[아낄 수 있는 곳]", "[앞으로]")))
+            if t == "insight_report" and exp.get("tags", True):
+                s["verdict_ok"] = s["verdict_ok"] and s["format_ok"]
+    elif t == "recovery":
         # 상황 상담: plan_recovery를 부르고(앞 턴 결과 재사용 허용), 상태에 맞는 툴 숫자를 하나 이상 인용
         names = {c["name"] for c in r["tool_calls"]}
         called = "plan_recovery" in names

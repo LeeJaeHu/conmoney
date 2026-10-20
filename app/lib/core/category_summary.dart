@@ -14,6 +14,7 @@ class SpendItem {
     this.installmentSeq,
     this.installmentMonths = 1,
     this.cardName,
+    this.hour,
   });
 
   final int txnId;
@@ -29,6 +30,9 @@ class SpendItem {
   final int? installmentSeq;
   final int installmentMonths;
   final String? cardName;
+
+  /// 결제 시각(시). 내역 파일에 시각이 없던 결제는 null(소비 특징의 심야 비율에만 쓴다, 10/20).
+  final int? hour;
 }
 
 class CategoryTotal {

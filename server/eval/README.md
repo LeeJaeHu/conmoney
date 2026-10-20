@@ -91,6 +91,17 @@ v1이 포화(luna/low·sol 100%)되어 실제 대화에서 틀리기 쉬운 상�
 .venv/Scripts/python -X utf8 -m eval.run_consult --model gpt-6-luna --effort low --scenarios consult_v4 --reps 3
 ```
 
+### 평가셋 v5 (`scenarios/consult_v5.jsonl`, `consult_scenarios_v5.py`, 10/20)
+
+AI 소비 분석 15개 × 3회. `get_spending_insights` 결과는 앱 `core/insights.dart`와 같은 형식으로 시나리오에 넣어 둠(`state.insights`).
+
+| 묶음 | 개수 | 정답 |
+|---|---|---|
+| report | 9 | 툴 호출 + 1순위 아낄 곳 월 절약액 인용 + [특징]·[아낄 수 있는 곳]·[앞으로](앱 버튼 문장·일상 표현) |
+| plan_ahead | 2 | "앞으로 어떻게 하면 예산 맞춰?" → 후보를 다 해도 남는 차이 등 툴 숫자 인용 |
+| follow | 3 | 리포트 뒤 "쇼핑은 어떻게 줄여?" 같은 후속 질문에 그 카테고리와 절약액 |
+| no_data | 1 | 기록이 없으면 숫자 없이 안내 |
+
 ## 2. 카테고리 분류 (`run_category.py`)
 
 - **정답**: 사용자가 검수한 라벨 446건(가맹점 109개, 카테고리 15개). 실제 가맹점 이름이라 **건별 결과는 `data/eval/`(git 제외)**, git에는 `runs/<날짜>_category/summary.json`(집계)만.

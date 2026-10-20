@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app_providers.dart';
 import '../../core/analysis.dart';
+import '../../core/insights.dart';
 import '../../core/category_summary.dart';
 import '../../core/models.dart';
 import '../../ui/format.dart';
 import '../../ui/insets.dart';
+import '../agent/consult_page.dart';
 import 'analysis_charts.dart';
 import 'spending_providers.dart';
 import 'transaction_sheet.dart';
@@ -102,6 +104,17 @@ class _CategoryPageState extends ConsumerState<CategoryPage> {
                 title: const Text('특이 지출 포함'),
               ),
               const SizedBox(height: 4),
+              // 아낄 수 있는 곳(10/20): 코드 계산 결과 + AI 분석·상담 버튼. 기간 선택과 무관하게 최근 완료 달 기준
+              if (base != null)
+                _Section(
+                  title: '아낄 수 있는 곳',
+                  child: SavingsCard(
+                    insights: computeInsights(all, base.engine, now, budget: base.budget),
+                    onAsk: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(builder: (_) => const ConsultPage(initialQuestion: insightQuestion)),
+                    ),
+                  ),
+                ),
               // 이번 달 흐름(10/16): 이번 달이고 예산이 있을 때만. 묶음마다 흰 카드(디자인 B2)
               if (_period == _Period.thisMonth && base?.budget != null)
                 _Section(title: '이번 달 흐름', child: PaceChart(pace: monthPace(all, base!.engine, now, base.budget!))),

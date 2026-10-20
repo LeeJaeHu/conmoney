@@ -125,3 +125,21 @@ gpt-6-luna / low · v5.2 (못 메우는 달엔 하루 감축액 없음),gpt-6-lu
 "gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",phrasing,1.0
 "gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",roomy,1.0
 "gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",tight,1.0
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),ask_amount,1.0
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),boundary,1.0
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),fixed_soon,1.0
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),installment,1.0
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),next_month,1.0
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),over,1.0
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),phrasing,1.0
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),roomy,1.0
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),tight,1.0
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",ask_amount,1.0
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",boundary,1.0
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",fixed_soon,1.0
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",installment,1.0
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",next_month,1.0
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",over,1.0
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",phrasing,1.0
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",roomy,1.0
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",tight,1.0

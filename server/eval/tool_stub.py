@@ -138,6 +138,8 @@ def run(name: str, args: dict, scenario: dict) -> dict:
             return {"error": "예정 지출은 금액과 날짜(yyyy-MM-dd)가 필요해요. 사용자에게 물어보세요."}
         return {"status": "needs_user_confirmation", "name": args.get("name", "예정 지출"), **_money("amount", amount), "date": date,
                 "note": "아직 등록 안 됨. 사용자가 화면의 [등록] 버튼을 눌러야 예산에 반영된다. 등록 전 계산에는 포함되지 않았다"}
+    if name == "get_spending_insights":
+        return scenario["state"].get("insights") or {"error": "지난달까지 기록이 한 달도 없어 소비 특징을 볼 수 없어요."}
     if name == "plan_recovery":
         return recovery(st)
     if name == "compare_spending":

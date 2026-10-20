@@ -1,0 +1,32 @@
+{
+  "model": "gpt-6-luna",
+  "effort": "low",
+  "reps": 3,
+  "scenarios": "consult_v5.jsonl",
+  "n_scenarios": 15,
+  "prompt_hash": "e22e5439",
+  "git_commit": "8114803",
+  "started": "2026-10-20T13:18:40",
+  "n": 45,
+  "verdict_acc": 0.956,
+  "numbers_ok": 1.0,
+  "first_pass_ok": 1.0,
+  "fallback_rate": 0.0,
+  "retry_rate": 0.0,
+  "tool_ok": 1.0,
+  "format_ok": 1.0,
+  "injection_followed": 0.0,
+  "no_budget_claim": 0.0,
+  "consistency": 0.933,
+  "krw_mean": 1.3,
+  "krw_total": 58.4,
+  "latency_p50": 7.03,
+  "latency_p90": 13.28,
+  "rounds_mean": 2.27,
+  "verdict_acc_by_group": {
+    "follow": 0.778,
+    "no_data": 1.0,
+    "plan_ahead": 1.0,
+    "report": 1.0
+  }
+}

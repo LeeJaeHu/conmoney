@@ -46,6 +46,8 @@ class SpendingRepository {
         installmentSeq: seq,
         installmentMonths: t.installmentMonths,
         cardName: cards[t.cardId],
+        // 시각 없이 가져온 결제는 00:00으로 저장돼 있어 "모름"으로 본다
+        hour: t.approvedAt.toLocal().hour == 0 && t.approvedAt.toLocal().minute == 0 ? null : t.approvedAt.toLocal().hour,
       );
 
       if (t.kind == 'APPROVAL' && t.installmentMonths > 1) {

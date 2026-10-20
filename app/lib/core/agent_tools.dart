@@ -1,4 +1,5 @@
 import 'analysis.dart';
+import 'insights.dart';
 import 'budget_engine.dart';
 import 'budget_plan.dart';
 import 'category_summary.dart';
@@ -71,11 +72,10 @@ class AgentToolbox {
     ),
     'plan_recovery' => planRecovery(),
     'compare_spending' => compareSpending(args['window'] as String? ?? 'this_month'),
+    'get_spending_insights' => spendingInsights(),
     _ => {'error': 'unknown tool $name'},
   };
 
-  /// 줄이기 어려운 카테고리(회복 계획의 "줄일 곳" 후보에서 뺀다).
-  static const _hardToCut = {'통신', '공과금', '구독', '연회비', '교통', '의료', '교육'};
 
   /// 이미 넘었거나 넘을 것 같을 때: 하루 얼마를 줄여야 하는지, 어디서 줄일 수 있는지(10/16, 일상 대화형 상담).
   Map<String, Object?> planRecovery() {
@@ -89,7 +89,7 @@ class AgentToolbox {
     final d = dateOnly(now).day;
     final m = YearMonth.of(now);
     final usualRest = usualByCategory(items, recentFullMonths(now, engine.ledger.firstRecordDate), d, m.days);
-    final cuttable = usualRest.entries.where((e) => !_hardToCut.contains(e.key) && e.value > 0).toList()
+    final cuttable = usualRest.entries.where((e) => !hardToCutCategories.contains(e.key) && e.value > 0).toList()
       ..sort((a, b) => b.value.compareTo(a.value));
     int up100(int v) => v <= 0 ? 0 : (v + 99) ~/ 100 * 100;
     int down100(int v) => v <= 0 ? 0 : v ~/ 100 * 100;
@@ -128,6 +128,53 @@ class AgentToolbox {
           {'category': r.name, ..._money('amount', r.amount), ..._money('usual', r.usual), ..._money('diff', r.diff)},
       ],
       'note': '특이 지출 제외. usual은 지난 몇 달 같은 기간의 카테고리별 중앙값. diff가 양수면 평소보다 많이 씀',
+    };
+  }
+
+  /// 소비 특징과 아낄 수 있는 곳(10/20). 계산은 core/insights.dart, AI는 해석만.
+  Map<String, Object?> spendingInsights() {
+    final x = computeInsights(items, engine, now, budget: budget);
+    if (x.months.isEmpty) return {'error': '지난달까지 기록이 한 달도 없어 소비 특징을 볼 수 없어요. 과거 기록 가져오기를 먼저 해 주세요.'};
+    String pct(double v) => '${(v * 100).round()}%';
+    return {
+      'months_used': x.months.length,
+      'monthly_totals': [
+        for (final (m, t) in x.months) {'month': '${m.month}월', ..._money('total', t)},
+      ],
+      ..._money('usual_month', x.usualMonth),
+      if (x.budget != null) ..._money('budget', x.budget!),
+      if (x.gapToBudget != null) ..._money('gap_to_budget', x.gapToBudget!),
+      if (x.trendChange != null) ..._money('trend_change_3m', x.trendChange!),
+      'categories': [
+        for (final c in x.categories)
+          {
+            'category': c.name,
+            ..._money('usual_monthly', c.usualMonthly),
+            'share': pct(c.share),
+            if (c.change != null) ..._money('change_3m', c.change!),
+          },
+      ],
+      'small_purchases': {
+        'count_per_month': x.smallCountPerMonth,
+        ..._money('total_per_month', x.smallTotalPerMonth),
+        'note': '1만 원 미만 결제',
+      },
+      'weekend_share': pct(x.weekendShare),
+      'busiest_weekday': '${weekdayNames[x.busiestWeekday]}요일',
+      if (x.lateNightShare != null) 'late_night_share': pct(x.lateNightShare!),
+      ..._money('fixed_monthly', x.fixedMonthly),
+      'saving_candidates': [
+        for (final c in x.candidates)
+          {
+            'kind': c.kind.name,
+            if (c.category != null) 'category': c.category,
+            ..._money('monthly_saving', c.monthly),
+            'basis': c.basis,
+          },
+      ],
+      if (x.candidates.isNotEmpty) ..._money('saving_top3_total', x.savingTop3),
+      if (x.gapToBudget != null && x.candidates.isNotEmpty) ..._money('gap_after_savings', x.gapToBudget! - x.savingTop3),
+      'note': '특이 지출 제외. 평소 = 최근 완료 3개월 중앙값. 금액은 이 값만 인용(직접 더하거나 나누지 않기). 가맹점 이름은 없음',
     };
   }
 

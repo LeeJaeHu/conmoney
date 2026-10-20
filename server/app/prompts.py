@@ -48,6 +48,17 @@ SYSTEM = """\
    지난달은 last_month). diff가 큰 카테고리 1~3개를 diff_text와 함께 말한다.
 15. 숫자를 묻지 않는 감정·잡담("아 배고프다", "돈 없어ㅠ")에는 툴 없이 1~2문장으로 짧게 공감하고, 도울 수 있는 질문 하나를 제안한다
    (예: "이번 달 남은 예산 확인해 볼까요?"). 이때 금액은 말하지 않는다.
+16. 여러 달에 걸친 소비 패턴·특징 분석, "평소에 어디서 아낄 수 있어?", "앞으로 어떻게 하면 좋을까?"는 get_spending_insights를 부른다.
+   이번 달 상황("이번 달 빠듯한데 어디서 줄여?", "남은 기간", "버틸 수 있을까")은 13번(plan_recovery)이 먼저다.
+   구독·가맹점 이름은 툴 결과에 없으므로 어떤 구독을 정리할지는 사용자에게 목록을 물어보되, 하나 정리하면 아끼는 평균 금액은 함께 말한다.
+   답 형식(7~10줄):
+   [특징] 2~3개. categories(평소 금액·비율·change_3m), small_purchases, weekend_share·busiest_weekday, late_night_share,
+   fixed_monthly 중 눈에 띄는 것만. 해석은 하되 숫자는 *_text와 비율 문자열을 그대로 쓴다.
+   [아낄 수 있는 곳] saving_candidates 순서대로 2~3개, 각각 monthly_saving_text와 basis의 기준을 짧게.
+   후보에 없는 카테고리를 "줄이라"고 하지 않는다. 고정비(통신·공과금 등)는 줄이라고 하지 않는다.
+   [앞으로] 1~2개 구체적 행동. gap_to_budget이 크면 saving_top3_total_text와 gap_after_savings_text로 "후보를 다 해도
+   이만큼 남으니 단계적으로 목표를 낮추자" 같이 현실적으로. 예산 설정의 단계적 목표를 권할 수 있다.
+   금액을 더하거나 나누는 계산은 하지 않는다(합계는 saving_top3_total_text). 사용자가 후속으로 물으면 같은 결과로 이어서 답한다.
 """
 
 _STRICT = {"type": "object", "additionalProperties": False}
@@ -140,6 +151,16 @@ TOOLS = [
         "description": (
             "이번 달이 이미 넘었거나 넘을 것 같을 때: 평소대로 쓰면 월말에 얼마나 넘는지, 하루 얼마를 줄여야 하는지, "
             "줄이기 쉬운 카테고리와 그 절반을 줄이면 아끼는 금액. 구매 질문이 아닌 상황 상담용."
+        ),
+        "parameters": {**_STRICT, "properties": {}, "required": []},
+        "strict": True,
+    },
+    {
+        "type": "function",
+        "name": "get_spending_insights",
+        "description": (
+            "최근 몇 달의 소비 특징과 아낄 수 있는 곳: 월별 지출, 평소 한 달, 예산과의 차이, 카테고리별 평소 금액·비율·추세, "
+            "소액 결제, 주말 비율·가장 많이 쓰는 요일, 심야 비율, 고정비, 아낄 수 있는 곳 후보(월 절약액·근거)."
         ),
         "parameters": {**_STRICT, "properties": {}, "required": []},
         "strict": True,

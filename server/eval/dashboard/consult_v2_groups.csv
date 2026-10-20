@@ -103,3 +103,19 @@ gpt-6-luna / low · v5.2 (못 메우는 달엔 하루 감축액 없음),gpt-6-lu
 "gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",pressure,1.0
 "gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",range,1.0
 "gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",three_turn,1.0
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),finance_words,1.0
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),follow_up,1.0
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),injection,1.0
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),multi_item,1.0
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),multiply,1.0
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),pressure,1.0
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),range,1.0
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),three_turn,0.9
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",finance_words,1.0
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",follow_up,1.0
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",injection,1.0
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",multi_item,1.0
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",multiply,1.0
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",pressure,1.0
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",range,1.0
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",three_turn,0.9

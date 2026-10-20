@@ -15,3 +15,11 @@ gpt-6-luna / low · v5.2 (못 메우는 달엔 하루 감축액 없음),gpt-6-lu
 "gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",compare,1.0
 "gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",mixed,1.0
 "gpt-6-luna / low · v5.3 (내부 용어 금지, 최종)",gpt-6-luna / low,"v5.3 (내부 용어 금지, 최종)",recovery,1.0
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),chitchat,0.833
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),compare,1.0
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),mixed,1.0
+gpt-6-luna / low · v6.1 (소비 분석·아낄 곳 첫 시안),gpt-6-luna / low,v6.1 (소비 분석·아낄 곳 첫 시안),recovery,0.889
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",chitchat,0.75
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",compare,1.0
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",mixed,1.0
+"gpt-6-luna / low · v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",gpt-6-luna / low,"v6.2 (이번 달 상황과 여러 달 분석 구분, 최종)",recovery,1.0

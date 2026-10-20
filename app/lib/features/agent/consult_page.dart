@@ -33,6 +33,9 @@ Future<AgentToolbox> buildToolbox(WidgetRef ref) async {
 }
 
 const _toolLabels = {
+  'get_spending_insights': '소비 패턴 분석',
+  'plan_recovery': '이번 달 회복 계획 계산',
+  'compare_spending': '평소와 비교',
   'get_budget_status': '이번 달 예산 확인',
   'get_upcoming_fixed': '다가오는 정기·예정 지출 확인',
   'get_spending_pattern': '평소 소비 패턴 확인',
@@ -60,8 +63,14 @@ class _Msg {
 }
 
 /// 구매 상담(Spec F6). P0에서는 대화를 저장하지 않는다(화면을 나가면 사라짐).
+/// 분석 화면의 [AI 분석 받기]가 보내는 첫 질문(10/20).
+const insightQuestion = '내 소비 패턴과 특징을 분석해 주고, 어디서 아낄 수 있는지와 앞으로 어떻게 하면 좋을지 알려줘';
+
 class ConsultPage extends ConsumerStatefulWidget {
-  const ConsultPage({super.key});
+  const ConsultPage({super.key, this.initialQuestion});
+
+  /// 열자마자 보낼 질문(없으면 빈 대화).
+  final String? initialQuestion;
 
   @override
   ConsumerState<ConsultPage> createState() => _ConsultPageState();
@@ -74,6 +83,13 @@ class _ConsultPageState extends ConsumerState<ConsultPage> {
   final _items = <Map<String, Object?>>[];
   String? _progress;
   bool get _busy => _progress != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final q = widget.initialQuestion;
+    if (q != null) WidgetsBinding.instance.addPostFrameCallback((_) => _ask(q));
+  }
 
   @override
   void dispose() {
@@ -180,7 +196,7 @@ class _ConsultPageState extends ConsumerState<ConsultPage> {
                     spacing: 8,
                     runSpacing: 4,
                     children: [
-                      for (final ex in ['키보드 15만 원 살까?', '이번 주말에 5만 원 써도 돼?', '이번 달 어디에 많이 썼어?'])
+                      for (final ex in ['키보드 15만 원 살까?', '이번 주말에 5만 원 써도 돼?', '이번 달 어디에 많이 썼어?', '내 소비 패턴 분석해 줘'])
                         ActionChip(label: Text(ex), onPressed: () => _ask(ex)),
                     ],
                   ),

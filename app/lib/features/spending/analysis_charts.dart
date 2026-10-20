@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/analysis.dart';
+import '../../core/insights.dart';
 import '../../ui/format.dart';
 import '../../ui/theme.dart';
 
@@ -289,4 +290,80 @@ class _DivergingBar extends CustomPainter {
 
   @override
   bool shouldRepaint(_DivergingBar old) => old.ratio != ratio || old.color != color;
+}
+
+/// 아낄 수 있는 곳(10/20): 코드가 계산한 후보를 바로 보여주고, AI 분석·상담으로 이어 준다.
+class SavingsCard extends StatelessWidget {
+  const SavingsCard({super.key, required this.insights, required this.onAsk});
+
+  final SpendingInsights insights;
+  final VoidCallback onAsk;
+
+  static String _title(SavingCandidate c) => switch (c.kind) {
+    SavingKind.categoryLow => c.category!,
+    SavingKind.smallPurchases => '소액 결제',
+    SavingKind.subscriptions => '구독 정리',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final small = theme.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant);
+    final x = insights;
+    if (x.months.isEmpty) {
+      return Text('지난달까지의 기록이 쌓이면 보여드려요. 메뉴 > 과거 기록 가져오기로 넣을 수 있어요.', style: small);
+    }
+    final gap = x.gapToBudget;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          '평소 한 달 ${won(x.usualMonth)}'
+          '${gap == null ? '' : gap > 0 ? ' · 예산보다 ${won(gap)} 많아요' : ' · 예산 안이에요'}',
+          style: theme.textTheme.bodyMedium,
+        ),
+        Text('특이 지출 제외 · 평소 = 최근 완료 3개월 중앙값', style: small),
+        const SizedBox(height: 10),
+        if (x.candidates.isEmpty) Text('지금 패턴에서는 크게 줄일 곳이 보이지 않아요', style: small),
+        for (final c in x.candidates)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(_title(c), style: theme.textTheme.titleSmall),
+                      Text(c.basis, style: small),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  '월 ${won(c.monthly)}',
+                  style: theme.textTheme.titleSmall?.copyWith(color: scheme.primary, fontFeatures: tabular),
+                ),
+              ],
+            ),
+          ),
+        if (x.candidates.length > 1) ...[
+          const Divider(height: 20),
+          Text(
+            '위에서 3가지를 하면 월 ${won(x.savingTop3)}'
+            '${gap != null && gap > 0 ? ' · 예산과의 차이 ${won(gap)} 중 ${(x.savingTop3 / gap * 100).clamp(0, 100).round()}%' : ''}',
+            style: theme.textTheme.bodyMedium,
+          ),
+        ],
+        const SizedBox(height: 12),
+        FilledButton.tonalIcon(
+          onPressed: onAsk,
+          icon: const Icon(Icons.auto_awesome_outlined),
+          label: const Text('AI에게 분석·상담 받기'),
+        ),
+      ],
+    );
+  }
 }

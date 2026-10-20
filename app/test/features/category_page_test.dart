@@ -42,7 +42,12 @@ void main() {
 
     // 10월: 할부 3회차 100,000 + 교통 1,500 + 마켓 12,000
     expect(find.text('총 113,500원'), findsOneWidget);
+    // 10/20부터 맨 위에 "아낄 수 있는 곳" 카드가 있어 아래 묶음은 스크롤해서 찾는다
+    final list = find.byType(Scrollable).first;
+    await tester.scrollUntilVisible(find.text('최근 6개월'), 300, scrollable: list);
     expect(find.text('최근 6개월'), findsOneWidget);
+    await tester.drag(list, const Offset(0, 5000));
+    await settle();
 
     await tester.tap(find.text('지난달'));
     await settle();
@@ -55,6 +60,7 @@ void main() {
 
     await tester.tap(find.text('특이 지출 포함'));
     await settle();
+    await tester.scrollUntilVisible(find.text('게임 · 1건'), 300, scrollable: list);
     await tester.tap(find.text('게임 · 1건'));
     await settle();
     expect(find.text('가짜게임기'), findsOneWidget);
