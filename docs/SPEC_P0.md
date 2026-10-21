@@ -470,6 +470,9 @@ class ParsedPayment {
 | `add_planned_expense` (10/15) | `name, amount, date?` | `{status: "needs_user_confirmation"}` — 저장은 사용자가 [등록] |
 | `plan_recovery` (10/16) | 없음 | `{status: on_track \| recoverable \| not_recoverable_this_month, projected_over_if_usual, daily_cut_needed?, daily_spend_target?, over_even_if_zero_spend?, cut_candidates: [{category, usual_rest, half_saves}]}` |
 | `compare_spending` (10/16) | `window: "this_month" \| "last_month"` | `{total, usual_total, total_diff, categories: [{category, amount, usual, diff}]}` |
+| `get_merchant_spending` (10/21) | `query, period: "this_month" \| "last_month" \| "last_3_months" \| "all"` | `{found, total, count, merchants: [{name, total}], usual_monthly?, last_date?}` — 없으면 `found: false`(숫자 없음) |
+
+**가맹점 조회**(10/21): 계산은 `app/lib/core/merchant_spending.dart`. 이름 맞추기는 부분 일치(띄어쓰기·(주)·기호 무시), 가맹점 정규화(배민 → 배달의민족 등)와 줄임말 몇 개(스벅·맥날 등), 두 글자 미만은 정확히 같을 때만. 특이 지출 포함, 할부는 그 달 회차, count는 결제 건수(할부 1건). usual_monthly = 최근 완료 3개월의 그 가맹점 월 합계 중앙값. 서버로 가는 것은 사용자가 말한 이름·찾은 가맹점 이름(최대 5개)·숫자뿐
 
 **AI 소비 분석**(10/20): `get_spending_insights`(입력 없음) — 계산은 `app/lib/core/insights.dart`.
 - 평소 한 달 = 최근 완료 3개월 지출(특이 지출 제외)의 중앙값. 앞쪽 달 지출이 나머지 중앙값의 1/3 미만이면 기록이 덜 들어온 달로 뺀다. 추세 = 최근 3개월 평균 − 그 전 2~3개월 평균

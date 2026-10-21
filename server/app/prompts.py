@@ -44,7 +44,7 @@ SYSTEM = """\
    빼지 말고 툴 결과 값만 쓴다. status가 not_recoverable_this_month면 이번 달 안에 메우기 어렵다고 솔직히 말하고 다음 달로 넘어가는
    금액(over_even_if_zero_spend)과 함께 덜 쓰는 쪽에 초점을 둔다. 사용자가 말한 숫자(예: "2만 원 넘음")와 툴 값이 다르면 툴 값을 쓰고
    "앱 기준으로는"이라고 밝힌다.
-14. "평소보다 많이 썼어?", "어디서 많이 썼어?", "지난달이랑 비교하면?"은 compare_spending을 부른다(이번 달은 this_month,
+14. (가맹점을 콕 집지 않은) "평소보다 많이 썼어?", "어디서 많이 썼어?", "지난달이랑 비교하면?"은 compare_spending을 부른다(이번 달은 this_month,
    지난달은 last_month). diff가 큰 카테고리 1~3개를 diff_text와 함께 말한다.
 15. 숫자를 묻지 않는 감정·잡담·축하("아 배고프다", "돈 없어ㅠ", "오늘 월급날이다!")에는 툴을 부르지 않고 1~2문장으로 짧게 공감하고,
    도울 수 있는 질문 하나를 제안한다
@@ -61,6 +61,17 @@ SYSTEM = """\
    [앞으로] 1~2개 구체적 행동. gap_to_budget이 크면 saving_top3_total_text와 gap_after_savings_text로 "후보를 다 해도
    이만큼 남으니 단계적으로 목표를 낮추자" 같이 현실적으로. 예산 설정의 단계적 목표를 권할 수 있다.
    금액을 더하거나 나누는 계산은 하지 않는다(합계는 saving_top3_total_text). 사용자가 후속으로 물으면 같은 결과로 이어서 답한다.
+17. 사용자가 가맹점 이름을 콕 집어 물으면("스타벅스에 이번 달 얼마 썼어?", "배민 지난달 몇 번 시켰어?", "쿠팡 요즘 얼마나 써?")
+   get_merchant_spending을 부른다. query에는 사용자가 말한 이름을 그대로 넣고(줄임말도 그대로), period는 이번 달 this_month,
+   지난달 last_month, "요즘"·"최근" last_3_months, "지금까지"·"전체" all, 기간을 말하지 않으면 this_month.
+   "그럼 지난달은?"처럼 이어서 물으면 같은 query로 period만 바꿔 다시 부른다.
+   가맹점 답 뒤에 "평소보다 많은 거야?", "많이 쓴 편이야?"라고 이어 물으면 그 가맹점 이야기다. compare_spending(카테고리 비교)이
+   아니라 같은 결과의 total_text와 usual_monthly_text를 비교해 답한다(usual_monthly가 없으면 평소와 비교할 기록이 없다고 말한다).
+   답은 2~3줄: 기간과 합계(total_text)·횟수(count)를 먼저, usual_monthly_text가 있으면 평소와 비교 한 줄.
+   merchants에 지점·이름이 여러 개면 많이 쓴 곳을 짧게 말해도 된다. 다른 가맹점이 섞였으면 그렇다고 말한다.
+   found가 false면 숫자 없이 "앱 기록에서 그 이름을 찾지 못했어요"라고 하고 결제 내역에 찍히는 이름으로 다시 물어보게 한다.
+   가맹점을 콕 집지 않은 "어디서 제일 많이 썼어?"는 14번(compare_spending)이나 16번(get_spending_insights)이다.
+   그 가맹점에서 무언가를 사려는 질문("스타벅스에서 2만 원 써도 돼?")은 1번대로 simulate_purchase다.
 """
 
 _STRICT = {"type": "object", "additionalProperties": False}
@@ -175,6 +186,23 @@ TOOLS = [
             **_STRICT,
             "properties": {"window": {"type": "string", "enum": ["this_month", "last_month"]}},
             "required": ["window"],
+        },
+        "strict": True,
+    },
+    {
+        "type": "function",
+        "name": "get_merchant_spending",
+        "description": (
+            "가맹점 하나를 콕 집은 질문: 그 이름이 들어간 결제의 기간 합계·횟수·지점별 합계·평소 월 합계·마지막 결제일. "
+            "앱이 폰 안에서 이름으로 찾는다(줄임말 일부 지원). 기록에 없으면 found=false."
+        ),
+        "parameters": {
+            **_STRICT,
+            "properties": {
+                "query": {"type": "string", "description": "사용자가 말한 가맹점 이름 그대로(예: 스타벅스, 배민)"},
+                "period": {"type": "string", "enum": ["this_month", "last_month", "last_3_months", "all"]},
+            },
+            "required": ["query", "period"],
         },
         "strict": True,
     },

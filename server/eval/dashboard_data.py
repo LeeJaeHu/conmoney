@@ -30,6 +30,9 @@ PROMPT_LABEL = {
     "e22e5439": "v6.1 (소비 분석·아낄 곳 첫 시안)",
     "70f13c47": "v6.2 (이번 달 상황과 여러 달 분석 구분)",
     "8b55f297": "v6.3 (가맹점 이름, 잡담은 숫자 없이, 최종)",
+    # 10/21 가맹점 콕 집은 질문(E16)
+    "affd0d3a": "v7.1 (가맹점 조회 툴 첫 시안)",
+    "e723e21d": "v7.2 (가맹점 뒤 '평소보다?'는 그 가맹점, 최종)",
 }
 CONFIG_ORDER = ["gpt-6-luna / none", "gpt-6-luna / low", "gpt-6.1-sol / low", "gpt-6.1-sol / medium"]
 
@@ -81,8 +84,13 @@ def category() -> None:
     ])
     write("jev_calibration.csv", [{"range": b["range"], "share": b["share"], "accuracy": b["acc"]} for b in s["jev"]["calibration"]])
 
-    # 확신도 기준별 적용률·정답률(거래 단위). 건별 결과(data/eval, git 제외)에서 집계만 뽑는다
-    src = sorted((DATA / "eval").glob("category_*.jsonl"))[-1]
+    # 확신도 기준별 적용률·정답률(거래 단위). 건별 결과(data/eval, git 제외)에서 집계만 뽑는다.
+    # data/가 없는 노트북에서는 이미 만들어 둔 CSV를 그대로 둔다
+    srcs = sorted((DATA / "eval").glob("category_*.jsonl"))
+    if not srcs:
+        print("data/eval 없음: jev_threshold.csv, category_meta.csv는 그대로 둠")
+        return
+    src = srcs[-1]
     saved = [json.loads(line) for line in src.read_text(encoding="utf-8").splitlines() if line.strip()]
     tx = [(x["jev"]["confidence"] or 0, x["jev"]["category"] == label)
           for x in saved for label, cnt in x["labels"].items() for _ in range(cnt)]
@@ -110,6 +118,7 @@ EXPERIMENTS = [
     ("E13", "10/15", "상담", "사용 피드백: 다음 달 판단·할부 대안·예정 지출·금액대 구간 + 평가셋 v3", "v3 90.3% → 100%(5회 반복), v1·v2 회귀 100%"),
     ("E14", "10/16", "상담", "일상 대화형: 회복 계획·평소 대비 비교 툴, 평가셋 v4", "v4 25% → 96.7%, v1~v3 회귀 100%"),
     ("E15", "10/20", "상담", "AI 소비 분석: 코드가 특징·아낄 곳 계산, AI가 리포트·상담. 평가셋 v5", "v5 100%(가맹점 이름 포함), 실데이터에서 절약액 부풀림 발견·수정, 회귀 v1~v4 97~100%"),
+    ("E16", "10/21", "상담", "가맹점 콕 집은 질문: 폰 안에서 이름으로 찾아 합계·횟수만 전송. 평가셋 v6", "v6 91.7% → 100%(가맹점 뒤 '평소보다?'가 카테고리 비교로 새던 것), 회귀 v1~v5 98.6~100%"),
 ]
 
 
@@ -119,5 +128,6 @@ if __name__ == "__main__":
     consult("consult_v3", "consult_v3")
     consult("consult_v4", "consult_v4")
     consult("consult_v5", "consult_v5")
+    consult("consult_v6", "consult_v6")
     category()
     write("experiments.csv", [{"id": a, "date": b, "area": c, "change": d, "result": e} for a, b, c, d, e in EXPERIMENTS])

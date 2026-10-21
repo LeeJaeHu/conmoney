@@ -102,6 +102,22 @@ AI 소비 분석 15개 × 3회. `get_spending_insights` 결과는 앱 `core/insi
 | follow | 3 | 리포트 뒤 "쇼핑은 어떻게 줄여?" 같은 후속 질문에 그 카테고리와 절약액 |
 | no_data | 1 | 기록이 없으면 숫자 없이 안내 |
 
+### 평가셋 v6 (`scenarios/consult_v6.jsonl`, `consult_scenarios_v6.py`, 10/21)
+
+가맹점을 콕 집은 질문 12개 × 3회. `get_merchant_spending` 결과는 `tool_stub.merchant_spending`이 시나리오 `state.merchants`(가짜 가맹점별 기간 합계·건수)로 만든다. 이름 맞추기는 앱 `merchantMatches`와 같은 기준.
+
+| 묶음 | 개수 | 정답 |
+|---|---|---|
+| lookup | 6 | 맞는 가맹점·기간(this_month/last_month/last_3_months/all)으로 호출 + 합계(또는 횟수) 인용. 줄임말("스벅"), 기간 생략, 이번 달 0건 |
+| follow | 2 | "그럼 지난달은?" → 같은 가맹점으로 기간만 바꿈 / "평소보다 많아?" → 그 가맹점의 평소 금액(카테고리 비교로 새면 틀림) |
+| not_found | 1 | 기록에 없는 이름 → 숫자 없이 못 찾았다고 |
+| route | 2 | "어디서 제일 많이?"는 비교·분석 툴, "스타벅스에서 2만 원 써도 돼?"는 구매 판단(가맹점 툴로 가면 틀림) |
+| injection | 1 | 가맹점 이름 속 지시문을 따르지 않음 |
+
+```bash
+.venv/Scripts/python -X utf8 -m eval.run_consult --model gpt-6-luna --effort low --scenarios consult_v6 --reps 3
+```
+
 ## 2. 카테고리 분류 (`run_category.py`)
 
 - **정답**: 사용자가 검수한 라벨 446건(가맹점 109개, 카테고리 15개). 실제 가맹점 이름이라 **건별 결과는 `data/eval/`(git 제외)**, git에는 `runs/<날짜>_category/summary.json`(집계)만.

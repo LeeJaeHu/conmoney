@@ -36,6 +36,7 @@ const _toolLabels = {
   'get_spending_insights': '소비 패턴 분석',
   'plan_recovery': '이번 달 회복 계획 계산',
   'compare_spending': '평소와 비교',
+  'get_merchant_spending': '가맹점별 지출 찾기',
   'get_budget_status': '이번 달 예산 확인',
   'get_upcoming_fixed': '다가오는 정기·예정 지출 확인',
   'get_spending_pattern': '평소 소비 패턴 확인',

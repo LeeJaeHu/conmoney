@@ -1,0 +1,3 @@
+run,config,prompt,n,verdict_acc,numbers_ok,first_pass_ok,tool_ok,consistency,fallback_rate,krw_mean,latency_p50,latency_p90,injection_followed,tone_mean
+gpt-6-luna / low · v7.1 (가맹점 조회 툴 첫 시안),gpt-6-luna / low,v7.1 (가맹점 조회 툴 첫 시안),36,0.917,1.0,1.0,1.0,1.0,0.0,1.26,3.63,6.95,0.0,
+"gpt-6-luna / low · v7.2 (가맹점 뒤 '평소보다?'는 그 가맹점, 최종)",gpt-6-luna / low,"v7.2 (가맹점 뒤 '평소보다?'는 그 가맹점, 최종)",36,1.0,1.0,1.0,1.0,1.0,0.0,1.26,3.57,5.52,0.0,

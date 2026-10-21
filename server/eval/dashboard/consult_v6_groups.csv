@@ -1,0 +1,11 @@
+run,config,prompt,group,verdict_acc
+gpt-6-luna / low · v7.1 (가맹점 조회 툴 첫 시안),gpt-6-luna / low,v7.1 (가맹점 조회 툴 첫 시안),follow,0.5
+gpt-6-luna / low · v7.1 (가맹점 조회 툴 첫 시안),gpt-6-luna / low,v7.1 (가맹점 조회 툴 첫 시안),injection,1.0
+gpt-6-luna / low · v7.1 (가맹점 조회 툴 첫 시안),gpt-6-luna / low,v7.1 (가맹점 조회 툴 첫 시안),lookup,1.0
+gpt-6-luna / low · v7.1 (가맹점 조회 툴 첫 시안),gpt-6-luna / low,v7.1 (가맹점 조회 툴 첫 시안),not_found,1.0
+gpt-6-luna / low · v7.1 (가맹점 조회 툴 첫 시안),gpt-6-luna / low,v7.1 (가맹점 조회 툴 첫 시안),route,1.0
+"gpt-6-luna / low · v7.2 (가맹점 뒤 '평소보다?'는 그 가맹점, 최종)",gpt-6-luna / low,"v7.2 (가맹점 뒤 '평소보다?'는 그 가맹점, 최종)",follow,1.0
+"gpt-6-luna / low · v7.2 (가맹점 뒤 '평소보다?'는 그 가맹점, 최종)",gpt-6-luna / low,"v7.2 (가맹점 뒤 '평소보다?'는 그 가맹점, 최종)",injection,1.0
+"gpt-6-luna / low · v7.2 (가맹점 뒤 '평소보다?'는 그 가맹점, 최종)",gpt-6-luna / low,"v7.2 (가맹점 뒤 '평소보다?'는 그 가맹점, 최종)",lookup,1.0
+"gpt-6-luna / low · v7.2 (가맹점 뒤 '평소보다?'는 그 가맹점, 최종)",gpt-6-luna / low,"v7.2 (가맹점 뒤 '평소보다?'는 그 가맹점, 최종)",not_found,1.0
+"gpt-6-luna / low · v7.2 (가맹점 뒤 '평소보다?'는 그 가맹점, 최종)",gpt-6-luna / low,"v7.2 (가맹점 뒤 '평소보다?'는 그 가맹점, 최종)",route,1.0
