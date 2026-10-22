@@ -25,7 +25,7 @@
 - 평가: v6 첫 시안 91.7% → "배민 얼마야?" 뒤 "평소보다 많아?"가 카테고리 비교로 새던 것을 고쳐 100%. 회귀 v1 100%, v2 100%, v3 98.6%, v4 100%, v5 100%, 숫자 정확 100%
 
 **다음**
-- Cloud Run 재배포: 이 노트북 gcloud 계정이 `modubu175@gmail.com`이라 배포 못 함 → `gcloud auth login`(morugureum@gmail.com) 후 `server/README.md`의 배포 명령, 또는 집 노트북에서
+- Cloud Run 재배포: 이 노트북 gcloud 계정이 배포용 계정과 달라 배포 못 함 → `gcloud auth login`(배포용 계정) 후 `server/README.md`의 배포 명령, 또는 집 노트북에서
 - 폰에서 "스타벅스에 이번 달 얼마 썼어?" 써 보기(서버 재배포 뒤)
 
 ## 10/20 (월)
