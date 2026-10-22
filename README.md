@@ -98,6 +98,34 @@ docs/    PRD, Spec, 실험 기록
 
 실행 방법은 [server/README.md](server/README.md), [app/README.md](app/README.md).
 
+## 개인정보와 공개 범위
+
+본인의 실제 카드 내역으로 만든 앱이지만, **거래 원본은 저장소에 올리지 않았습니다.**
+
+**올리지 않은 것** (`.gitignore`로 막음)
+
+- 카드사 내보내기 파일과 거래 원본(`카드내역/`, `data/*.csv`, `data/*.xlsx`)
+- API 키와 앱 토큰(`.env`, `app/config/*.json`). 운영 키는 Google Secret Manager에만 있음
+- 앱 서명 키(`*.jks`, `key.properties`)
+
+**올라가 있는 것**
+
+- 446건 분석의 **집계 결과**: 거래 수·가맹점 수, 분류 정확도, 확신도 구간별 정답률 같은 통계(`server/eval/dashboard/`)
+- 문서 속 일부 개인 소비 정보: 월평균 지출 규모, 특이 지출 예시, 사용 카드사. 설계 결정의 근거라 본인 동의 아래 남겨 둠
+- 평가셋과 평가 실행 기록(`server/eval/scenarios/`, `server/eval/runs/`), 테스트 데이터(`app/test/fixtures/`)는 **가짜 숫자로 만든 시나리오**
+
+**앱이 데이터를 다루는 방식**
+
+- 거래 원본은 폰의 SQLite에만 저장합니다. 상담 툴도 폰에서 실행합니다.
+- 서버로는 예산·카테고리 합계 같은 집계와 카테고리별 상위 가맹점의 월평균만 보냅니다. 보내기 전에 카드번호·전화번호 같은 식별자는 가립니다(`app/lib/core/masking.dart`, `server/app/guard.py`).
+- 서버는 대화를 저장하지 않고, 운영 로그에는 지연·토큰·비용 같은 숫자만 남깁니다.
+- 결제 알림은 사용자가 지정한 카드사 앱의 알림만 원문을 저장하고, 다른 앱의 알림은 앱 이름별 개수만 셉니다.
+
+**직접 실행한다면**
+
+- 서버는 앱 토큰(`X-App-Token`)이 맞을 때만 응답합니다. 문서에 적힌 서버 주소로는 토큰 없이 쓸 수 없으니, 본인 GCP 프로젝트와 OpenAI 키로 다시 배포하세요.
+- 결제 알림 읽기 권한(알림 접근)은 폰의 금융 알림 전체를 볼 수 있는 강한 권한입니다. 본인 기기에서만 쓰세요.
+
 ## 사용한 글꼴
 
 - [Pretendard](https://github.com/orioncactus/pretendard) v1.3.9 © Kil Hyung-jin, SIL Open Font License 1.1 — `app/assets/fonts/Pretendard-LICENSE.txt`
