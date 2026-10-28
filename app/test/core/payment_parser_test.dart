@@ -138,4 +138,11 @@ void main() {
     expect(autoPay('자동납부 승인 홍*동님 한국전력공사'), isA<ParseFailed>()); // 금액 없음
     expect(builtinCategory(normMerchant('한국전력공사'), 45320), '공과금');
   });
+
+  test('기존 형식으로 읽히는 알림은 "자동납부"라는 말이 있어도 기존 규칙 그대로(10/28)', () {
+    final p = parsed(hyundai('홍길동 님, 현대 ZERO 승인 15,400원 일시불, 10/18 4:04 \r\n도시가스(자동납부) \r\n누적123,456원'));
+    expect(p.amount, 15400);
+    expect(p.merchant, '도시가스(자동납부)');
+    expect(p.approvedAt, DateTime(2026, 10, 18, 4, 4));
+  });
 }

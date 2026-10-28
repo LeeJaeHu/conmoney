@@ -104,12 +104,15 @@ ParseOutcome _unreadable(String body, String reason) =>
 /// 취소·해외·할부는 아직 샘플이 없어 공통 키워드로 추정한다 `[확인 필요]`.
 ParseOutcome _parseHyundai(String body, DateTime postedAt) {
   final lines = _lines(body);
-  if (lines.any((l) => l.contains('자동납부'))) return _parseHyundaiAutoPay(lines, postedAt);
   final head = RegExp(
     r'(승인취소|취소|승인)\s*(?:(' + _currencies + r')\s*)?([\d,]+(?:\.\d+)?)\s*(원|' + _currencies + r')?',
   );
   final idx = lines.indexWhere(head.hasMatch);
-  if (idx < 0) return _unreadable(body, '승인 줄을 찾지 못함');
+  if (idx < 0) {
+    // 기존 규칙으로 못 읽을 때만 자동납부 형식을 시도한다(잘 읽히던 알림은 결과가 바뀌지 않게, 10/28)
+    if (lines.any((l) => l.contains('자동납부'))) return _parseHyundaiAutoPay(lines, postedAt);
+    return _unreadable(body, '승인 줄을 찾지 못함');
+  }
   final merchant = lines.skip(idx + 1).where((l) => !l.startsWith('누적')).firstOrNull;
   // 짧은 본문(text)만 있으면 가맹점이 없다
   if (merchant == null) return const ParseFailed('가맹점 줄이 없음');
