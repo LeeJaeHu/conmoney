@@ -5,6 +5,7 @@ import 'package:conmoney/data/database.dart';
 import 'package:conmoney/data/ledger_repository.dart';
 import 'package:conmoney/data/notification_ingest.dart';
 import 'package:conmoney/data/spending_repository.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -156,5 +157,41 @@ void main() {
     final t = (await txns()).single;
     expect(t.suggestedCategoryId, cats['기타']);
     expect(t.suggestSource, 'USER_RULE');
+  });
+
+  test('못 읽었던 알림은 파서가 고쳐지면 다시 읽어 0원 확인 항목을 진짜 거래로 바꾸고, 여전히 못 읽으면 그대로 둔다(10/28)', () async {
+    // 예전 파서가 실패해 남긴 상태를 재현: 0원 확인 필요 거래 + PARSE_FAIL 기록
+    final placeholder = await db.into(db.transactions).insert(TransactionsCompanion.insert(
+      kind: 'APPROVAL',
+      amount: 0,
+      merchantRaw: '자동납부 승인 홍*동님 한국전력공사 10월분 45,320원',
+      merchantNorm: '자동납부 승인 홍*동님 한국전력공사 10월분 45,320원',
+      approvedAt: DateTime(2026, 10, 27, 9, 1),
+      localDate: '2026-10-27',
+      needsReview: const Value(true),
+      reviewReason: const Value('PARSE_FAIL: 승인 줄을 찾지 못함'),
+      dedupeKey: 'PARSE_FAIL|7',
+    ));
+    await db.into(db.notificationResults).insert(NotificationResultsCompanion.insert(
+      rawId: const Value(7),
+      result: 'PARSE_FAIL',
+      transactionId: Value(placeholder),
+      processedAt: DateTime(2026, 10, 27, 9, 2),
+    ));
+    final hyundai = raw(7, '자동납부 승인 홍*동님 한국전력공사 10월분 45,320원',
+        package: 'com.hyundaicard.appcard', title: '현대카드', at: DateTime(2026, 10, 27, 9, 1));
+    final r = await ingestor.ingest([hyundai]);
+    expect(r.saved, 1);
+    final t = (await txns()).single;
+    expect(t.amount, 45320);
+    expect(t.merchantNorm, '한국전력공사');
+    final cats = {for (final c in await db.select(db.categories).get()) c.id: c.name};
+    expect(cats[t.suggestedCategoryId], '공과금');
+
+    // 계속 못 읽는 알림은 확인 항목을 한 번만 만든다
+    final bad = raw(8, '자동납부 승인 홍*동님 한국전력공사', package: 'com.hyundaicard.appcard', title: '현대카드');
+    await ingestor.ingest([bad]);
+    await ingestor.ingest([bad]);
+    expect((await txns()).where((x) => x.amount == 0), hasLength(1));
   });
 }

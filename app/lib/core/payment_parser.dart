@@ -104,6 +104,7 @@ ParseOutcome _unreadable(String body, String reason) =>
 /// 취소·해외·할부는 아직 샘플이 없어 공통 키워드로 추정한다 `[확인 필요]`.
 ParseOutcome _parseHyundai(String body, DateTime postedAt) {
   final lines = _lines(body);
+  if (lines.any((l) => l.contains('자동납부'))) return _parseHyundaiAutoPay(lines, postedAt);
   final head = RegExp(
     r'(승인취소|취소|승인)\s*(?:(' + _currencies + r')\s*)?([\d,]+(?:\.\d+)?)\s*(원|' + _currencies + r')?',
   );
@@ -129,6 +130,46 @@ ParseOutcome _parseHyundai(String body, DateTime postedAt) {
       installmentMonths: months == null ? 1 : int.parse(months[1]!),
       isForeign: currency != null || lines[idx].contains('해외'),
       foreignAmount: currency != null ? '$currency $number' : null,
+    ),
+  );
+}
+
+/// 현대카드 자동납부(10/27 실기기 제보: 전기요금이 "승인 줄을 찾지 못함"으로 실패). 첫 줄이
+/// `자동납부 승인 이*후님 한국전력공사 10월…`처럼 "승인" 뒤에 이름·가맹점이 와서 일반 승인 줄 규칙에 안 맞는다.
+/// 원문 전체는 아직 못 봐서 너그럽게 읽는다 `[확인 필요]`:
+/// - 금액: 그 줄부터 "누적" 줄을 빼고 처음 나오는 "N원"
+/// - 가맹점: "님" 뒤에서 "N월", "N원", "일시불", 날짜 앞까지. 비면 다음 줄
+ParseOutcome _parseHyundaiAutoPay(List<String> lines, DateTime postedAt) {
+  final idx = lines.indexWhere((l) => l.contains('자동납부'));
+  final head = lines[idx];
+  int? amount;
+  for (final l in lines.skip(idx)) {
+    if (l.startsWith('누적')) continue;
+    final m = RegExp(r'([\d,]+)\s*원').firstMatch(l);
+    if (m != null) {
+      amount = int.tryParse(m[1]!.replaceAll(',', ''));
+      break;
+    }
+  }
+  if (amount == null) return const ParseFailed('자동납부 금액을 찾지 못함');
+
+  String cut(String s) => s
+      .replaceAll(RegExp('자동납부|승인취소|승인|취소'), '')
+      .replaceFirst(RegExp(r'^[,\s]+'), '')
+      .split(RegExp(r'\s*(\d{1,2}월|[\d,]+\s*원|일시불|\d{1,2}/\d{1,2})'))
+      .first
+      .trim();
+  final afterName = head.contains('님') ? head.substring(head.indexOf('님') + 1) : head.replaceFirst(RegExp(r'^.*?(승인취소|취소|승인)'), '');
+  var merchant = cut(afterName);
+  if (merchant.isEmpty && idx + 1 < lines.length && !lines[idx + 1].startsWith('누적')) merchant = cut(lines[idx + 1]);
+  if (merchant.isEmpty) return const ParseFailed('자동납부 가맹점을 찾지 못함');
+  return Parsed(
+    ParsedPayment(
+      source: PaymentSource.hyundaiApp,
+      amount: amount,
+      merchant: merchant,
+      approvedAt: _dateTime(lines.skip(idx).join(' '), postedAt) ?? postedAt,
+      isCancel: head.contains('취소'),
     ),
   );
 }

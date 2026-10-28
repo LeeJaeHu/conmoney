@@ -107,4 +107,35 @@ void main() {
     expect(builtinCategory('스타벅스 강남점', 5000), '카페·간식');
     expect(builtinCategory('구글클라우드코리아', 12000), '기타');
   });
+
+  // 10/27 실기기 제보: 현대카드 자동납부(전기요금) 첫 줄 "자동납부 승인 이*후님 한국전력공사 10월…"만 확인. 나머지 모양은 추정
+  ParseOutcome autoPay(String body) => parsePaymentNotification(
+    source: PaymentSource.hyundaiApp,
+    title: '현대카드',
+    body: body,
+    postedAt: DateTime(2026, 10, 27, 9, 1),
+  );
+
+  test('현대 자동납부: 금액이 같은 줄에 있을 때', () {
+    final p = parsed(autoPay('자동납부 승인 홍*동님 한국전력공사 10월분 45,320원'));
+    expect(p.merchant, '한국전력공사');
+    expect(p.amount, 45320);
+    expect(p.isCancel, isFalse);
+    expect(p.approvedAt, DateTime(2026, 10, 27, 9, 1));
+  });
+
+  test('현대 자동납부: 금액·날짜가 다음 줄, 누적 줄은 무시', () {
+    final p = parsed(autoPay('자동납부 승인 홍*동님 한국전력공사 10월 전기요금\n45,320원 일시불 10/27 08:59\n누적 512,000원'));
+    expect(p.merchant, '한국전력공사');
+    expect(p.amount, 45320);
+    expect(p.approvedAt, DateTime(2026, 10, 27, 8, 59));
+  });
+
+  test('현대 자동납부: 가맹점이 다음 줄, 취소', () {
+    final p = parsed(autoPay('홍*동님 자동납부 승인취소\n한국전력공사 10월분\n45,320원'));
+    expect(p.merchant, '한국전력공사');
+    expect(p.isCancel, isTrue);
+    expect(autoPay('자동납부 승인 홍*동님 한국전력공사'), isA<ParseFailed>()); // 금액 없음
+    expect(builtinCategory(normMerchant('한국전력공사'), 45320), '공과금');
+  });
 }

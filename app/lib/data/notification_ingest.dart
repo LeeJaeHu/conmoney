@@ -49,19 +49,25 @@ class NotificationIngestor {
 
   Future<IngestResult> ingest(List<RawPaymentNotification> raws) async {
     final result = IngestResult();
+    final previous = await db.select(db.notificationResults).get();
+    // 파서가 없던 출처(UNSUPPORTED)와 못 읽은 결제(PARSE_FAIL)는 파서가 고쳐졌을 수 있어 매번 다시 본다(10/28)
     final done = {
-      for (final r in await db.select(db.notificationResults).get())
-        if (r.result != 'UNSUPPORTED') r.rawId,
+      for (final r in previous)
+        if (r.result != 'UNSUPPORTED' && r.result != 'PARSE_FAIL') r.rawId,
+    };
+    final failedBefore = {
+      for (final r in previous)
+        if (r.result == 'PARSE_FAIL') r.rawId: r.transactionId,
     };
     for (final raw in raws) {
       if (done.contains(raw.id)) continue;
-      await db.transaction(() => _one(raw, result));
+      await db.transaction(() => _one(raw, result, failedTxnId: failedBefore[raw.id], failedBefore: failedBefore.containsKey(raw.id)));
     }
     if (result.changed) await RecurringRepository(db).relink();
     return result;
   }
 
-  Future<void> _one(RawPaymentNotification raw, IngestResult out) async {
+  Future<void> _one(RawPaymentNotification raw, IngestResult out, {int? failedTxnId, bool failedBefore = false}) async {
     Future<void> record(String r, [int? txnId]) => db
         .into(db.notificationResults)
         .insertOnConflictUpdate(
@@ -78,7 +84,16 @@ class NotificationIngestor {
       out.ignored++;
       return record('IGNORED');
     }
-    switch (parsePaymentNotification(source: source, title: raw.title, body: raw.body, postedAt: raw.postedAt)) {
+    final outcome = parsePaymentNotification(source: source, title: raw.title, body: raw.body, postedAt: raw.postedAt);
+    if (failedBefore) {
+      // 여전히 못 읽으면 이미 남긴 확인 필요 거래(0원)를 그대로 두고 아무것도 하지 않는다
+      if (outcome is ParseFailed) return;
+      // 이제 읽히면 그때 남긴 0원 자리 거래를 지우고 아래에서 정상 처리한다
+      if (failedTxnId != null) {
+        await (db.delete(db.transactions)..where((t) => t.id.equals(failedTxnId) & t.amount.equals(0))).go();
+      }
+    }
+    switch (outcome) {
       case NotPayment():
         out.ignored++;
         return record('IGNORED');
