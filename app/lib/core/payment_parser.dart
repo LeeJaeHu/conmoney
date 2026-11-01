@@ -31,6 +31,7 @@ class ParsedPayment {
     this.installmentMonths = 1,
     this.isForeign = false,
     this.foreignAmount,
+    this.cumulative,
   });
 
   final PaymentSource source;
@@ -45,6 +46,15 @@ class ParsedPayment {
   final int installmentMonths;
   final bool isForeign;
   final String? foreignAmount;
+
+  /// 본문의 "누적금액 502,136원"·"누적142,396원". 같은 분·같은 금액·같은 가맹점으로 두 번 결제했을 때
+  /// 같은 알림의 재전송과 구분하는 데 쓴다(11/2 실사용: 같은 분에 USD 5.00 두 번).
+  final int? cumulative;
+}
+
+int? _cumulative(String body) {
+  final m = RegExp(r'누적(?:금액)?\s*([\d,]+)\s*원').firstMatch(body);
+  return m == null ? null : int.tryParse(m[1]!.replaceAll(',', ''));
 }
 
 sealed class ParseOutcome {
@@ -133,6 +143,7 @@ ParseOutcome _parseHyundai(String body, DateTime postedAt) {
       installmentMonths: months == null ? 1 : int.parse(months[1]!),
       isForeign: currency != null || lines[idx].contains('해외'),
       foreignAmount: currency != null ? '$currency $number' : null,
+      cumulative: _cumulative(body),
     ),
   );
 }
@@ -220,6 +231,7 @@ ParseOutcome _parseLotte(String body, DateTime postedAt) {
       installmentMonths: months == null ? 1 : int.parse(months[1]!),
       isForeign: isForeign || RegExp('해외').hasMatch(body),
       foreignAmount: isForeign ? '$currency $number' : null,
+      cumulative: _cumulative(body),
     ),
   );
 }

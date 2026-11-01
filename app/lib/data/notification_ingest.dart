@@ -138,15 +138,20 @@ class NotificationIngestor {
         );
   }
 
-  static String _key(ParsedPayment p) =>
+  /// 누적금액이 있으면 키에 넣는다: 같은 분·금액·가맹점의 결제 두 건은 누적금액이 달라 따로 저장되고,
+  /// 같은 알림이 다시 오면 누적금액까지 같아 한 번만 저장된다(11/2).
+  static String _key(ParsedPayment p) => '${_legacyKey(p)}${p.cumulative == null ? '' : '|${p.cumulative}'}';
+
+  /// 누적금액을 넣기 전(~11/1)에 저장된 거래의 키. 그때 저장된 결제가 다시 들어와도 중복으로 알아보게 남긴다.
+  static String _legacyKey(ParsedPayment p) =>
       'NOTIF|${p.source.key}|${p.approvedAt.toIso8601String()}|${p.amount}|${p.merchant}|${p.isCancel ? 'C' : 'A'}';
 
   /// 같은 알림이 다시 온 것, 또는 카드사 내역 파일로 이미 가져온 결제(Spec 4.3).
   /// 가져온 기록은 시각이 없는 경우가 많아 같은 카드·날짜·금액·가맹점으로 비교한다.
   Future<bool> _isDuplicate(ParsedPayment p, int cardId) async {
-    final key = _key(p);
-    final same = await (db.select(db.transactions)..where((t) => t.dedupeKey.equals(key))).getSingleOrNull();
-    if (same != null) return true;
+    final keys = {_key(p), _legacyKey(p)};
+    final same = await (db.select(db.transactions)..where((t) => t.dedupeKey.isIn(keys))).get();
+    if (same.isNotEmpty) return true;
     final amount = p.isCancel ? -p.amount : p.amount;
     final candidates =
         await (db.select(db.transactions)..where(

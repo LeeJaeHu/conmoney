@@ -56,6 +56,7 @@ void main() {
     expect(p.foreignAmount, 'USD 5.00');
     expect(p.isCancel, isFalse);
     expect(p.approvedAt, DateTime(2026, 10, 31, 13, 9));
+    expect(p.cumulative, 123456);
     expect(parsed(lotte(body.replaceFirst('해외승인', '해외승인취소'))).isCancel, isTrue);
   });
 
