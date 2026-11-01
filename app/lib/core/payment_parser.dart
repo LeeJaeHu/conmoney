@@ -48,7 +48,7 @@ class ParsedPayment {
   final String? foreignAmount;
 
   /// 본문의 "누적금액 502,136원"·"누적142,396원". 같은 분·같은 금액·같은 가맹점으로 두 번 결제했을 때
-  /// 같은 알림의 재전송과 구분하는 데 쓴다(11/2 실사용: 같은 분에 USD 5.00 두 번).
+  /// 같은 알림의 재전송과 구분하는 데 쓴다(11/2).
   final int? cumulative;
 }
 

@@ -196,7 +196,7 @@ void main() {
   });
 
   test('롯데 "해외승인"을 못 읽어 남은 0원 항목 → 다시 읽으면 해외 결제, 원화는 확인 시트에서(11/2)', () async {
-    // 실사용: 같은 분에 USD 5.00을 두 번 결제 → 알림 두 개는 누적금액만 다르다
+    // 같은 분에 USD 5.00을 두 번 결제한 경우 → 알림 두 개는 누적금액만 다르다
     String body(String cumulative) =>
         'ACME AI\nUSD 5.00 해외승인\n홍*동 LOCA LIKIT Eat(1*2*)\n일시불, 10/31 13:09\n누적금액 $cumulative원';
     final raws = [raw(21, body('123,456'), at: DateTime(2026, 10, 31, 13, 10)), raw(22, body('130,606'), at: DateTime(2026, 10, 31, 13, 10))];
