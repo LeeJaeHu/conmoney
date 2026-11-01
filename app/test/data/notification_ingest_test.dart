@@ -222,14 +222,12 @@ void main() {
     }
     final r = await ingestor.ingest(raws);
     expect(r.saved, 2); // 두 번 결제는 두 건
-    final list = await txns();
+    final list = (await txns())..sort((a, b) => a.id.compareTo(b.id));
     expect(list, hasLength(2));
-    for (final t in list) {
-      expect(t.amount, 0);
-      expect(t.isForeign, isTrue);
-      expect(t.originalAmount, 'USD 5.00');
-      expect(t.reviewReason, 'FOREIGN_AMOUNT');
-    }
+    expect(list.every((t) => t.isForeign && t.originalAmount == 'USD 5.00'), isTrue);
+    // 첫 건은 앞 알림이 없어 원화를 모르고, 둘째 건은 누적금액 차이(7,150원)로 추정
+    expect([list[0].amount, list[0].reviewReason], [0, 'FOREIGN_AMOUNT']);
+    expect([list[1].amount, list[1].reviewReason], [7150, 'FOREIGN_ESTIMATE']);
 
     // 같은 알림(누적금액까지 같음)이 다시 오면 중복
     final again = await ingestor.ingest([raw(23, body('130,606'), at: DateTime(2026, 10, 31, 13, 12))]);
@@ -242,7 +240,7 @@ void main() {
     expect(saved.amount, 7150);
     expect(saved.needsReview, isFalse);
     final engine = BudgetEngine(await LedgerRepository(db).loadLedger());
-    expect(engine.spent(YearMonth(2026, 10)), 7150);
+    expect(engine.spent(YearMonth(2026, 10)), 7150 + 7150);
   });
 
   test('누적금액을 넣기 전에 저장된 거래도 같은 알림이 다시 오면 중복으로 본다', () async {
@@ -259,5 +257,45 @@ void main() {
     final r = await ingestor.ingest([raw(31, body)]);
     expect(r.duplicates, 1);
     expect(await txns(), hasLength(1));
+  });
+
+  group('해외 승인 원화 추정: 누적금액 차이(11/2)', () {
+    String won(String merchant, String amount, String when, String cumulative) =>
+        '$merchant\n$amount원 승인\n홍*동 LOCA LIKIT Eat(1*2*)\n일시불, $when\n누적금액 $cumulative원';
+    String usd(String when, String cumulative, {String amount = '5.00'}) =>
+        'ACME AI\nUSD $amount 해외승인\n홍*동 LOCA LIKIT Eat(1*2*)\n일시불, $when\n누적금액 $cumulative원';
+    final at = DateTime(2026, 10, 31, 9);
+
+    test('앞 알림과의 누적금액 차이를 원화로 넣고 확인 목록에 남긴다, 고치면 그 값', () async {
+      final r = await ingestor.ingest([
+        raw(1, won('버거킹 강남역점', '9,300', '10/31 09:00', '488,600'), at: at),
+        raw(2, usd('10/31 11:45', '495,380'), at: at),
+        raw(3, usd('10/31 13:09', '502,136'), at: at),
+      ]);
+      expect(r.estimated, 2);
+      final foreign = (await txns()).where((t) => t.isForeign).toList()..sort((a, b) => a.id.compareTo(b.id));
+      expect(foreign.map((t) => t.amount), [6780, 6756]);
+      expect(foreign.every((t) => t.reviewReason == 'FOREIGN_ESTIMATE' && t.needsReview), isTrue);
+      final engine = BudgetEngine(await LedgerRepository(db).loadLedger());
+      expect(engine.spent(YearMonth(2026, 10)), 9300 + 6780 + 6756);
+
+      await SpendingRepository(db).saveReview(foreign.first.id, categoryId: null, isUnusual: false, memo: null, amount: 6800);
+      final fixed = (await txns()).firstWhere((t) => t.id == foreign.first.id);
+      expect(fixed.amount, 6800);
+      expect(fixed.needsReview, isFalse);
+    });
+
+    test('환율로 말이 안 되는 차이(놓친 알림·청구 기간 초기화)나 앞 알림이 없으면 0원 그대로', () async {
+      await ingestor.ingest([raw(1, usd('10/31 11:45', '495,380'), at: at)]); // 앞 알림 없음
+      await ingestor.ingest([
+        raw(2, won('버거킹 강남역점', '9,300', '10/31 12:00', '400,000'), at: at),
+        raw(3, usd('10/31 13:09', '502,136'), at: at), // 102,136원 / 5달러 → 버림
+        raw(4, won('버거킹 강남역점', '9,300', '11/01 09:00', '9,300'), at: DateTime(2026, 11, 1, 9)),
+        raw(5, usd('11/01 10:00', '5,000'), at: DateTime(2026, 11, 1, 10)), // 누적이 줄어듦 → 버림
+      ]);
+      final foreign = (await txns()).where((t) => t.isForeign);
+      expect(foreign, hasLength(3));
+      expect(foreign.every((t) => t.amount == 0 && t.reviewReason == 'FOREIGN_AMOUNT'), isTrue);
+    });
   });
 }

@@ -56,6 +56,7 @@ class _TransactionSheetState extends ConsumerState<TransactionSheet> {
       _categoryId = t.categoryId ?? t.suggestedCategoryId;
       _unusual = t.isUnusual;
       _memo.text = t.memo ?? '';
+      if (t.reviewReason == 'FOREIGN_ESTIMATE') _won.text = '${t.amount}';
     });
   }
 
@@ -95,7 +96,7 @@ class _TransactionSheetState extends ConsumerState<TransactionSheet> {
             ),
             Text(t.localDate, style: theme.textTheme.bodySmall),
             // 원화 금액 없이 온 해외 승인·못 읽은 알림은 0원이라 예산에 안 잡힌다 → 명세서·카드 앱의 원화 금액을 넣는다
-            if (t.amount == 0) ...[
+            if (t.amount == 0 || t.reviewReason == 'FOREIGN_ESTIMATE') ...[
               const SizedBox(height: 12),
               TextField(
                 controller: _won,
@@ -103,9 +104,12 @@ class _TransactionSheetState extends ConsumerState<TransactionSheet> {
                 decoration: InputDecoration(
                   labelText: '원화 금액',
                   suffixText: '원',
-                  helperText: t.originalAmount != null
-                      ? '${t.originalAmount} 결제예요. 카드 앱·명세서의 원화 금액을 넣어 주세요'
-                      : '알림에서 금액을 읽지 못했어요. 결제 금액을 넣어 주세요',
+                  helperText: switch ((t.reviewReason, t.originalAmount)) {
+                    ('FOREIGN_ESTIMATE', final o) => '$o 결제예요. 누적금액 차이로 계산한 추정이라 카드 앱 금액과 다르면 고쳐 주세요',
+                    (_, final o?) => '$o 결제예요. 카드 앱·명세서의 원화 금액을 넣어 주세요',
+                    _ => '알림에서 금액을 읽지 못했어요. 결제 금액을 넣어 주세요',
+                  },
+                  helperMaxLines: 2,
                 ),
               ),
             ],

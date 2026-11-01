@@ -52,7 +52,8 @@ class ParsedPayment {
   final int? cumulative;
 }
 
-int? _cumulative(String body) {
+/// 알림 본문의 누적금액(없으면 null). 해외 승인의 원화 추정에도 쓴다(notification_ingest.dart).
+int? parseCumulative(String body) {
   final m = RegExp(r'누적(?:금액)?\s*([\d,]+)\s*원').firstMatch(body);
   return m == null ? null : int.tryParse(m[1]!.replaceAll(',', ''));
 }
@@ -143,7 +144,7 @@ ParseOutcome _parseHyundai(String body, DateTime postedAt) {
       installmentMonths: months == null ? 1 : int.parse(months[1]!),
       isForeign: currency != null || lines[idx].contains('해외'),
       foreignAmount: currency != null ? '$currency $number' : null,
-      cumulative: _cumulative(body),
+      cumulative: parseCumulative(body),
     ),
   );
 }
@@ -231,7 +232,7 @@ ParseOutcome _parseLotte(String body, DateTime postedAt) {
       installmentMonths: months == null ? 1 : int.parse(months[1]!),
       isForeign: isForeign || RegExp('해외').hasMatch(body),
       foreignAmount: isForeign ? '$currency $number' : null,
-      cumulative: _cumulative(body),
+      cumulative: parseCumulative(body),
     ),
   );
 }
@@ -244,3 +245,21 @@ DateTime? _dateTime(String text, DateTime postedAt) {
   final year = postedAt.month == 1 && month == 12 ? postedAt.year - 1 : postedAt.year;
   return DateTime(year, month, int.parse(m[2]!), int.parse(m[3]!), int.parse(m[4]!));
 }
+
+/// 원통화 1단위의 원화 범위(대략). 누적금액 차이로 추정한 원화가 이 범위 밖이면 버린다(사이에 놓친 알림·취소·청구 기간 초기화).
+const wonPerUnitRange = <String, (double, double)>{
+  'USD': (1000, 2000),
+  'EUR': (1100, 2200),
+  'GBP': (1300, 2600),
+  'JPY': (6, 15),
+  'CNY': (140, 300),
+  'HKD': (130, 260),
+  'SGD': (750, 1500),
+  'AUD': (650, 1300),
+  'CAD': (700, 1400),
+  'CHF': (1100, 2200),
+  'TWD': (30, 60),
+  'THB': (28, 55),
+  'VND': (0.04, 0.08),
+  'PHP': (18, 35),
+};

@@ -78,4 +78,5 @@ server/  Cloud Run(Python, FastAPI) LLM 중계. 비밀값은 server/.env(git 제
 - [x] 알림 → 거래(F2): 롯데카드 알림톡·현대카드 앱 파서(`core/payment_parser.dart`), 저장·중복·취소·할부·카테고리 추천(`data/notification_ingest.dart`), DB v6 `notification_results`. 홈을 열 때·돌아올 때·새로고침 때 동기화 + 결제 직후 F7 검사(`services/notification_sync.dart`)
 - [x] AI 소비 분석: `core/insights.dart`(특징·아낄 곳) + 툴 get_spending_insights + 분석 화면 카드·[AI에게 분석·상담 받기], 평가셋 v5(E15)
 - [x] 가맹점 콕 집은 질문(10/21): `core/merchant_spending.dart`, 툴 `get_merchant_spending`, 지시문 규칙 17, 평가셋 v6(E16). **Cloud Run 재배포 필요**
+- [x] 롯데 해외승인(`USD 5.00 해외승인`) 읽기, 해외 결제 원화 추정(누적금액 차이)·확인 시트에서 입력, 데이터 내보내기(홈 메뉴 > 데이터 내보내기: SQLite·거래 CSV)(11/2)
 - [ ] 토스 파서(샘플 필요), 롯데·현대 취소·할부·해외 실제 형식 확인, 앱이 꺼져 있을 때 반영, 확인 알림(F3), 상담 평가셋 50개

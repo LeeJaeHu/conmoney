@@ -16,6 +16,7 @@ import '../dev/import_page.dart';
 import '../planned/planned_page.dart';
 import '../recurring/recurring_page.dart';
 import '../samples/sample_collector_page.dart';
+import '../settings/export_page.dart';
 import '../settings/metrics_page.dart';
 import '../settings/notification_settings_page.dart';
 import '../spending/category_page.dart';
@@ -93,6 +94,7 @@ class _HomePageState extends ConsumerState<HomePage> with WidgetsBindingObserver
               'category' => open(const CategoryPage()),
               'alerts' => open(const NotificationSettingsPage()),
               'metrics' => open(const MetricsPage()),
+              'export' => open(const ExportPage()),
               _ => open(const SampleCollectorPage()),
             },
             itemBuilder: (_) => const [
@@ -102,6 +104,7 @@ class _HomePageState extends ConsumerState<HomePage> with WidgetsBindingObserver
               PopupMenuItem(value: 'category', child: Text('지출 분석')),
               PopupMenuItem(value: 'alerts', child: Text('먼저 알려주기')),
               PopupMenuItem(value: 'metrics', child: Text('사용 기록')),
+              PopupMenuItem(value: 'export', child: Text('데이터 내보내기')),
               PopupMenuItem(value: 'import', child: Text('과거 기록 가져오기')),
               PopupMenuItem(value: 'samples', child: Text('결제 알림 샘플')),
             ],

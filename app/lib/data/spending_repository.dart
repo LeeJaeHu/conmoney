@@ -65,7 +65,7 @@ class SpendingRepository {
   Future<TransactionRow> transaction(int id) => (db.select(db.transactions)..where((t) => t.id.equals(id))).getSingle();
 
   /// 확인 시트 저장(Spec F3). 추천과 다른 카테고리면 같은 가맹점의 다음 결제부터 그 카테고리를 추천한다.
-  /// [amount]는 0원으로 들어온 결제(원화 없는 해외 승인, 못 읽은 알림)에 원화 금액을 넣을 때만 준다.
+  /// [amount]는 0원으로 들어온 결제(원화 없는 해외 승인, 못 읽은 알림)나 원화를 추정한 해외 결제의 금액을 고칠 때만 준다.
   Future<void> saveReview(
     int txnId, {
     required int? categoryId,
@@ -77,7 +77,7 @@ class SpendingRepository {
       final t = await transaction(txnId);
       await (db.update(db.transactions)..where((x) => x.id.equals(txnId))).write(
         TransactionsCompanion(
-          amount: amount != null && t.amount == 0 ? Value(amount) : const Value.absent(),
+          amount: amount != null && (t.amount == 0 || t.reviewReason == 'FOREIGN_ESTIMATE') ? Value(amount) : const Value.absent(),
           categoryId: Value(categoryId),
           isUnusual: Value(isUnusual),
           memo: Value(memo == null || memo.trim().isEmpty ? null : memo.trim()),

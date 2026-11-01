@@ -35,10 +35,13 @@ class IngestResult {
   int ignored = 0;
   int unsupported = 0;
 
+  /// 원화 없이 온 해외 승인에 누적금액 차이로 원화를 채운 건수.
+  int estimated = 0;
+
   /// 새로 저장한 승인 거래(결제 직후 먼저 알려주기 검사에 쓴다).
   final List<int> newApprovals = [];
 
-  bool get changed => saved + cancels + failed > 0;
+  bool get changed => saved + cancels + failed + estimated > 0;
 }
 
 /// 결제 알림 → 거래(Spec F2 처리 순서 3~5). 같은 원문을 다시 넣어도 한 번만 처리한다.
@@ -63,8 +66,52 @@ class NotificationIngestor {
       if (done.contains(raw.id)) continue;
       await db.transaction(() => _one(raw, result, failedTxnId: failedBefore[raw.id], failedBefore: failedBefore.containsKey(raw.id)));
     }
+    result.estimated = await _estimateForeignWon();
     if (result.changed) await RecurringRepository(db).relink();
     return result;
+  }
+
+  /// 원화 없이 온 해외 승인(`FOREIGN_AMOUNT`, 0원)에 원화를 추정해 넣는다(11/2 실사용).
+  /// 카드사 누적금액에는 해외 결제도 원화로 더해진다(10/31 롯데: USD 5.00 승인 뒤 495,380 → 502,136원).
+  /// 그래서 이 알림의 누적금액 - 같은 카드 바로 앞 알림의 누적금액 = 이 결제의 원화. 사이에 놓친 알림·취소·
+  /// 청구 기간 초기화가 있으면 틀리므로 환율 범위([wonPerUnitRange]) 밖이면 버리고, 맞아도 확인 목록에 남긴다.
+  Future<int> _estimateForeignWon() async {
+    final pending = await (db.select(db.transactions)
+          ..where((t) => t.reviewReason.equals('FOREIGN_AMOUNT') & t.amount.equals(0) & t.installmentMonths.equals(1)))
+        .get();
+    var n = 0;
+    for (final t in pending) {
+      final won = await _wonFromCumulative(t);
+      if (won == null) continue;
+      await (db.update(db.transactions)..where((x) => x.id.equals(t.id))).write(
+        TransactionsCompanion(amount: Value(won), reviewReason: const Value('FOREIGN_ESTIMATE')),
+      );
+      n++;
+    }
+    return n;
+  }
+
+  Future<int?> _wonFromCumulative(TransactionRow t) async {
+    final now = parseCumulative(t.rawText);
+    final parts = (t.originalAmount ?? '').split(' '); // "USD 5.00"
+    final units = parts.length == 2 ? double.tryParse(parts[1]) : null;
+    final range = wonPerUnitRange[parts.first];
+    if (now == null || t.cardId == null || units == null || units <= 0 || range == null) return null;
+    final before = await (db.select(db.transactions)
+          ..where(
+            (x) =>
+                x.cardId.equals(t.cardId!) &
+                x.id.equals(t.id).not() &
+                x.rawText.equals('').not() &
+                (x.approvedAt.isSmallerThanValue(t.approvedAt) | (x.approvedAt.equals(t.approvedAt) & x.id.isSmallerThanValue(t.id))),
+          )
+          ..orderBy([(x) => OrderingTerm.desc(x.approvedAt), (x) => OrderingTerm.desc(x.id)]))
+        .get();
+    final prev = before.map((x) => parseCumulative(x.rawText)).nonNulls.firstOrNull;
+    if (prev == null) return null;
+    final won = now - prev;
+    final perUnit = won / units;
+    return perUnit >= range.$1 && perUnit <= range.$2 ? won : null;
   }
 
   Future<void> _one(RawPaymentNotification raw, IngestResult out, {int? failedTxnId, bool failedBefore = false}) async {

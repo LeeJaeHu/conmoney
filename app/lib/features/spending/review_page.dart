@@ -40,6 +40,7 @@ class ReviewPage extends ConsumerWidget {
                 title: Text(t.merchantNorm, maxLines: 1, overflow: TextOverflow.ellipsis),
                 subtitle: Text(switch (t.reviewReason) {
                   'FOREIGN_AMOUNT' => '해외 결제 · 원화 금액을 넣어 주세요',
+                  'FOREIGN_ESTIMATE' => '해외 결제 ${t.originalAmount ?? ''} · 원화는 추정, 맞는지 봐 주세요',
                   final r? when r.startsWith('PARSE_FAIL') => '알림을 읽지 못함 · 금액을 넣어 주세요',
                   final r? => r,
                   null when t.kind == 'MANUAL' => '직접 기록한 지출 · 카테고리 미확인',
