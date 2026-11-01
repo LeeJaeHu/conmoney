@@ -194,4 +194,47 @@ void main() {
     await ingestor.ingest([bad]);
     expect((await txns()).where((x) => x.amount == 0), hasLength(1));
   });
+
+  test('롯데 "해외승인"을 못 읽어 남은 0원 항목 2개(같은 알림 두 번) → 다시 읽으면 해외 결제 1건, 원화는 확인 시트에서(11/1)', () async {
+    const body = 'ACME AI\nUSD 5.00 해외승인\n홍*동 LOCA LIKIT Eat(1*2*)\n일시불, 10/31 13:09\n누적금액 123,456원';
+    // 예전 파서가 같은 알림 두 개를 각각 실패로 남긴 상태
+    for (final id in [21, 22]) {
+      final placeholder = await db.into(db.transactions).insert(TransactionsCompanion.insert(
+        kind: 'APPROVAL',
+        amount: 0,
+        merchantRaw: 'ACME AI',
+        merchantNorm: 'ACME AI',
+        approvedAt: DateTime(2026, 10, 31, 13, 10),
+        localDate: '2026-10-31',
+        needsReview: const Value(true),
+        reviewReason: const Value('PARSE_FAIL: 금액 줄을 찾지 못함'),
+        dedupeKey: 'NOTIF_FAIL|$id',
+      ));
+      await db.into(db.notificationResults).insert(NotificationResultsCompanion.insert(
+        rawId: Value(id),
+        result: 'PARSE_FAIL',
+        transactionId: Value(placeholder),
+        processedAt: DateTime(2026, 10, 31, 13, 11),
+      ));
+    }
+    final r = await ingestor.ingest([
+      raw(21, body, at: DateTime(2026, 10, 31, 13, 10)),
+      raw(22, body, at: DateTime(2026, 10, 31, 13, 10)),
+    ]);
+    expect(r.saved, 1);
+    expect(r.duplicates, 1);
+    final t = (await txns()).single;
+    expect(t.amount, 0);
+    expect(t.isForeign, isTrue);
+    expect(t.originalAmount, 'USD 5.00');
+    expect(t.reviewReason, 'FOREIGN_AMOUNT');
+
+    // 확인 시트에서 원화 금액을 넣으면 예산에 잡힌다
+    await SpendingRepository(db).saveReview(t.id, categoryId: null, isUnusual: false, memo: null, amount: 7150);
+    final saved = (await txns()).single;
+    expect(saved.amount, 7150);
+    expect(saved.needsReview, isFalse);
+    final engine = BudgetEngine(await LedgerRepository(db).loadLedger());
+    expect(engine.spent(YearMonth(2026, 10)), 7150);
+  });
 }

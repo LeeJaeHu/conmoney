@@ -38,14 +38,14 @@ class ReviewPage extends ConsumerWidget {
               ListTile(
                 leading: Text(_md(t.localDate)),
                 title: Text(t.merchantNorm, maxLines: 1, overflow: TextOverflow.ellipsis),
-                subtitle: Text(
-                  t.reviewReason ??
-                      switch (t.kind) {
-                        'MANUAL' => '직접 기록한 지출 · 카테고리 미확인',
-                        _ => '카테고리 미확인',
-                      },
-                ),
-                trailing: Text(won(t.amount, exact: true)),
+                subtitle: Text(switch (t.reviewReason) {
+                  'FOREIGN_AMOUNT' => '해외 결제 · 원화 금액을 넣어 주세요',
+                  final r? when r.startsWith('PARSE_FAIL') => '알림을 읽지 못함 · 금액을 넣어 주세요',
+                  final r? => r,
+                  null when t.kind == 'MANUAL' => '직접 기록한 지출 · 카테고리 미확인',
+                  null => '카테고리 미확인',
+                }),
+                trailing: Text(t.amount == 0 && t.originalAmount != null ? t.originalAmount! : won(t.amount, exact: true)),
                 onTap: () async {
                   final saved = await showTransactionSheet(context, t.id);
                   if (saved == true) {

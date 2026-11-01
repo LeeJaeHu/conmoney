@@ -179,7 +179,7 @@ ParseOutcome _parseHyundaiAutoPay(List<String> lines, DateTime postedAt) {
 
 const _currencies = 'USD|EUR|JPY|CNY|GBP|HKD|SGD|AUD|CAD|CHF|TWD|THB|VND|PHP';
 
-/// 롯데카드 알림톡(10/17 샘플):
+/// 롯데카드 알림톡(10/17 샘플, 해외는 10/31 샘플):
 /// ```
 /// 버거킹 건대입구역점
 /// 11,800원 승인
@@ -187,12 +187,14 @@ const _currencies = 'USD|EUR|JPY|CNY|GBP|HKD|SGD|AUD|CAD|CHF|TWD|THB|VND|PHP';
 /// 일시불, 10/17 11:57
 /// 누적금액 470,844원
 /// ```
-/// 취소·해외·할부는 아직 샘플이 없어 공통 키워드(Spec F2)로 추정한다 `[확인 필요]`.
+/// 해외 승인은 `USD 5.00 해외승인`으로 원화 금액 없이 온다. 취소·할부는 아직 샘플이 없어
+/// 공통 키워드(Spec F2)로 추정한다 `[확인 필요]`.
 ParseOutcome _parseLotte(String body, DateTime postedAt) {
   final lines = _lines(body);
-  // "11,800원 승인", "11,800원 승인취소", "USD 12.99 승인", "12.99USD 승인"
+  // "11,800원 승인", "11,800원 승인취소", "USD 12.99 승인", "12.99USD 승인".
+  // 해외 결제는 "USD 5.00 해외승인"(10/31 실기기 샘플)처럼 "해외"가 붙는다
   final amountLine = RegExp(
-    r'^(?:(' + _currencies + r')\s*)?([\d,]+(?:\.\d+)?)\s*(원|' + _currencies + r')?\s*(승인취소|취소|승인)',
+    r'^(?:(' + _currencies + r')\s*)?([\d,]+(?:\.\d+)?)\s*(원|' + _currencies + r')?\s*(?:해외\s*)?(승인취소|취소|승인)',
   );
   final idx = lines.indexWhere(amountLine.hasMatch);
   // 결제 예정·명세서 안내 같은 알림톡은 "승인"이 없다

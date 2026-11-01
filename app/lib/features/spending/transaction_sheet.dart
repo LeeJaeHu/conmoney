@@ -30,6 +30,7 @@ class _TransactionSheetState extends ConsumerState<TransactionSheet> {
   int? _categoryId;
   bool _unusual = false;
   final _memo = TextEditingController();
+  final _won = TextEditingController();
 
   @override
   void initState() {
@@ -40,6 +41,7 @@ class _TransactionSheetState extends ConsumerState<TransactionSheet> {
   @override
   void dispose() {
     _memo.dispose();
+    _won.dispose();
     super.dispose();
   }
 
@@ -60,7 +62,13 @@ class _TransactionSheetState extends ConsumerState<TransactionSheet> {
   Future<void> _save() async {
     await ref
         .read(spendingRepositoryProvider)
-        .saveReview(widget.txnId, categoryId: _categoryId, isUnusual: _unusual, memo: _memo.text);
+        .saveReview(
+          widget.txnId,
+          categoryId: _categoryId,
+          isUnusual: _unusual,
+          memo: _memo.text,
+          amount: int.tryParse(_won.text.replaceAll(RegExp(r'[^\d]'), '')),
+        );
     if (mounted) Navigator.of(context).pop(true);
   }
 
@@ -86,6 +94,21 @@ class _TransactionSheetState extends ConsumerState<TransactionSheet> {
               style: theme.textTheme.titleMedium,
             ),
             Text(t.localDate, style: theme.textTheme.bodySmall),
+            // 원화 금액 없이 온 해외 승인·못 읽은 알림은 0원이라 예산에 안 잡힌다 → 명세서·카드 앱의 원화 금액을 넣는다
+            if (t.amount == 0) ...[
+              const SizedBox(height: 12),
+              TextField(
+                controller: _won,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: '원화 금액',
+                  suffixText: '원',
+                  helperText: t.originalAmount != null
+                      ? '${t.originalAmount} 결제예요. 카드 앱·명세서의 원화 금액을 넣어 주세요'
+                      : '알림에서 금액을 읽지 못했어요. 결제 금액을 넣어 주세요',
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
             Text('카테고리', style: theme.textTheme.titleSmall),
             const SizedBox(height: 8),

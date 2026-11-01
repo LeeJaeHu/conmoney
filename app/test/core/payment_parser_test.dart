@@ -47,6 +47,18 @@ void main() {
     expect(p.foreignAmount, 'USD 12.99');
   });
 
+  test('롯데 해외승인: "USD 5.00 해외승인"(10/31 실기기 형식)', () {
+    const body = 'ACME AI\nUSD 5.00 해외승인\n홍*동 LOCA LIKIT Eat(1*2*)\n일시불, 10/31 13:09\n누적금액 123,456원';
+    final p = parsed(lotte(body, DateTime(2026, 10, 31, 13, 10)));
+    expect(p.merchant, 'ACME AI');
+    expect(p.amount, 0);
+    expect(p.isForeign, isTrue);
+    expect(p.foreignAmount, 'USD 5.00');
+    expect(p.isCancel, isFalse);
+    expect(p.approvedAt, DateTime(2026, 10, 31, 13, 9));
+    expect(parsed(lotte(body.replaceFirst('해외승인', '해외승인취소'))).isCancel, isTrue);
+  });
+
   test('1월에 받은 12월 날짜는 전년', () {
     final p = parsed(lotte(lotteApproval.replaceFirst('10/17', '12/31'), DateTime(2027, 1, 1, 0, 2)));
     expect(p.approvedAt, DateTime(2026, 12, 31, 12, 34));
