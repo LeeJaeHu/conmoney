@@ -1,0 +1,10 @@
+{
+  "model": "gpt-6-luna",
+  "effort": "low",
+  "reps": 3,
+  "scenarios": "holdout_v1.jsonl",
+  "n_scenarios": 26,
+  "prompt_hash": "e723e21d",
+  "git_commit": "2fb3bbb",
+  "started": "2026-11-02T23:09:11"
+}
